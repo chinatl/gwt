@@ -107,7 +107,6 @@ export default {
   },
   methods: {
     upload_img() {
-      console.log(1);
       this.upload_img_dialog = true;
     }
   }
