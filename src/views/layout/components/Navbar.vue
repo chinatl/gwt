@@ -25,25 +25,7 @@
         </div>
       </div>
       <div class="history-list">
-        <scroll-pane ref="scrollPane" class="tags-view-wrapper">
-        <router-link
-            v-for="tag in visitedViews"
-            ref="tag"
-            :class="isActive(tag)?'active':''"
-            :to="tag"
-            :key="tag.path"
-            class="tags-view-item"
-            @dblclick.prevent.stop="closeSelectedTag(tag)"
-            @contextmenu.prevent.native="openMenu(tag,$event)">
-            {{ tag.title }}
-            <span class="el-icon-close" @click.prevent.stop="closeSelectedTag(tag)"/>
-        </router-link>
-        </scroll-pane>
-         <ul v-show="visible" :style="{left:left+'px',top:top+'px'}" class="contextmenu">
-          <li @click="closeSelectedTag(selectedTag)">关闭</li>
-          <li @click="closeOthersTags">关闭其他</li>
-          <li @click="closeAllTags">关闭所有</li>
-        </ul>
+        <tags-view></tags-view>
       </div>
   </div>
 </template>
@@ -53,12 +35,14 @@ import { mapGetters } from "vuex";
 import Breadcrumb from "@/components/Breadcrumb";
 import Hamburger from "@/components/Hamburger";
 import ScrollPane from "@/components/ScrollPane";
+import tagsView from "./TagsView"
 
 export default {
   components: {
     Breadcrumb,
     Hamburger,
-    ScrollPane
+    ScrollPane,
+    tagsView
   },
   data() {
     return {
@@ -72,10 +56,6 @@ export default {
     ...mapGetters(["sidebar", "avatar", "visitedViews"])
   },
   watch: {
-    $route() {
-      this.addViewTags();
-      this.moveToCurrentTag();
-    },
     visible(value) {
       if (value) {
         document.body.addEventListener("click", this.closeMenu);
@@ -84,46 +64,14 @@ export default {
       }
     }
   },
-  mounted() {
-    this.addViewTags();
-  },
+
   methods: {
-    openMenu(tag, e) {
-      this.visible = true;
-      this.selectedTag = tag;
-      const offsetLeft = this.$el.getBoundingClientRect().left; // container margin left
-      this.left = e.clientX - offsetLeft + 15; // 15: margin right
-      this.top = e.clientY;
-    },
-    closeAllTags() {
-      this.$store.dispatch("delAllViews");
-      this.$router.push("/");
-    },
-    closeOthersTags() {
-      this.$router.push(this.selectedTag);
-      this.$store.dispatch("delOthersViews", this.selectedTag).then(() => {
-        this.moveToCurrentTag();
-      });
-    },
-    closeSelectedTag(view) {
-      this.$store.dispatch("delVisitedViews", view).then(views => {
-        if (this.isActive(view)) {
-          const latestView = views.slice(-1)[0];
-          if (latestView) {
-            this.$router.push(latestView);
-          } else {
-            this.$router.push("/");
-          }
-        }
-      });
-    },
     has_command(e) {
       if (e === "user") {
         this.$router.push({
           path: "/person-center/index"
         });
       }
-      console.log(e);
     },
     generateRoute() {
       if (this.$route.name) {
@@ -148,31 +96,12 @@ export default {
         }
       });
     },
-    addViewTags() {
-      const route = this.generateRoute();
-      if (!route) {
-        return false;
-      }
-      this.$store.dispatch("addVisitedViews", route);
-    },
     toggleSideBar() {
       this.$store.dispatch("ToggleSideBar");
     },
     logout() {
       this.$store.dispatch("LogOut").then(() => {
         location.reload(); // 为了重新实例化vue-router对象 避免bug
-      });
-    },
-    closeSelectedTag(view) {
-      this.$store.dispatch("delVisitedViews", view).then(views => {
-        if (this.isActive(view)) {
-          const latestView = views.slice(-1)[0];
-          if (latestView) {
-            this.$router.push(latestView);
-          } else {
-            this.$router.push("/");
-          }
-        }
       });
     }
   }

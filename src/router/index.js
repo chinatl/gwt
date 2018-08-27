@@ -26,6 +26,10 @@ export const constantRouterMap = [
   { path: '/login', component: () => import('@/views/login/index'), hidden: true },
   { path: '/404', component: () => import('@/views/404'), hidden: true },
   {
+    path: '/dashboard',
+    redirect: '/message/index',
+  },
+  {
     path: '/',
     component: Layout,
     redirect: '/message/index',
@@ -363,7 +367,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '个人中心-字属性',
         component: () => import('@/views/person-center'),
-        meta: { title: '个人中心'},
+        meta: { title: '个人中心' },
       },
     ]
   },

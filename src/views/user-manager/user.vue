@@ -108,19 +108,11 @@
                     prop="name"
                     label="操作"
                     align="center"
-                    width="186"
+                    width="160"
                     >
                     <template slot-scope="scope">
-                        <el-button
-                        size="mini"
-                        type="success"
-                        icon="el-icon-edit-outline"
-                        @click="edit_user(scope.$index, scope.row)">编辑</el-button>
-                        <el-button
-                        size="mini"
-                        type="danger"
-                        icon="el-icon-delete"
-                        @click="handle_delete(scope.$index, scope.row)">删除</el-button>
+                      <little-button name='编辑' @click.native="edit_user(scope.$index, scope.row)"></little-button>
+                      <little-button name='删除' @click.native="handle_delete(scope.$index, scope.row)"></little-button>
                     </template>
                     </el-table-column>
                 </el-table>
@@ -141,6 +133,7 @@
     </div>
     <!-- 弹窗 -->
     <el-dialog
+        slot="else"
         :title="user_type ==='add' ?'添加用户':'编辑用户'"
         class="common-dialog"
         :visible.sync="user_visible">
@@ -197,7 +190,11 @@
   </t-layout>
 </template>
 <script>
+import littleButton from "@/components/Button/littleButton";
 export default {
+  components: {
+    littleButton
+  },
   data() {
     return {
       form: {
