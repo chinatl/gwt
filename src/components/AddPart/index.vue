@@ -1,5 +1,5 @@
 <template>
-<el-dialog :visible.sync="dialog" title='选择接收部门' class="select-user-dialog">
+<el-dialog :visible.sync="dialog" title='添加部门' class="select-user-dialog">
     <div class="select-user-container">
         <div class="select-left">
             <div class="select-part-top">
@@ -7,44 +7,15 @@
                     <i slot="suffix" class="el-input__icon el-icon-search"></i>
                 </el-input>
             </div>
-            <div class="select-part-bottom">
-                <div class="select-part-yield">
-                    <ul>
-                        <li class="avtive">常用联系部门</li>
-                        <li>本部门</li>
-                        <li>省人大域</li>
-                    </ul>
-                </div>
-                <div class="select-breadcrumb">
-                    <el-breadcrumb separator-class="el-icon-arrow-right">
-                        <el-breadcrumb-item>全部</el-breadcrumb-item>
-                    </el-breadcrumb>
-                </div>
-                <div class="select-yield">
-                    <el-collapse v-model="activeNames" @change="handleChange" accordion>
-                    <el-collapse-item  name="1">
-                        <template slot="title">
-                        <i class="el-icon-star-off"></i>  常用联系部门1 
-                        </template>
-                        <div class="yield-box"><el-checkbox v-model="checked">部门一</el-checkbox></div>
-                        <div class="yield-box"><el-checkbox v-model="checked">部门二</el-checkbox></div>
-                    </el-collapse-item>
-                    <el-collapse-item  name="2">
-                        <template slot="title">
-                        <i class="el-icon-star-off"></i>  常用联系部门2 
-                        </template>
-                        <div class="yield-box"><el-checkbox v-model="checked">部门一</el-checkbox></div>
-                        <div class="yield-box"><el-checkbox v-model="checked">部门二</el-checkbox></div>
-                    </el-collapse-item>
-                    <el-collapse-item name="3">
-                        <template slot="title">
-                        <i class="el-icon-star-off"></i>  常用联系部门3
-                        </template>
-                        <div class="yield-box"><el-checkbox v-model="checked">部门一</el-checkbox></div>
-                        <div class="yield-box"><el-checkbox v-model="checked">部门二</el-checkbox></div>
-                    </el-collapse-item>
-                    </el-collapse>
-                </div>
+            <div class="select-part-bottom common-temp">
+                <el-tree
+                :data="data2"
+                show-checkbox
+                node-key="id"
+                :default-expanded-keys="[2, 3]"
+                :default-checked-keys="[5]"
+                :props="defaultProps">
+                </el-tree>
             </div>
         </div>
         <div class="select-right">
@@ -89,7 +60,51 @@ export default {
       part: "1",
       checked: false,
       input: "",
-      activeNames: ""
+      activeNames: "",
+      data2: [
+        {
+          id: 1,
+          label: "陕西省",
+          children: [
+            {
+              id: 4,
+              label: "省政府办公厅",
+              children: [
+                {
+                  id: 9,
+                  label: "三级 1-1-1"
+                },
+                {
+                  id: 10,
+                  label: "三级 1-1-2"
+                }
+              ]
+            },
+            {
+              id: 14,
+              label: "省开发委",
+            },
+            {
+              id: 10,
+              label: "省教育厅",
+            },
+          ]
+        },
+        {
+          id: 2,
+          label: "西安市碑林区",
+          children: [
+            {
+              id: 5,
+              label: "碑林区区政府"
+            },
+          ]
+        },
+      ],
+      defaultProps: {
+        children: "children",
+        label: "label"
+      }
     };
   },
   props: {
@@ -115,7 +130,7 @@ export default {
       this.$emit("ok");
     },
     cancel() {
-        console.log(1)
+      console.log(1);
       this.$emit("close");
     },
     save_message() {},

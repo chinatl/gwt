@@ -185,10 +185,8 @@ export default {
     };
   },
   afterEach() {
-    console.log(e);
   },
   created() {
-    console.log(this.rules);
   },
   methods: {
     //上架或者下架app

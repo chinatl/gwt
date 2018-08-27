@@ -29,7 +29,7 @@ export default {
 </script>
 <style>
 .add-user-button {
-  width: 120px;
+  width: 140px;
 }
 </style>
 

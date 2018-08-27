@@ -2,7 +2,7 @@
   <div class="tags-view-container">
     <scroll-pane ref="scrollPane" class="tags-view-wrapper">
       <router-link
-        v-for="tag in Array.from(visitedViews)"
+        v-for="tag in visitedViews"
         ref="tag"
         :class="isActive(tag)?'active':''"
         :to="tag"

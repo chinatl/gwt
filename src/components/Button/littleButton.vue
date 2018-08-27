@@ -7,9 +7,7 @@
 <script>
 export default {
   data() {
-    return {
-      fas: true
-    };
+    return {};
   },
   computed: {
     classTitle() {
@@ -83,8 +81,20 @@ export default {
           return {
             className: "rukediaochan"
           };
+        case "撤销":
+          return {
+            className: "xiajia",
+            iconName: "撤销"
+          };
+        case "变更":
+          return {
+            className: "biangeng",
+            iconName: "变更"
+          };
         default:
-          return {};
+          return {
+            className: ""
+          };
       }
     }
   },
@@ -108,6 +118,7 @@ export default {
   margin: 0 5px;
   color: #ffff;
   cursor: pointer;
+  text-align: center;
   &.yishangjia {
     background-color: #35ca79;
     cursor: default;
@@ -142,6 +153,13 @@ export default {
   }
   &.rukediaochan {
     background-color: #55cfde;
+  }
+  &.biangeng {
+    background-color: #35ca79;
+    .svg-icon {
+      font-size: 16px;
+      vertical-align: sub;
+    }
   }
   &.disabled {
     color: #333;

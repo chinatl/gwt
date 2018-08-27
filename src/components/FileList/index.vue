@@ -2,7 +2,8 @@
 <div class="cnclosure-area" v-if="list.length">
     <div class="cnclosure-list" v-for='(item,index) in list' :key="index">
         <div class="file-logo">
-            <svg-icon :icon-class='get_svg_name(item.name)'></svg-icon>
+            <svg-icon :icon-class='get_svg_name(item.name)' v-if="get_svg_name(item.name) !=='png'"></svg-icon>
+            <img :src="item.url" v-else>
         </div>
         <div class="file-name">{{item.name}}</div>
         <div class="cnclosure-mask">
@@ -43,7 +44,7 @@ export default {
     },
     //  获取文件类型
     get_svg_name(name) {
-      return getFileType(name)
+      return getFileType(name);
     }
   }
 };
@@ -120,6 +121,11 @@ export default {
       align-items: center;
       .svg-icon {
         font-size: 60px;
+      }
+      img {
+        max-width: 90%;
+        max-height: 90%;
+        display: block;
       }
     }
     .file-name {

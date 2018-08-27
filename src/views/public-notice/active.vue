@@ -27,28 +27,24 @@
         </div>
         <ul class="message-list">
             <li v-for="(item,index) in [1,2,3]" :key="index">
-                <div class="message-area">
-                    <img :src="require('@/assets/imgs/message.png')">
-                </div>
-                <div class="message-info">
-                    <div class="h3">
-                        标题为“bcbcn”的通知被举报，点击查看详情
-                        <div class="message-action">
-                          <span class="common-tabel-svg error">
-                            <svg-icon icon-class='撤销'></svg-icon>撤销
-                          </span>
-                          <span class="common-tabel-svg app">
-                            <svg-icon icon-class='变更'></svg-icon>变更
-                          </span>
-                        </div>
+              <div class="message-area">
+                  <img :src="require('@/assets/imgs/message.png')">
+              </div>
+              <div class="message-info">
+                  <div class="h3">
+                    标题为“bcbcn”的通知被举报，点击查看详情
+                    <div class="message-action">
+                      <little-button name='撤销'></little-button>
+                      <little-button name='变更'></little-button>
                     </div>
-                    <div class="caozuo">
-                        <span class="reportColor">会议通知</span>
-                        <span class="info-detail">text01</span>
-                        <span class="info-detail">神航2部</span>
-                        <span class="info-time"> 2018-08-07 23:49:34</span>
-                    </div>
-                </div>
+                  </div>
+                  <div class="caozuo">
+                      <span class="reportColor">会议通知</span>
+                      <span class="info-detail">text01</span>
+                      <span class="info-detail">神航2部</span>
+                      <span class="info-time"> 2018-08-07 23:49:34</span>
+                  </div>
+              </div>
             </li>
         </ul>
         <div class="common-page">
@@ -80,7 +76,11 @@
     </div>
 </template>
 <script>
+import littleButton from "@/components/Button/littleButton";
 export default {
+  components: {
+    littleButton
+  },
   data() {
     return {
       pageNo: 1,

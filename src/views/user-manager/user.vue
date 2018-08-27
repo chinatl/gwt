@@ -39,19 +39,19 @@
                     </el-select>
                 </div>
                 <div class="part-action-right">
-                    排序：
-                    <span class="btn">
-                        <svg-icon icon-class='置顶'></svg-icon>
-                    </span>
-                    <span class="btn">
-                        <svg-icon icon-class='上箭头'></svg-icon>
-                    </span>
-                    <span class="btn">
-                        <svg-icon icon-class='下箭头'></svg-icon>
-                    </span>
-                    <span class="btn">
-                        <svg-icon icon-class='置底'></svg-icon>
-                    </span>
+                      排序：
+                      <span class="btn">
+                          <svg-icon icon-class='置顶'></svg-icon>
+                      </span>
+                      <span class="btn">
+                          <svg-icon icon-class='上箭头'></svg-icon>
+                      </span>
+                      <span class="btn">
+                          <svg-icon icon-class='下箭头'></svg-icon>
+                      </span>
+                      <span class="btn">
+                          <svg-icon icon-class='置底'></svg-icon>
+                      </span>
                       <el-button type="success" icon="el-icon-plus" size='medium' style="margin-left: 18px" @click="add_user">新增用户</el-button>
                 </div>
             </div>
