@@ -1,6 +1,8 @@
 <template>
   <section class="app-main">
       <transition name="fade" mode="out-in">
+      <!-- <transition name="el-zoom-in-center" mode="out-in"> -->
+      <!-- <transition name="el-zoom-in-top" mode="out-in"> -->
         <!-- <router-view :key="key"></router-view> -->
         <router-view></router-view>
       </transition>

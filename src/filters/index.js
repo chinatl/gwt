@@ -42,18 +42,13 @@ export function toThousandslsFilter(num) {
 }
 /* 计算文件大小 */
 export function fileSize(num, level = 'K') {
-  switch (level) {
-    case 'K':
-      return (num / 1024).toFixed(2) + ' KB';
-      break;
-    case 'M':
-      return (num / 1024 / 1024).toFixed(2) + ' MB';
-      break;
-    case 'G':
-      return (num / 1024 / 1024 / 1024).toFixed(2) + ' G';
-      break
-    default:
-      return ''
+  number = (num / 1024).toFixed(2);
+  if (number < 1000) {
+    return number + ' KB'
   };
-
-} 
+  number = (num / 1024 / 1024).toFixed(2);
+  if (number < 1000) {
+    return number + ' MB'
+  };
+  return (num / 1024 / 1024 / 1024).toFixed(2) + ' G';
+}

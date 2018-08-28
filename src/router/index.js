@@ -157,7 +157,7 @@ export const constantRouterMap = [
         path: 'resource',
         name: '应用管理',
         component: () => import('@/views/system-set/resource'),
-        meta: { title: '应用管理', up: true, },
+        meta: { title: '资源管理', up: true, },
         hidden: true
       },
       {
@@ -323,13 +323,13 @@ export const constantRouterMap = [
     ]
   },
   {
-    path: '/message-list',
+    path: '/mail-list',
     component: Layout,
     children: [
       {
         path: 'index',
         name: '通讯录',
-        component: () => import('@/views/my-message'),
+        component: () => import('@/views/mail-list'),
         meta: { title: '通讯录', icon: '通讯录' }
       }
     ]

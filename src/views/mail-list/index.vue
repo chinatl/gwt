@@ -1,33 +1,41 @@
 <template>
     <t-layout>
         <div slot="left">
-            <div class="user-role">
-                <el-button icon="el-icon-news" size="small" :type="current === 1 ? 'primary':'info'" @click="check_role(1)">发布权限</el-button>
-                <el-button icon="el-icon-message" size="small" :type="current === 2 ? 'primary':'info'" @click="check_role(2)">接收权限</el-button>
-                <el-button icon="el-icon-document" size="small" :type="current === 3 ? 'primary':'info'" @click="check_role(3)">阅读权限</el-button>
+            <div class="mail-list">
+                <el-button icon="el-icon-plus" size="small" type="success" @click="add_user">新增人员组</el-button>
+                <el-button icon="el-icon-plus" size="small" type="primary" @click="add_group">新增部门组</el-button>
             </div>
-            <div class="role-page-content common-temp">
+            <div class="mail-content common-temp">
                 <div class="main-input">
-                    <el-input size="small" v-model="keyword" placeholder="搜索部门名称"></el-input>
+                    <el-input size="small" v-model="keyword"></el-input>
                 </div>
                 <el-tree :data="data" :props="defaultProps" @node-click="handleNodeClick"></el-tree>
             </div>
         </div>
         <div slot="right">
-            <t-title>{{ current === 1 ? '跨部门通知权限' : current === 2 ? ' 通知接收权限' : '跨部门阅读权限'}}</t-title>
+           <t-title title="通讯录">
+               <div class="main-title">
+                   <el-input size="small" placeholder="请输入姓名/手机号/部门名称"></el-input>
+                   <el-button size="mini" type="primary" icon="el-icon-search">搜索</el-button>
+               </div>
+           </t-title>
+           <div class="desc-group">
+              <i class="el-icon-caret-right"></i>
+              <el-breadcrumb separator-class="el-icon-arrow-right">
+                <el-breadcrumb-item>卫生局</el-breadcrumb-item>
+                <el-breadcrumb-item>卫生局</el-breadcrumb-item>
+              </el-breadcrumb>
+              <span class="rename">
+                <i class="el-icon-edit-outline"></i>重命名 
+              </span>
+              <span class="delete">
+                <i class="el-icon-close"></i>删除
+              </span>
+            </div>
             <div class="common-action">
+                <arrow-button></arrow-button>
                 <div>
-                    <el-input size="medium" placeholder="请输入姓名/手机号"  v-model="select.keyword"  style="width:200px"></el-input>
-                    <el-button type="primary" icon="el-icon-search" size="medium"  style="margin-right:8px">搜索</el-button>
-                    <el-select size="medium" v-show="current === 2" v-model="select.type" style="width:120px">
-                        <el-option label="全部" value="0"></el-option>
-                        <el-option label="会议通知" value="1"></el-option>
-                        <el-option label="通知" value="2"></el-option>
-                        <el-option label="材料征集" value="3"></el-option>
-                    </el-select>
-                </div>
-                <div v-if='current === 2'>
-                    <el-button type="success" icon="el-icon-plus" size="medium"  style="margin-right:8px" @click="dialog = true">新增接收人</el-button>
+                  <el-button type="success" size="small">新增部门</el-button>
                 </div>
             </div>
             <div class="common-table">
@@ -35,11 +43,25 @@
                     :data="tableData"
                     border
                     style="width: 100%">
-                    <el-table-column prop="name" align="center" label="姓名"></el-table-column>
-                    <el-table-column prop="name" align="center" label="性别"></el-table-column>
-                    <el-table-column prop="name" align="center" label="人员级别"></el-table-column>
-                    <el-table-column prop="name" align="center" label="手机号码"></el-table-column>
-                    <el-table-column prop="name" align="center" label="固定电话"></el-table-column>
+                    <el-table-column
+                    prop="name"
+                    align="center"
+                    width="80"
+                    label="选择">
+                       <template slot-scope="scope">
+                          <el-checkbox v-model="scope.row.checked"></el-checkbox>
+                       </template>
+                    </el-table-column>
+                    <el-table-column
+                    prop="name"
+                    align="center"
+                    label="部门名称">
+                    </el-table-column>
+                    <el-table-column
+                    prop="type"
+                    align="center"
+                    label="部门">
+                    </el-table-column>
                     <el-table-column
                     prop="name"
                     label="操作"
@@ -50,37 +72,24 @@
                         <el-button
                         size="mini"
                         type="danger"
-                        icon="el-icon-minus"
-                        @click="handleDelete(scope.$index, scope.row)" v-if='Math.random() < .5'>删除</el-button>
-                        <el-button
-                        size="mini"
-                        type="success"
                         icon="el-icon-delete"
-                        @click="handleDelete(scope.$index, scope.row)" v-else>添加</el-button>
+                        @click="handleDelete(scope.$index, scope.row)">删除</el-button>
                     </template>
                     </el-table-column>
                 </el-table>
             </div>
-        </div> 
-        <template slot="else">
-            <add-user :show='dialog' @close='dialog = false'></add-user>
-        </template>
+        </div>
+        <template slot="else"></template>
     </t-layout>
 </template>
 <script>
 import arrowButton from "@/components/Button/arrowButton";
-import addUserButton from "@/components/Button/addUserButton";
-import addUser from "@/components/AddUser";
 export default {
   components: {
-    arrowButton,
-    addUserButton,
-    addUser
+    arrowButton
   },
   data() {
     return {
-      dialog: false,
-      current: 1, // 1.发布权限 2.接收权限 3.阅读权限
       keyword: "",
       defaultProps: {
         children: "children",
@@ -152,16 +161,10 @@ export default {
           name: "NB电子竞技俱乐部",
           type: "地市政府"
         }
-      ],
-      select: {
-        type: "0"
-      }
+      ]
     };
   },
   methods: {
-    check_role(index) {
-      this.current = index;
-    },
     handleNodeClick(data) {
       console.log(data);
     },
@@ -237,7 +240,7 @@ export default {
 };
 </script>
 <style rel="stylesheet/scss" lang="scss">
-.user-role {
+.mail-list {
   margin: 12px 20px;
   display: flex;
   button {
@@ -248,7 +251,7 @@ export default {
     }
   }
 }
-.role-page-content {
+.mail-content {
   margin: 0 20px;
   height: 550px;
   border: 1px solid #dcdfe6;
@@ -257,8 +260,7 @@ export default {
   padding: 6px;
   border-radius: 4px;
   .main-input {
-    margin-top: 2px;
-    margin-bottom: 10px;
+    margin-bottom: 6px;
   }
 }
 .main-title {

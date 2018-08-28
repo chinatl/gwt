@@ -55,6 +55,7 @@ import uploadButton from "@/components/Button/uploadButton";
 import addUserButton from "@/components/Button/addUserButton";
 import addUser from "@/components/AddUser";
 import addYield from "@/components/AddYield";
+// import localforage from "localforage";
 export default {
   components: {
     fileList,
@@ -84,6 +85,9 @@ export default {
       file_list: [],
       yield_dialog: false //部门管理弹窗
     };
+  },
+  created(){
+      
   },
   methods: {
     delete_file(index) {

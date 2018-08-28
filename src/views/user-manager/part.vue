@@ -13,25 +13,11 @@
     </div>
     <div slot="right">
         <t-title>部门管理</t-title>
-            <div class="part-action">
+            <div class="part-action between">
                 <div class="part-action-left">
                     当前位置：运城市
                 </div>
-                <div class="part-action-right">
-                  排序：
-                  <span class="btn">
-                      <svg-icon icon-class='置顶'></svg-icon>
-                  </span>
-                  <span class="btn">
-                      <svg-icon icon-class='上箭头'></svg-icon>
-                  </span>
-                  <span class="btn">
-                      <svg-icon icon-class='下箭头'></svg-icon>
-                  </span>
-                  <span class="btn">
-                      <svg-icon icon-class='置底'></svg-icon>
-                  </span>
-                </div>
+                <arrow-button></arrow-button>
             </div>
           <div class="common-table">
               <el-table
@@ -139,9 +125,11 @@
 </template>
 <script>
 import formButton from "@/components/Button/formButton";
+import arrowButton from "@/components/Button/arrowButton";
 export default {
   components: {
-    formButton
+    formButton,
+    arrowButton
   },
   data() {
     return {
@@ -558,26 +546,6 @@ export default {
     float: left;
     font-size: 14px;
     font-weight: 600;
-  }
-  .part-action-right {
-    float: right;
-    font-size: 13px;
-    .btn {
-      background-color: #23c6c8;
-      color: #fff;
-      padding: 6px;
-      font-size: 16px;
-      border-radius: 4px;
-      margin-left: 6px;
-      &:hover {
-        cursor: pointer;
-        background-color: rgba(35, 198, 200, 0.8);
-      }
-      &:active {
-        cursor: pointer;
-        background-color: rgba(35, 198, 200, 1);
-      }
-    }
   }
 }
 </style>

@@ -54,24 +54,12 @@
             </div>
             <div class="common-action">
                 <div>
-                    <el-input v-model="input" placeholder="请输入部门名称" style="width:200px" size='medium'></el-input>
-                    <el-button type="primary" icon="el-icon-search" size='medium'>搜索</el-button>
+                    <el-input v-model="input" placeholder="请输入部门名称" style="width:200px" size='small'></el-input>
+                    <el-button type="primary" icon="el-icon-search" size='small'>搜索</el-button>
                 </div>
                 <div>
-                    排序：
-                    <span class="btn">
-                        <svg-icon icon-class='置顶'></svg-icon>
-                    </span>
-                    <span class="btn">
-                        <svg-icon icon-class='上箭头'></svg-icon>
-                    </span>
-                    <span class="btn">
-                        <svg-icon icon-class='下箭头'></svg-icon>
-                    </span>
-                    <span class="btn">
-                        <svg-icon icon-class='置底'></svg-icon>
-                    </span>
-                    <el-button type="success" icon="el-icon-plus" size='medium' @click="add_part">添加部门</el-button>
+                    <arrow-button></arrow-button>
+                    <el-button type="success" icon="el-icon-plus" size='small' @click="add_part" style="margin-left:10px">添加部门</el-button>
                 </div>
             </div>
             <div class="common-table">
@@ -159,11 +147,13 @@
 <script>
 import { mapGetters } from "vuex";
 import formButton from "@/components/Button/formButton";
+import arrowButton from "@/components/Button/arrowButton";
 import AddPart from "@/components/AddPart";
 export default {
   components: {
     formButton,
-    AddPart
+    AddPart,
+    arrowButton
   },
   data() {
     return {
@@ -232,7 +222,7 @@ export default {
 </script>
 
 
-<style rel="stylesheet/scss" lang="scss" >
+<style rel="stylesheet/scss" lang="scss">
 .field-desc {
   background-color: #fff;
   border-radius: 6px;
@@ -326,22 +316,6 @@ export default {
     .svg-icon {
       margin-right: 4px;
     }
-  }
-}
-.btn {
-  background-color: #23c6c8;
-  color: #fff;
-  padding: 6px;
-  font-size: 16px;
-  border-radius: 4px;
-  margin-left: 6px;
-  &:hover {
-    cursor: pointer;
-    background-color: rgba(35, 198, 200, 0.8);
-  }
-  &:active {
-    cursor: pointer;
-    background-color: rgba(35, 198, 200, 1);
   }
 }
 </style>
