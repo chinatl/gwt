@@ -19,7 +19,7 @@
                 <span class="span2">非法</span>
             </p>
             <p>
-                <el-button type="primary" size="medium" @click="report_desc">查看详情</el-button>
+                <el-button type="primary" size="medium" @click="report_desc" v-wave>查看详情</el-button>
             </p>
         </div>
     </div>

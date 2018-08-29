@@ -22,7 +22,7 @@
                     :picker-options="pickerOptions">
                 </el-date-picker>
                 <el-input v-model="input" placeholder="请输入域名称" style="width:200px" size='medium'></el-input>
-                <el-button type="primary" icon="el-icon-search" size='medium'>搜索</el-button>
+                <el-button type="primary" icon="el-icon-search" size='medium' v-wave>搜索</el-button>
             </div>
         </div>
         <ul class="message-list">
@@ -63,6 +63,7 @@
         <el-dialog
         :visible.sync="del_dialog"
         width="40%"
+        v-drag
         :before-close="handleClose">
             <div class="dialog-content">
                 <h3>您确定要删除的信息吗?</h3>

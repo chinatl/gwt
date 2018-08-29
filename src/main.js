@@ -98,7 +98,13 @@ import * as filters from './filters' // global filters
 Object.keys(filters).forEach(key => {
   Vue.filter(key, filters[key])
 });
-
+//注册一个弹框可拖拽的指令
+import Drag from "@/directive/el-dragDialog"
+Vue.directive('drag',Drag);
+//注册一个按钮波纹动画
+import Wave from "@/directive/waves"
+Vue.directive('wave',Wave);
+//住
 
 // import '@/permission' // permission control
 import '@/session'

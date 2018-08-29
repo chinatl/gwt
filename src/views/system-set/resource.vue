@@ -4,7 +4,7 @@
             <t-title title=" 本地资源"></t-title>
             <div class="padding20 resource-title">
                 应用名称：<span class="resource-name">公务通</span>
-                <span class="add-title" @click="add_resource"><el-button type="success" size='small' icon="el-icon-plus">添加</el-button></span>
+                <span class="add-title" @click="add_resource"><el-button type="success" size='small' icon="el-icon-plus" v-wave>添加</el-button></span>
             </div>
             <div class="common-table">
                 <el-table
@@ -28,8 +28,8 @@
                     align="center"
                     >
                       <template slot-scope="scope">
-                        <el-button type="primary" size='mini' @click.native="edit_resource">修改</el-button>
-                        <el-button type="danger" size='mini'>删除</el-button>
+                        <el-button type="primary" size='mini' @click.native="edit_resource" v-wave>修改</el-button>
+                        <el-button type="danger" size='mini' v-wave>删除</el-button>
                       </template>
                     </el-table-column>
                 </el-table>
@@ -42,7 +42,7 @@
                 <el-form-item label="功能获取地址：" prop='name'>
                     <div class="flex">
                         <el-input v-model="url" size="small" readonly></el-input>
-                        <el-button size="small" icon="el-icon-edit-outline" type="primary" @click="get_function">获取功能</el-button>
+                        <el-button size="small" icon="el-icon-edit-outline" type="primary" @click="get_function" v-wave>获取功能</el-button>
                     </div>
                 </el-form-item>
                 <form-button @cancel='onCancel' @submit="onSubmit"></form-button>

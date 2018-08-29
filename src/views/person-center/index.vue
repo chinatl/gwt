@@ -2,7 +2,7 @@
     <div>
         <div class="common">
             <t-title title="基本信息">
-                <el-button style="float:right" size='small' type="success">编辑</el-button>
+                <el-button style="float:right" size='small' type="success" v-wave>编辑</el-button>
             </t-title>
             <div class="page-form" style="width:700px">
                 <el-form label-width="120px">
@@ -46,11 +46,11 @@
                     </el-form-item>
                     <el-form-item label="手机号：" class="page-form-item">
                         135****0721
-                        <el-button type="success" size="mini" icon="el-icon-edit-outline" @click="password_first_visible = true">编辑</el-button>
+                        <el-button type="success" size="mini" icon="el-icon-edit-outline" @click="password_first_visible = true" v-wave>编辑</el-button>
                     </el-form-item>
                     <el-form-item label="密码：" class="page-form-item">
                         ************************
-                        <el-button type="success" size="mini" icon="el-icon-edit-outline" @click="role_visible = true">编辑</el-button>
+                        <el-button type="success" size="mini" icon="el-icon-edit-outline" @click="role_visible = true" v-wave>编辑</el-button>
                     </el-form-item>
                 </el-form>
             </div>
@@ -82,7 +82,7 @@
         <el-dialog
             title="为了保证公务通账号的安全，请验证账号和密码"
             class="common-dialog"
-            center
+            center v-drag
             :visible.sync="password_first_visible">
             <el-form ref="form" :model="form" label-width="80px" :rules="rules">
                 <el-form-item label="密码" prop='name'>
@@ -94,7 +94,7 @@
         <!-- 修改手机号第二步 -->
         <el-dialog
             title="手机号绑定"
-            class="common-dialog"
+            class="common-dialog" v-drag
             @close="close_second_visible"
             center
             :visible.sync="password_second_visible">
@@ -109,7 +109,7 @@
             </el-form>
         </el-dialog>
         <!-- 上传图片弹框 -->
-        <el-dialog :visible.sync="upload_img_dialog" title="头像修改" class="upload-img-dialog">
+        <el-dialog :visible.sync="upload_img_dialog" title="头像修改" class="upload-img-dialog" v-drag>
             <upload-button  @on-change="select_img">上传图片</upload-button>
             <div class="preview-action">
                 <div class="show-transparent">
@@ -155,7 +155,7 @@
         <el-dialog
             title="修改密码"
             class="common-dialog"
-            :visible.sync="role_visible">
+            :visible.sync="role_visible" v-drag>
             <el-form ref="form" :model="form" label-width="80px" :rules="rules">
                 <el-form-item label="原密码" prop='name'>
                     <el-input v-model="form.name" size="small" placeholder="请输入原密码"></el-input>

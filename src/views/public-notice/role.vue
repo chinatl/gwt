@@ -2,9 +2,9 @@
     <t-layout>
         <div slot="left">
             <div class="user-role">
-                <el-button icon="el-icon-news" size="small" :type="current === 1 ? 'primary':'info'" @click="check_role(1)">发布权限</el-button>
-                <el-button icon="el-icon-message" size="small" :type="current === 2 ? 'primary':'info'" @click="check_role(2)">接收权限</el-button>
-                <el-button icon="el-icon-document" size="small" :type="current === 3 ? 'primary':'info'" @click="check_role(3)">阅读权限</el-button>
+                <el-button icon="el-icon-news" size="small" :type="current === 1 ? 'primary':'info'" @click="check_role(1)" v-wave>发布权限</el-button>
+                <el-button icon="el-icon-message" size="small" :type="current === 2 ? 'primary':'info'" @click="check_role(2)" v-wave>接收权限</el-button>
+                <el-button icon="el-icon-document" size="small" :type="current === 3 ? 'primary':'info'" @click="check_role(3)" v-wave>阅读权限</el-button>
             </div>
             <div class="role-page-content common-temp">
                 <div class="main-input">
@@ -18,7 +18,7 @@
             <div class="common-action">
                 <div>
                     <el-input size="medium" placeholder="请输入姓名/手机号"  v-model="select.keyword"  style="width:200px"></el-input>
-                    <el-button type="primary" icon="el-icon-search" size="medium"  style="margin-right:8px">搜索</el-button>
+                    <el-button type="primary" icon="el-icon-search" size="medium"  style="margin-right:8px" v-wave>搜索</el-button>
                     <el-select size="medium" v-show="current === 2" v-model="select.type" style="width:120px">
                         <el-option label="全部" value="0"></el-option>
                         <el-option label="会议通知" value="1"></el-option>
@@ -27,7 +27,7 @@
                     </el-select>
                 </div>
                 <div v-if='current === 2'>
-                    <el-button type="success" icon="el-icon-plus" size="medium"  style="margin-right:8px" @click="dialog = true">新增接收人</el-button>
+                    <el-button type="success" icon="el-icon-plus" size="medium"  style="margin-right:8px" @click="dialog = true" v-wave>新增接收人</el-button>
                 </div>
             </div>
             <div class="common-table">
@@ -51,12 +51,12 @@
                         size="mini"
                         type="danger"
                         icon="el-icon-minus"
-                        @click="handleDelete(scope.$index, scope.row)" v-if='Math.random() < .5'>删除</el-button>
+                        @click="handleDelete(scope.$index, scope.row)" v-if='Math.random() < .5' v-wave>删除</el-button>
                         <el-button
                         size="mini"
                         type="success"
                         icon="el-icon-delete"
-                        @click="handleDelete(scope.$index, scope.row)" v-else>添加</el-button>
+                        @click="handleDelete(scope.$index, scope.row)" v-else v-wave>添加</el-button>
                     </template>
                     </el-table-column>
                 </el-table>

@@ -5,9 +5,9 @@
           <el-input v-model="input" placeholder="请输入查询条件"  size='medium' style="width:100%"></el-input>
       </div>
       <div class="part-flex">
-          <el-button type="success" size="small"  icon="el-icon-plus">新增</el-button>
-          <el-button type="warning" size="small"  icon="el-icon-edit-outline">编辑</el-button>
-          <el-button type="danger" size="small"  icon="el-icon-delete">删除</el-button>
+          <el-button type="success" size="small"  icon="el-icon-plus" v-wave>新增</el-button>
+          <el-button type="warning" size="small"  icon="el-icon-edit-outline" v-wave>编辑</el-button>
+          <el-button type="danger" size="small"  icon="el-icon-delete" v-wave>删除</el-button>
       </div>
       <div class="part-content common-temp">
           <ul class="data-ul-list">
@@ -24,9 +24,9 @@
           <el-input v-model="input" placeholder="请输入查询条件"  size='medium' style="width:100%"></el-input>
           </div>
           <div class="part-flex">
-              <el-button type="success" size="small"  icon="el-icon-plus">新增</el-button>
-              <el-button type="warning" size="small"  icon="el-icon-edit-outline">编辑</el-button>
-              <el-button type="danger" size="small"  icon="el-icon-delete">删除</el-button>
+              <el-button type="success" size="small"  icon="el-icon-plus" v-wave>新增</el-button>
+              <el-button type="warning" size="small"  icon="el-icon-edit-outline" v-wave>编辑</el-button>
+              <el-button type="danger" size="small"  icon="el-icon-delete" v-wave>删除</el-button>
           </div>
           <div class="part-content common-temp" style="height:490px">
               <el-tree :data="data" :props="defaultProps" @node-click="handleNodeClick"></el-tree>
@@ -50,7 +50,7 @@
                       <el-input v-model="form.name" size="small"></el-input>
                   </el-form-item>
                   <el-form-item align='right'>
-                      <el-button type="primary" @click="onSubmit" size="small">确定</el-button>
+                      <el-button type="primary" @click="onSubmit" size="small" v-wave>确定</el-button>
                   </el-form-item>
               </el-form>
           </div>

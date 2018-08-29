@@ -146,7 +146,8 @@ if (config.build.productionGzip) {
         '\\.(' + config.build.productionGzipExtensions.join('|') + ')$'
       ),
       threshold: 10240,
-      minRatio: 0.8
+      minRatio: 0.8,
+      deleteOriginalAssets :true, //删除源文件，不建议
     })
   )
 }

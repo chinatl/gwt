@@ -22,8 +22,8 @@
                     :picker-options="pickerOptions">
                 </el-date-picker>
                 <el-input v-model="input" placeholder="请输入域名称" style="width:200px" size='medium'></el-input>
-                <el-button type="primary" icon="el-icon-search" size='medium'>搜索</el-button>
-                <el-button type="warning" icon="el-icon-circle-close" size='medium'>已删除通知</el-button>
+                <el-button type="primary" icon="el-icon-search" size='medium' v-wave>搜索</el-button>
+                <el-button type="warning" icon="el-icon-circle-close" size='medium' v-wave>已删除通知</el-button>
             </div>
         </div>
         <div class="common-table">
@@ -46,7 +46,7 @@
                     size="mini"
                     type="danger"
                     icon="el-icon-delete"
-                    @click="handleDelete(scope.$index, scope.row)">删除</el-button>
+                    @click="handleDelete(scope.$index, scope.row)" v-wave>删除</el-button>
                 </template>
                 </el-table-column>
             </el-table>

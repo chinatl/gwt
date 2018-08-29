@@ -4,10 +4,10 @@
         <div class="common-action">
             <div>
                 <el-input v-model="input" placeholder="请输入角色名称" style="width:200px" size='medium'></el-input>
-                <el-button type="primary" icon="el-icon-search" size='medium'>搜索</el-button>
+                <el-button type="primary" icon="el-icon-search" size='medium' v-wave>搜索</el-button>
             </div>
             <div>
-                <el-button type="success" icon="el-icon-plus" size='medium' @click="add_role">新增角色</el-button>
+                <el-button type="success" icon="el-icon-plus" size='medium' @click="add_role" v-wave>新增角色</el-button>
             </div>
         </div>
         <div class="common-table">
@@ -30,12 +30,12 @@
                     size="mini"
                     type='success'
                     icon="el-icon-edit-outline"
-                    @click="edit_role(scope.$index, scope.row)">编辑</el-button>
+                    @click="edit_role(scope.$index, scope.row)" v-wave>编辑</el-button>
                     <el-button
                     size="mini"
                     type="danger"
                     icon="el-icon-delete"
-                    @click="handleDelete(scope.$index, scope.row)">删除</el-button>
+                    @click="handleDelete(scope.$index, scope.row)" v-wave>删除</el-button>
                 </template>
                 </el-table-column>
             </el-table>
@@ -56,6 +56,7 @@
             <el-dialog
             :title="role_type === 'add' ? '新增角色':'编辑角色'"
             class="common-dialog padding0"
+            v-drag
             :visible.sync="role_visible">
             <el-form ref="form" :model="form" label-width="80px" :rules="rules"  class="demo-ruleForm">
                 <el-form-item label="角色名称" prop='name'>

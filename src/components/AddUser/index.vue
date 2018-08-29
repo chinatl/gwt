@@ -1,5 +1,5 @@
 <template>
-<el-dialog :visible.sync="dialog" title='添加联系人' class="select-user-dialog">
+<el-dialog :visible.sync="dialog" title='添加联系人' class="select-user-dialog" v-drag>
     <div class="select-user-container">
         <div class="select-left">
             <div class="select-part-top">
@@ -62,8 +62,8 @@
         </div>
     </div>
     <div class="select-action-button">
-        <el-button size="small" @click="save_message">取消</el-button>
-        <el-button type="primary" @click="onSubmit" size="small">确定</el-button>
+        <el-button size="small" @click="save_message" v-wave>取消</el-button>
+        <el-button type="primary" @click="onSubmit" size="small" v-wave>确定</el-button>
     </div>
 </el-dialog>
 </template>

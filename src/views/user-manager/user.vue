@@ -31,7 +31,7 @@
             <div class="part-action">
                 <div class="part-action-left">
                     <el-input v-model="inputs" placeholder="请输入姓名/手机号" style="width:160px" size='medium'></el-input>
-                    <el-button type="primary" icon="el-icon-search" size='medium' style="margin:0 8px">搜索</el-button>
+                    <el-button type="primary" icon="el-icon-search" size='medium' style="margin:0 8px" v-wave>搜索</el-button>
                     <el-select v-model="status" size="medium" style="width:80px">
                         <el-option label="全部" value="1"></el-option>
                         <el-option label="启用" value="3"></el-option>
@@ -40,7 +40,7 @@
                 </div>
                 <div class="part-action-right">
                       <arrow-button></arrow-button>
-                      <el-button type="success" icon="el-icon-plus" size='medium' style="margin-left: 18px" @click="add_user">新增用户</el-button>
+                      <el-button type="success" icon="el-icon-plus" size='medium' style="margin-left: 18px" @click="add_user" v-wave>新增用户</el-button>
                 </div>
             </div>
             <div class="common-table">
@@ -124,6 +124,7 @@
         slot="else"
         :title="user_type ==='add' ?'添加用户':'编辑用户'"
         class="common-dialog"
+        v-drag
         :visible.sync="user_visible">
         <el-form ref="form" :model="form" label-width="80px" :rules="rules"  class="demo-ruleForm">
             <el-form-item label="用户名">
@@ -170,8 +171,8 @@
                 <el-input type="textarea" v-model="form.desc" :autosize="{ minRows: 4, maxRows: 6}"></el-input>
             </el-form-item>
                 <el-form-item align='right'>
-                <el-button size="small">取消</el-button>
-                <el-button type="primary" @click="onSubmit" size="small">确定</el-button>
+                <el-button size="small" v-wave>取消</el-button>
+                <el-button type="primary" @click="onSubmit" size="small" v-wave>确定</el-button>
             </el-form-item>
         </el-form>
     </el-dialog>

@@ -4,7 +4,7 @@
       <div class="common-action">
           <div>
               <el-input v-model="input" placeholder="请输入部门名称"  size='medium' style="width:100%"></el-input>
-              <el-button type="success" icon="el-icon-plus" size='medium' @click="add_part" style="padding:10px 10px">新增部门</el-button>
+              <el-button type="success" icon="el-icon-plus" size='medium' @click="add_part" style="padding:10px 10px" v-wave>新增部门</el-button>
           </div>
         </div>
         <div class="part-content common-temp">
@@ -59,12 +59,12 @@
                       size="mini"
                       type="success"
                       icon="el-icon-edit-outline"
-                      @click="handle_edit(scope.$index, scope.row)">编辑</el-button>
+                      @click="handle_edit(scope.$index, scope.row)" v-wave>编辑</el-button>
                       <el-button
                       size="mini"
                       type="danger"
                       icon="el-icon-delete"
-                      @click="handle_delete(scope.$index, scope.row)">删除</el-button>
+                      @click="handle_delete(scope.$index, scope.row)" v-wave>删除</el-button>
                   </template>
                   </el-table-column>
               </el-table>
@@ -85,7 +85,7 @@
         <!-- 弹窗 -->
 <div class="common-dialog" slot="else">
 <el-dialog
-:title="part_type ==='add' ?'新增部门':'编辑部门'"
+:title="part_type ==='add' ?'新增部门':'编辑部门'" v-drag
 :visible.sync="edit_visible">
 <el-form ref="form" :model="form" label-width="80px" :rules="rules"  class="demo-ruleForm">
 <el-form-item label="所属区域" prop='city'>

@@ -9,7 +9,7 @@
             </div>
             <div>
                 <el-input v-model="input" placeholder="请输入应用名称" style="width:200px" size='medium'></el-input>
-                <el-button type="primary" icon="el-icon-search" size='medium'>搜索</el-button>
+                <el-button type="primary" icon="el-icon-search" size='medium' v-wave>搜索</el-button>
                 <el-button type="success" icon="el-icon-plus" size='medium' @click="add_role">新增应用</el-button>
             </div>
         </div>
@@ -82,6 +82,7 @@
             <el-dialog
             :title="role_type === 'add' ? '新增应用':'编辑应用'"
             class="common-dialog"
+            v-drag
             :visible.sync="role_visible">
             <el-form ref="form" :model="form" label-width="120px" :rules="rules"  class="demo-ruleForm">
                 <el-form-item label="应用图标">

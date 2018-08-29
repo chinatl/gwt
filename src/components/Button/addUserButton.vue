@@ -1,5 +1,5 @@
 <template>
-    <el-button :size='size' :type="type" :icon="icon" @click="click" class="add-user-button"><slot></slot></el-button>
+    <el-button :size='size' :type="type" :icon="icon" @click="click" class="add-user-button" v-wave><slot></slot></el-button>
 </template>
 <script>
 export default {

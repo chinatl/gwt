@@ -6,8 +6,8 @@
               <span style="color:rgb(103, 106, 108);font-weight:600;font-size:16px">神航2部</span>
             </div>
             <div>
-                <el-button type="primary" icon="el-icon-download" size='medium'>下载</el-button>
-                <el-button type="danger" icon="el-icon-close" size='medium'>删除</el-button>
+                <el-button type="primary" icon="el-icon-download" size='medium' v-wave>下载</el-button>
+                <el-button type="danger" icon="el-icon-close" size='medium' v-wave>删除</el-button>
             </div>
         </div>
         <div class="disk-cloud-router">

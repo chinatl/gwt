@@ -40,8 +40,8 @@
                         <el-checkbox v-model="form.checked"><span>我已确认本通知不含涉密信息</span></el-checkbox>
                     </el-form-item>
                     <el-form-item align='right'>
-                        <el-button size="small" @click="save_message">保持草稿</el-button>
-                        <el-button type="primary" @click="onSubmit" size="small">确定</el-button>
+                        <el-button size="small" @click="save_message" v-wave>保持草稿</el-button>
+                        <el-button type="primary" @click="onSubmit" size="small" v-wave>发送</el-button>
                     </el-form-item>
             </el-form>
         </div>

@@ -46,7 +46,7 @@
                 <el-breadcrumb-item>卫生局</el-breadcrumb-item>
               </el-breadcrumb>
               <span class="rename" @click="update_grounp">
-                <i class="el-icon-edit-outline"></i>重命名 
+                <i class="el-icon-edit-outline"></i>重命名
               </span>
               <span class="delete">
                 <i class="el-icon-close"></i>删除

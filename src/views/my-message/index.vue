@@ -1,8 +1,6 @@
 <template>
     <div class="my-message">
-        <div class="common-title">
-            我的消息
-        </div> 
+        <t-title>我的消息</t-title>
         <ul class="message-list">
             <li v-for="(item,index) in [1,2,3]" :key="index" @click="$router.push({path:'desc'})">
                 <div class="message-area">
@@ -35,11 +33,15 @@
     </div>
 </template>
 <script>
+//import * as Driver from "driver.js"; // import driver.js
+//import "driver.js/dist/driver.min.css"; // import driver.js css
+//import steps from "./defineSteps";
 export default {
   data() {
     return {
       pageNo: 1,
-      pageSize: 5
+      pageSize: 5,
+      driver: null
     };
   },
   methods: {

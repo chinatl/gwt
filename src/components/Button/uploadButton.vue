@@ -4,7 +4,7 @@
     :on-change="upload_img"
     :show-file-list="false"
     :auto-upload="false">
-        <el-button :size='size' :type="type" :icon="icon">
+        <el-button :size='size' :type="type" :icon="icon" v-wave>
             <slot></slot>
         </el-button>
     </el-upload>
