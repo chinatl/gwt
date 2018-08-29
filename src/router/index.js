@@ -31,14 +31,7 @@ export const constantRouterMap = [
   },
   {
     path: '/',
-    component: Layout,
-    redirect: '/message/index',
-    name: '主页',
-    hidden: true,
-    children: [{
-      path: '主页',
-      component: () => import('@/views/dashboard/index')
-    }]
+    redirect: '/login'
   },
 
 
@@ -376,6 +369,7 @@ export const constantRouterMap = [
 
 export default new Router({
   // mode: 'history', //后端支持可开
+  mode: process.env.NODE_ENV === 'development' ? 'hash' : 'history',
   scrollBehavior: () => ({ y: 0 }),
   routes: constantRouterMap
 })

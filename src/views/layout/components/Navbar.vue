@@ -35,7 +35,7 @@ import { mapGetters } from "vuex";
 import Breadcrumb from "@/components/Breadcrumb";
 import Hamburger from "@/components/Hamburger";
 import ScrollPane from "@/components/ScrollPane";
-import tagsView from "./TagsView"
+import tagsView from "./TagsView";
 
 export default {
   components: {
@@ -64,12 +64,15 @@ export default {
       }
     }
   },
-
   methods: {
     has_command(e) {
       if (e === "user") {
         this.$router.push({
           path: "/person-center/index"
+        });
+      } else {
+        this.$router.push({
+          path: "/login"
         });
       }
     },

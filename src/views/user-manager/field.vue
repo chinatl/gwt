@@ -55,6 +55,7 @@
         <el-dialog
             title="新增域"
             class="common-dialog padding0"
+            v-drag
             :visible.sync="role_visible">
             <el-form ref="form" :model="form" label-width="80px" :rules="rules"  class="demo-ruleForm">
                 <el-form-item label="域名称" prop='name'>

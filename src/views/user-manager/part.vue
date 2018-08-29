@@ -1,10 +1,10 @@
 <template>
 <t-layout>
     <div slot="left">
-      <div class="common-action">
+        <div class="common-action">
           <div>
-              <el-input v-model="input" placeholder="请输入部门名称"  size='medium' style="width:100%"></el-input>
-              <el-button type="success" icon="el-icon-plus" size='medium' @click="add_part" style="padding:10px 10px" v-wave>新增部门</el-button>
+            <el-input v-model="input" placeholder="请输入部门名称"  size='medium' style="width:100%"></el-input>
+            <el-button type="success" icon="el-icon-plus" size='medium' @click="add_part" style="padding:10px 10px;overflow:hidden;width:130px" v-wave>新增部门</el-button>
           </div>
         </div>
         <div class="part-content common-temp">

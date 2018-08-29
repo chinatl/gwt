@@ -1,6 +1,7 @@
 <template>
     <div class="my-message">
         <t-title>我的消息</t-title>
+        <!-- <el-button @click.prevent.stop="dasdsad">adasdada</el-button> -->
         <ul class="message-list">
             <li v-for="(item,index) in [1,2,3]" :key="index" @click="$router.push({path:'desc'})">
                 <div class="message-area">
@@ -33,9 +34,10 @@
     </div>
 </template>
 <script>
-//import * as Driver from "driver.js"; // import driver.js
-//import "driver.js/dist/driver.min.css"; // import driver.js css
-//import steps from "./defineSteps";
+// import * as Driver from "driver.js"; // import driver.js
+// import "driver.js/dist/driver.min.css"; // import driver.js css
+// import steps from "./defineSteps";
+
 export default {
   data() {
     return {
@@ -44,7 +46,14 @@ export default {
       driver: null
     };
   },
+  mounted() {
+    // this.driver = new Driver();
+  },
   methods: {
+    // dasdsad() {
+    //   this.driver.defineSteps(steps);
+    //   this.driver.start();
+    // },
     handleSizeChange(e) {},
     handleCurrentChange(e) {},
     del_one_list(index) {

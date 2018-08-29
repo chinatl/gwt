@@ -4,13 +4,13 @@
         <div class="common-action">
             <div class="disk-cloud">
                 <upload-button icon="el-icon-upload2" @on-change="upload_img" size='medium' type="success" >上传</upload-button>
-                <el-button type="success" icon="el-icon-plus" size='medium'>新建文件夹</el-button>
-                <el-button type="primary" icon="el-icon-download" size='medium'>下载</el-button>
-                <el-button type="danger" icon="el-icon-close" size='medium'>删除</el-button>
+                <el-button type="success" icon="el-icon-plus" size='medium' v-wave>新建文件夹</el-button>
+                <el-button type="primary" icon="el-icon-download" size='medium' v-wave>下载</el-button>
+                <el-button type="danger" icon="el-icon-close" size='medium' v-wave>删除</el-button>
             </div>
             <div>
-                 <el-input v-model="input" placeholder="请输入文件名" style="width:240px" size='medium'></el-input>
-                <el-button type="primary" icon="el-icon-search" size='medium'>搜索</el-button>
+                <el-input v-model="input" placeholder="请输入文件名" style="width:240px" size='medium'></el-input>
+                <el-button type="primary" icon="el-icon-search" size='medium' v-wave>搜索</el-button>
             </div>
         </div>
         <div class="disk-cloud-router">

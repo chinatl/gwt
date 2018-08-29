@@ -28,10 +28,7 @@
                     <el-form-item align='left'>
                         <el-checkbox v-model="form.checked"><span>我已确认本通知不含涉密信息</span></el-checkbox>
                     </el-form-item>
-                    <el-form-item align='right'>
-                        <el-button size="small" @click="save_message" v-wave>保持草稿</el-button>
-                        <el-button type="primary" @click="onSubmit" size="small" v-wave>发送</el-button>
-                    </el-form-item>
+                    <form-button cancel_name='保持草稿' submit_name='发送'></form-button>
             </el-form>
         </div>
         <add-yield :show="yield_dialog" @ok='yield_dialog = false' @close='yield_dialog = false'></add-yield>
@@ -42,6 +39,7 @@
 import fileList from "@/components/FileList";
 import uploadButton from "@/components/Button/uploadButton";
 import addUserButton from "@/components/Button/addUserButton";
+import formButton from "@/components/Button/formButton";
 import addUser from "@/components/AddUser";
 import addYield from "@/components/AddYield";
 export default {
@@ -50,7 +48,8 @@ export default {
     addUser,
     uploadButton,
     addYield,
-    addUserButton
+    addUserButton,
+    formButton
   },
   data() {
     return {

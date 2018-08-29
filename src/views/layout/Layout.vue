@@ -6,6 +6,10 @@
       <nav-bar></nav-bar>
       <app-main></app-main>
     </div>
+    <div class="main-footer">
+      © 2017-2020
+      <span>电子政务办  神航星云 联合出品</span>
+    </div>
   </div>
 </template>
 
@@ -66,5 +70,26 @@ export default {
   height: 100%;
   position: absolute;
   z-index: 999;
+}
+.main-footer {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  height: 36px;
+  line-height: 36px;
+  text-align: right;
+  background: none repeat scroll 0 0 #fff;
+  border-top: 1px solid #e7eaec;
+  font-size: 13px;
+  padding-right: 20px;
+  color: #676a6c;
+  span {
+    color: #337ab7;
+    cursor: pointer;
+    &:hover {
+      color: #37aeeb;
+    }
+  }
 }
 </style>

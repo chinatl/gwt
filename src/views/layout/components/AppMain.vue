@@ -28,5 +28,8 @@ export default {
   overflow: hidden;
   padding: 100px 30px 20px 30px;
   background-color: #f3f3f4;
+  height: 100%;
+  width: 100%;
+  overflow: auto;
 }
 </style>

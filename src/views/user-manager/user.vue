@@ -4,7 +4,7 @@
         <div class="padding20">
             <el-input v-model="input" placeholder="请输入部门名称"  size='medium' style="width:100%"></el-input>
         </div>
-        <div class="part-content common-temp">
+        <div class="part-content common-temp scrollbar">
             <el-tree :data="data" :props="defaultProps" @node-click="handleNodeClick"></el-tree>
         </div>
     </div>
@@ -595,6 +595,7 @@ export default {
   box-sizing: border-box;
   padding: 4px;
   border-radius: 4px;
+  overflow: auto;
 }
 
 .part-top {
