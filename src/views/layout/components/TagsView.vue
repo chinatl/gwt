@@ -96,7 +96,7 @@ export default {
           if (latestView) {
             this.$router.push(latestView)
           } else {
-            this.$router.push('/')
+            this.$router.push('/message/index')
           }
         }
       })
@@ -109,7 +109,7 @@ export default {
     },
     closeAllTags() {
       this.$store.dispatch('delAllViews')
-      this.$router.push('/')
+      this.$router.push('/message/index')
     },
     openMenu(tag, e) {
       this.visible = true

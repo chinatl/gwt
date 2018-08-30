@@ -1,5 +1,5 @@
 <template>
-  <div class="login-container">
+  <div class="login-container" :style="note1">
     <div class="login-form">
       <div class="login-img" :style="note"></div>
       <el-form  :model="loginForm" :rules="loginRules" ref="loginForm" v-loading='loading'>
@@ -17,7 +17,9 @@
             </i>
           </el-input>
         </el-form-item>
-        <p class="forget-pwd">忘记密码了？</p>
+        <p class="forget-pwd">
+          <span @click="$router.push({path:'/forgetpwd/phone'})">忘记密码了？</span>
+        </p>
         <el-form-item>
           <el-button type="primary" class="login-button" size="medium" @click="handleLogin">登录</el-button>
         </el-form-item>
@@ -25,31 +27,31 @@
     </div>
     <div class="login-qrcode">
         <div class="qrcode-block">
-          <vue-qr :size="100" text="Hello world!" :margin='2'></vue-qr>
+          <div id="and_qrcode" ref="and_qrcode"></div>
           <div class="phone-btn">
             <svg-icon icon-class='Android'></svg-icon>
             <span>iphone</span>
           </div>
         </div>
         <div class="qrcode-block">
-          <vue-qr :size="100" text="Hello world!" :margin='2'></vue-qr>
+          <div id="app_qrcode" ref="app_qrcode"></div>
           <div class="phone-btn">
             <svg-icon icon-class='Iphone'></svg-icon>
             <span>iphone</span>
           </div>
         </div>
     </div>
+    <div class="copy">© 2017-2020 电子政务办 & 神航星云 联合出品</div>
   </div>
 </template>
 
 <script>
 import { isvalidUsername } from "@/utils/validate";
-import VueQr from "vue-qr";
+import QRCode from "qrcodejs2";
+
 export default {
   name: "login",
-  components: {
-    VueQr
-  },
+  components: { QRCode },
   data() {
     const validateUsername = (rule, value, callback) => {
       if (!value) {
@@ -73,6 +75,9 @@ export default {
       note: {
         backgroundImage: "url(" + require("@/assets/imgs/logo2.png") + ")"
       },
+      note1: {
+        backgroundImage: "url(" + require("@/assets/imgs/bodybg.jpg") + ")"
+      },
       loginRules: {
         username: [
           { required: true, trigger: "blur", validator: validateUsername }
@@ -83,7 +88,27 @@ export default {
       pwdType: "password"
     };
   },
+  created() {
+    this.$nextTick(() => {
+      this.app_qrcode();
+      this.and_qrcode();
+    });
+  },
   methods: {
+    app_qrcode() {
+      let qrcode = new QRCode("app_qrcode", {
+        width: 100, // 设置宽度
+        height: 100, // 设置高度
+        text: "hello world"
+      });
+    },
+    and_qrcode() {
+      let qrcode = new QRCode("and_qrcode", {
+        width: 100, // 设置宽度
+        height: 100, // 设置高度
+        text: "hello world"
+      });
+    },
     showPwd() {
       if (this.pwdType === "password") {
         this.pwdType = "";
@@ -128,7 +153,9 @@ export default {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(to bottom, #01207a, #76d8fd 80%); /* 标准的语法 */
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-image: linear-gradient(to bottom, #001f79, #1e74c7, #80ddff);
   .login-form {
     width: 360px;
     height: 320px;
@@ -139,7 +166,7 @@ export default {
     box-shadow: 0 3px 0 rgba(12, 12, 12, 0.03);
     border-radius: 3px;
     padding: 30px;
-    margin-top: 20vh;
+    margin-top: 10%;
     .login-img {
       height: 59px;
       background-position: center top;
@@ -164,10 +191,18 @@ export default {
     width: 360px;
     margin: 0 auto;
     display: flex;
-    margin-top: 50px;
+    margin-top: 40px;
     .qrcode-block {
       text-align: center;
       flex: 1;
+      #app_qrcode,
+      #and_qrcode {
+        img {
+          background-color: #fff;
+          padding: 2px;
+          margin: 0 auto;
+        }
+      }
       .phone-btn {
         color: #fff;
         border-color: #fff;
@@ -183,6 +218,16 @@ export default {
         cursor: pointer;
       }
     }
+  }
+  .copy {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 12px;
+    text-align: center;
+    font-size: 14px;
+    line-height: 24px;
+    color: #fff;
   }
 }
 </style>

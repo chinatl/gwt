@@ -31,7 +31,35 @@ export const constantRouterMap = [
   },
   {
     path: '/',
-    redirect: '/login'
+    redirect: '/login',
+    component: () => import('@/views/login/index'), hidden: true
+  },
+  {
+    path: '/forgetpwd',
+    component: () => import('@/views/forget-pwd/index'), hidden: true,
+    redirect: '/forgetpwd/phone',
+    children: [
+      {
+        path: 'phone',
+        name: '验证手机号',
+        component: () => import('@/views/forget-pwd/phone'),
+      },
+      {
+        path: 'identity',
+        name: '验证身份',
+        component: () => import('@/views/forget-pwd/identity'),
+      },
+      {
+        path: 'reset',
+        name: '重置密码',
+        component: () => import('@/views/forget-pwd/reset'),
+      },
+      {
+        path: 'finish',
+        name: '成功',
+        component: () => import('@/views/forget-pwd/finish'),
+      },
+    ]
   },
 
 
@@ -66,7 +94,6 @@ export const constantRouterMap = [
         name: '息',
         component: () => import('@/views/my-message'),
         meta: { title: '我的消息', icon: '消息' },
-
       },
       {
         path: 'desc',

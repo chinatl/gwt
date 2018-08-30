@@ -3,14 +3,24 @@
 /*fade*/
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity .28s;
+  transition: opacity 0.28s;
 }
 
 .fade-enter,
 .fade-leave-active {
   opacity: 0;
 }
+/* show*/
+.show-enter-active,
+.show-leave-active {
+  transition: all .28s;
+}
 
+.show-enter,
+.show-leave-active {
+  transform: translate(60px,0);
+  opacity: 0;
+}
 /*fade*/
 .breadcrumb-enter-active,
 .breadcrumb-leave-active {
