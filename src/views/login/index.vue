@@ -93,6 +93,7 @@ export default {
       this.app_qrcode();
       this.and_qrcode();
     });
+    
   },
   methods: {
     app_qrcode() {

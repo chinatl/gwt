@@ -343,6 +343,72 @@ export const constantRouterMap = [
     ]
   },
   {
+    path: '/edu-train',
+    component: Layout,
+    redirect: '/edu-train/user',
+    name: '教育培训',
+    meta: { title: '教育培训', icon: '云盘' },
+    children: [
+      {
+        path: 'list',
+        name: '课程列表',
+        component: () => import('@/views/edu-train/list'),
+        meta: { title: '课程列表' }
+      },
+      {
+        path: 'user',
+        name: '我的课程',
+        component: () => import('@/views/edu-train/user'),
+        meta: { title: '我的课程' }
+      },
+      {
+        path: 'category',
+        name: '课程类别',
+        component: () => import('@/views/edu-train/category'),
+        meta: { title: '课程类别' }
+      },
+    ]
+  },
+  {
+    path: '/online-test',
+    component: Layout,
+    redirect: '/edu-train/user',
+    name: '在线考试',
+    meta: { title: '在线考试', icon: '云盘' },
+    children: [
+      {
+        path: 'questionlist',
+        name: '题库列表',
+        component: () => import('@/views/online-test/questionlist'),
+        meta: { title: '题库列表' }
+      },
+      {
+        path: 'testpaper',
+        name: '试卷管理',
+        component: () => import('@/views/online-test/testpaper'),
+        meta: { title: '试卷管理' }
+      },
+      {
+        path: 'user',
+        name: '我的考试',
+        component: () => import('@/views/online-test/user'),
+        meta: { title: '我的考试' }
+      },
+      {
+        path: 'history',
+        name: '历史考试',
+        component: () => import('@/views/online-test/history'),
+        meta: { title: '历史考试' }
+      },
+      {
+        path: 'test',
+        name: '在线考试',
+        component: () => import('@/views/online-test/test'),
+        meta: { title: '在线考试' }
+      },
+    ]
+  },
+  {
     path: '/mail-list',
     component: Layout,
     children: [
