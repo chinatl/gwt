@@ -52,7 +52,7 @@ export default {
 <style rel="stylesheet/scss" lang="scss">
 .cnclosure-area {
   border: 1px solid #e7eaec;
-  padding: 20px;
+  padding: 20px 20px 20px 36px;
   font-size: 12px;
   border-radius: 3px;
   width: 100%;

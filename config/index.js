@@ -10,18 +10,26 @@ module.exports = {
     assetsSubDirectory: 'static',
     assetsPublicPath: '/',
     proxyTable: {
-      // '/apis': {
-      //   // 测试环境
-      //   target: 'https://goods.footer.com',  // 接口域名
-      //   changeOrigin: true,  //是否跨域
-      //   pathRewrite: {
-      //     '^/apis': ''   //需要rewrite重写的,
-      //   }
-      // }
+      '/gwt-web-manage': {
+        // 测试环境
+        target: 'http://gwt3.inetgov.com:11312',  // 接口域名
+        changeOrigin: true,  //是否跨域
+        // pathRewrite: {
+        //   '^/apis': ''   //需要rewrite重写的,
+        // }
+      },
+      '/api': {
+        // 测试环境
+        target: 'http://check.douziit.com',  // 接口域名
+        changeOrigin: true,  //是否跨域
+        // pathRewrite: {
+        //   '^/apis': ''   //需要rewrite重写的,
+        // }
+      }
     },
 
     // Various Dev Server settings
-    host: '192.168.31.168', // can be overwritten by process.env.HOST
+    host: 'localhost', // can be overwritten by process.env.HOST
     port: 80, // can be overwritten by process.env.PORT, if port is in use, a free one will be determined
     autoOpenBrowser: true,
     errorOverlay: true,

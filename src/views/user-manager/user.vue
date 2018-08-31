@@ -154,12 +154,12 @@
                 </el-select>
             </el-form-item>
             <el-form-item label="角色">
-                  <el-select v-model="form.jiaose" placeholder="请选择"  multiple size="small" style="width:100%">
-                    <el-option label="副厅级" value="1"></el-option>
-                    <el-option label="副处级" value="2"></el-option>
-                    <el-option label="正科级" value="3"></el-option>
-                    <el-option label="科员" value="4"></el-option>
-                </el-select>
+                <el-select v-model="form.jiaose" placeholder="请选择"  multiple size="small" style="width:100%">
+                  <el-option label="副厅级" value="1"></el-option>
+                  <el-option label="副处级" value="2"></el-option>
+                  <el-option label="正科级" value="3"></el-option>
+                  <el-option label="科员" value="4"></el-option>
+              </el-select>
             </el-form-item>
             <el-form-item label="职务">
                 <el-input v-model="form.address" size="small"></el-input>

@@ -3,6 +3,7 @@ import Vuex from 'vuex'
 import app from './modules/app'
 import user from './modules/user'
 import tagsView from './modules/tagsView'
+import edu_train from './modules/edu_train'
 
 import getters from './getters'
 import { setItem, getItem } from '@/utils/auth'
@@ -12,7 +13,8 @@ const store = new Vuex.Store({
   modules: {
     app,
     user,
-    tagsView
+    tagsView,
+    edu_train
   },
   getters,
   state: {

@@ -3,9 +3,10 @@
         <t-title>我的课程</t-title>
         <div class="common-action between">
             <div class="common-table-bar">
-                <span v-for='(item,index) in navbar' :key='index'
-                    @click="current = index"
-                    :class="current === index ? 'current' :''">{{item.name}}</span>
+                <span  @click="current = 0" :class="current === 0 ? 'current' :''">全部</span>
+                <span v-for='(item,index) in class_list' :key='index'
+                    @click="current = (index + 1)"
+                    :class="current === (index + 1)? 'current' :''">{{item.typeName}}</span>
             </div>
         </div>
         <div class="common-table">
@@ -53,7 +54,7 @@
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
             :current-page="pageNo"
-            :page-sizes="[10, 20, 30, 40]"
+            :page-sizes="[5, 10, 15, 20]"
             :page-size="pageSize"
             layout="total, sizes, prev, pager, next, jumper"
             background
@@ -63,29 +64,20 @@
     </div>
 </template>
 <script>
+import { mapGetters } from "vuex";
 export default {
   data() {
     return {
-      navbar: [
-        {
-          name: "全部"
-        },
-        {
-          name: "课程类别一"
-        },
-        {
-          name: "课程类别二"
-        },
-        {
-          name: "课程类别三"
-        }
-      ],
       pageNo: 1,
-      pageSize: 10,
+      pageSize: 5,
+      total: 0,
       select: {},
       tableData: [],
-      current: 1
+      current: 0
     };
+  },
+  computed: {
+    ...mapGetters(["class_list"])
   },
   methods: {
     handleSizeChange() {},

@@ -35,8 +35,8 @@
                 </el-table>
             </div>
         </div>
-        <div class="common sourece-page">
-            <t-title title="功能获取"></t-title>
+        <!-- <div class="common sourece-page">
+          <t-title title="功能获取"></t-title>
             <div class="page-form">
               <el-form label-width="120px" >
                 <el-form-item label="功能获取地址：" prop='name'>
@@ -47,8 +47,8 @@
                 </el-form-item>
                 <form-button @cancel='onCancel' @submit="onSubmit"></form-button>
             </el-form>
-        </div>
-        </div>
+          </div>
+        </div> -->
         <el-dialog
             :title="group_type === 'add' ? '新增资源' :'编辑资源'"
             class="common-dialog"

@@ -7,6 +7,8 @@ const getters = {
   roles: state => state.user.roles,
   field_manager_data: state => state.field_manager_data,
   levelList: state => state.levelList,
-  visitedViews: state => state.tagsView.visitedViews
+  visitedViews: state => state.tagsView.visitedViews,
+  edu_list_data: state => state.edu_train.edu_list_data,
+  class_list: state => state.edu_train.class_list
 }
 export default getters

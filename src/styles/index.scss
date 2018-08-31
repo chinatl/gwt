@@ -257,6 +257,11 @@ a:active {
 }
 //弹窗样式
 .common-dialog {
+  &.edu {
+    .el-dialog {
+      width: 846px
+    }
+  }
   .el-dialog {
     width: 600px;
     .el-dialog__header {

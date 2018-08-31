@@ -1,5 +1,5 @@
 <template>
-    <span  :class="'little-button ' + classTitle">
+    <span  :class="'little-button ' + classTitle" @click="submit">
         <svg-icon :icon-class='className.iconName' v-if="className.iconName"></svg-icon>
         {{name}}
     </span>
@@ -91,6 +91,31 @@ export default {
             className: "biangeng",
             iconName: "变更"
           };
+        case "课程章节":
+          return {
+            className: "tongzhibiangeng",
+            iconName: "菜单"
+          };
+        case "练习题":
+          return {
+            className: "biangeng",
+            iconName: "练习题"
+          };
+        case "学习进度":
+          return {
+            className: "rukediaochan",
+            iconName: "学习进度"
+          };
+        case "批量导入试题":
+          return {
+            className: "rukediaochan",
+            iconName: "撤销"
+          };
+        case "创建试题":
+          return {
+            className: "bianji",
+            iconName: "增加"
+          };
         default:
           return {
             className: ""
@@ -107,7 +132,13 @@ export default {
       default: false,
       type: Boolean
     }
+  },
+  methods:{
+    submit(){
+      this.$emit('click')
+    }
   }
+
 };
 </script>
 <style rel="stylesheet/scss" lang="scss">

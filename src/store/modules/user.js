@@ -3,7 +3,8 @@ import { getToken, setToken, removeToken } from '@/utils/auth'
 
 const user = {
   state: {
-    token: getToken(),
+    // token: getToken(),
+    token: '0314_caca55d7-ced5-4ab6-87e0-667cc9e5d2b1',
     name: '',
     avatar: '',
     roles: []

@@ -367,6 +367,27 @@ export const constantRouterMap = [
         component: () => import('@/views/edu-train/category'),
         meta: { title: '课程类别' }
       },
+      {
+        path: 'chapter',
+        name: '课程章节',
+        component: () => import('@/views/edu-train/chapter'),
+        meta: { title: '课程章节',up: true },
+        hidden: true
+      },
+      {
+        path: 'progress',
+        name: '学习进度',
+        component: () => import('@/views/edu-train/progress'),
+        meta: { title: '学习进度',up: true },
+        hidden: true
+      },
+      {
+        path: 'exercise',
+        name: '课程练习题',
+        component: () => import('@/views/edu-train/exercise'),
+        meta: { title: '课程练习题',up: true },
+        hidden: true
+      },
     ]
   },
   {
@@ -402,7 +423,7 @@ export const constantRouterMap = [
       },
       {
         path: 'test',
-        name: '在线考试',
+        name: '在线考试-子菜单',
         component: () => import('@/views/online-test/test'),
         meta: { title: '在线考试' }
       },

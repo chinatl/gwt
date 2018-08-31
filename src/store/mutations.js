@@ -1,0 +1,2 @@
+export const SET_TRAIN_LIST_DATA = 'SET_TRAIN_LIST_DATA';
+export const SET_CLASS_LIST = 'SET_CLASS_LIST';

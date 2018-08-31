@@ -1,26 +1,27 @@
 <template>
     <div class="common">
         <t-title title="课程类别管理">
-            <el-button icon="el-icon-plus" type="success" size="medium" @click="group_visible = true">添加课程类别</el-button>
+            <el-button icon="el-icon-plus" type="success" size="medium" @click="add_category">添加课程类别</el-button>
         </t-title>
         <div class="common-action"></div>
         <div class="common-table">
             <el-table
                 :data="tableData"
                 border
+                v-loading ='table_loading'
                 style="width: 100%">
                 <el-table-column
-                prop="title"
+                prop="typeName"
                 align="center"
                 label="课程类别名称">
                 </el-table-column>
                 <el-table-column
-                prop="title"
+                prop="ceateUser"
                 align="center"
                 label="创建人">
                 </el-table-column>
                 <el-table-column
-                prop="title"
+                prop="ceateTime"
                 align="center"
                 label="创建时间">
                 </el-table-column>
@@ -39,7 +40,7 @@
                     size="mini"
                     type="danger"
                     icon="el-icon-delete"
-                    @click="handleDelete(scope.$index, scope.row)" v-wave>删除</el-button>
+                    @click="del_category(scope.row.ctypeId)" v-wave>删除</el-button>
                 </template>
                 </el-table-column>
             </el-table>
@@ -49,11 +50,11 @@
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
             :current-page="pageNo"
-            :page-sizes="[10, 20, 30, 40]"
+            :page-sizes="[5, 10, 15, 20]"
             :page-size="pageSize"
             layout="total, sizes, prev, pager, next, jumper"
             background
-            :total="40">
+            :total="total">
             </el-pagination>
         </div>
         <!-- 弹窗 -->
@@ -62,8 +63,8 @@
             class="common-dialog"
             :visible.sync="group_visible">
             <el-form ref="form" :model="form" label-width="80px" :rules="rules"  class="demo-ruleForm">
-                <el-form-item label="类别名称" prop='title'>
-                    <el-input v-model="form.title" size="small" placeholder=""></el-input>
+                <el-form-item label="类别名称" prop='typeName'>
+                    <el-input v-model="form.typeName" size="small" placeholder=""></el-input>
                 </el-form-item>
                 <form-button @cancel='onCancel_resource' @submit="onSubmit_resource"></form-button>
             </el-form>
@@ -79,31 +80,126 @@ export default {
   data() {
     return {
       pageNo: 1,
-      pageSize: 10,
+      pageSize: 5,
+      total: 0,
       select: {},
       tableData: [],
       group_type: "add",
       group_visible: false,
-      form: {},
+      form: {
+        typeName: ""
+      },
       rules: {
-        title: [
+        typeName: [
           {
             required: true,
             tigger: "blur",
             message: "请输入课程类别名称"
           }
         ]
-      }
+      },
+      table_loading: false
     };
   },
+  created() {
+    this.init();
+  },
+  computed: {
+    token() {
+      return this.$store.getters.token;
+    }
+  },
   methods: {
+    add_category() {
+      this.form.typeName = "";
+      this.group_visible = true;
+      this.$nextTick(res => {
+        this.$refs.form.resetFields();
+      });
+    },
+    init() {
+      this.table_loading = true;
+      this.$post("api/course/type/queryCourseType.do", {
+        sEcho: 1,
+        iColumns: 4,
+        sColumns: ",,,",
+        iDisplayStart: this.pageNo - 1,
+        iDisplayLength: this.pageSize,
+        mDataProp_0: "typeName",
+        mDataProp_1: "ceateUser",
+        mDataProp_2: "ceateTime",
+        mDataProp_3: "function",
+        iSortCol_0: 0,
+        sSortDir_0: "asc",
+        typeName: ""
+      })
+        .then(res => {
+          this.table_loading = false;
+          this.total = res.recordsTotal;
+          if (!res.data) {
+            this.tableData = [];
+            return;
+          }
+          this.tableData = res.data;
+        })
+        .catch(res => {
+          this.table_loading = false;
+        });
+    },
+    del_category(ctypeId) {
+      this.$swal({
+        title: "您确定要删除这条信息吗？",
+        text: "删除后将无法恢复，请谨慎操作！",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#DD6B55",
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        confirmButtonClass: "btn btn-success"
+      }).then(res => {
+        if (res.value) {
+          this.$post(`api/course/type/delCourseType.do/${ctypeId}`)
+            .then(res => {
+              this.$store.dispatch("get_class_list");
+              this.init();
+              this.$swal({
+                title: "操作成功！",
+                text: "当前操作您已设置成功。",
+                type: "success",
+                timer: 1500,
+                showConfirmButton: false
+              });
+            })
+            .catch(res => {});
+        }
+      });
+    },
     handleSizeChange() {},
     handleCurrentChange() {},
     onCancel_resource() {
       this.group_visible = false;
     },
     onSubmit_resource() {
-      this.group_visible = false;
+      this.$refs.form.validate(valid => {
+        if (valid) {
+          this.$post("api/course/type/add.do", {
+            typeName: this.form.typeName,
+            token: this.token
+          })
+            .then(res => {
+              this.$message({
+                type: "success",
+                message: "添加课程类别成功"
+              });
+              this.init();
+              this.group_visible = false;
+              this.$store.dispatch("get_class_list");
+            })
+            .catch(res => {});
+        } else {
+          return false;
+        }
+      });
     }
   }
 };
