@@ -424,6 +424,13 @@ export const constantRouterMap = [
         hidden: true
       },
       {
+        path: 'refresh',
+        name: '更新试卷',
+        component: () => import('@/views/online-test/refreshPaper'),
+        meta: { title: '更新试卷', up: true },
+        hidden: true
+      },
+      {
         path: 'testdesc',
         name: '考试详情',
         component: () => import('@/views/online-test/testdesc'),

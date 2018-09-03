@@ -258,6 +258,13 @@ export default {
     add_resource() {
       this.group_visible = true;
       this.group_type = "add";
+      this.dialog_form.questionName = "";
+      this.options = [{ value: "" }];
+      this.dialog_form.analysis = "";
+      this.dialog_form.answer = "";
+      this.$nextTick(res => {
+        this.$refs.dialog_form.resetFields();
+      });
     },
     edit_resource(data) {
       this.group_visible = true;

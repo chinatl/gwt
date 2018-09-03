@@ -56,7 +56,7 @@
 </template>
 
 <script>
-import { SET_TEST_DESC_DATA } from "@/store/mutations";
+import { SET_TEST_DESC_DATA, SET_REFRESH_DATA } from "@/store/mutations";
 import littleButton from "@/components/Button/littleButton";
 export default {
   components: {
@@ -128,7 +128,12 @@ export default {
       });
     },
     //编辑一场考试
-    edit_paper() {},
+    edit_paper(item) {
+      this.$store.commit(SET_REFRESH_DATA, item);
+      this.$router.push({
+        path: "/online-test/refresh"
+      });
+    },
     config_paper() {},
     //考试详情
     test_desc(item) {
