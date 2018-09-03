@@ -3,8 +3,8 @@
         <t-title>题库列表</t-title>
         <div class="common-action">
             <div>
-                <el-input v-model="input" placeholder="请输入角色名称" style="width:200px" size='medium'></el-input>
-                <el-button type="primary" icon="el-icon-search" size='medium' v-wave>查询</el-button>
+                <el-input v-model="qlibName" placeholder="请输入标题" style="width:200px" size='medium' @keyup.native.enter="search_condition"></el-input>
+                <el-button type="primary" icon="el-icon-search" size='medium' v-wave @click="search_condition">查询</el-button>
             </div>
             <div>
                 <el-button type="success" icon="el-icon-plus" size='medium' @click="add_role" v-wave>创建题库</el-button>
@@ -33,10 +33,10 @@
                 width="380"
                 >
                  <template slot-scope="scope">
-                     <little-button name='编辑' @click="edit_role(scope.$index, scope.row)"></little-button>
+                     <little-button name='编辑' @click="edit_question(scope.row)"></little-button>
                      <little-button name='删除' @click="del_question(scope.row.id)"></little-button>
                      <little-button name='创建试题' @click="create_question(scope.row)"></little-button>
-                     <little-button name='批量导入试题' @click="handleDelete(scope.$index, scope.row)"></little-button>
+                     <little-button name='批量导入试题' @click="open_all_list_dialog(scope.row)"></little-button>
                 </template>
                 </el-table-column>
             </el-table>
@@ -45,16 +45,16 @@
             <el-pagination
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
-            :current-page="pageNo"
+            :current-page.sync="pageNo"
             :page-sizes="[5, 10, 15, 20]"
-            :page-size="pageSize"
+            :page-size.sync="pageSize"
             layout="total, sizes, prev, pager, next, jumper"
             background
             :total="total">
             </el-pagination>
         </div>
         <!-- 角色新增弹出框 -->
-            <el-dialog
+          <el-dialog
             :title="role_type === 'add' ? '创建题库':'修改题库'"
             class="common-dialog"
             v-drag
@@ -111,18 +111,46 @@
                 <form-button @cancel='onCancel_resource' @submit="onSubmit_resource"></form-button>
             </el-form>
         </el-dialog>
+    <!-- 批量导入题库 -->
+          <el-dialog
+            title='批量导入试题'
+            class="common-dialog"
+            :visible.sync="all_list_visible">
+            <el-form ref="form" :model="all_list_form" label-width="120px" :rules="all_list_form_rules"  class="demo-ruleForm">
+                <el-form-item label="题库模板" prop='name'>
+                   <el-button type="primary" size="small">
+                      <a href="http://check.douziit.com/templates/xzt.xls">点击下载</a>
+                    </el-button>
+                   <p style="line-height:1;font-size:12px;color:#aaa">请下载模板，并按照格式填写，填写完成后，上传文件即可完成导入</p>
+                </el-form-item>
+                <el-form-item label="所选题库" prop='name'>
+                    <el-input v-model="all_list_form.name" size="small" readonly></el-input>
+                </el-form-item>
+                <el-form-item label="选择文件">
+                    <upload-button  @on-change="upload_img">添加附件</upload-button>
+                    <file-list :list='file_list' @delete='delete_file'></file-list>
+                </el-form-item>
+                <form-button @cancel='cancel_all_list' @submit="add_all_list"></form-button>
+            </el-form>
+        </el-dialog>
     </div>
 </template>
 <script>
 import formButton from "@/components/Button/formButton";
 import littleButton from "@/components/Button/littleButton";
+import fileList from "@/components/FileList";
+import uploadButton from "@/components/Button/uploadButton";
+import { SET_QUESTION_DATA } from "@/store/mutations";
 export default {
   components: {
     formButton,
-    littleButton
+    littleButton,
+    fileList,
+    uploadButton
   },
   data() {
     return {
+      qlibName: "", //条件搜索
       role_type: "add",
       pageNo: 1,
       pageSize: 5,
@@ -161,7 +189,16 @@ export default {
         name: ""
       },
       subject_visible: false,
-      answer: ""
+      answer: "",
+      all_list_visible: false, //批量上传文件
+      file_list: [],
+      all_list_form: {
+        name: ""
+      },
+      all_list_form_rules: {
+        name: [{ required: true, message: "请输入章节标题", trigger: "blur" }]
+      },
+      file_name_list: ""
     };
   },
   computed: {
@@ -173,6 +210,52 @@ export default {
     this.init(this.pageSize, this.pageNo);
   },
   methods: {
+    // 取消批量导入弹窗
+    cancel_all_list() {
+      this.all_list_visible = false;
+    },
+    // 确定批量导入弹框
+    add_all_list() {
+      this.$post("api/exam/quesbank/importxzt.do", {
+        libId: this.all_list_form.id,
+        path: this.file_name_list
+      })
+        .then(res => {
+          this.all_list_visible = false;
+          this.$message({
+            type: "success",
+            message: "批量导入试题成功！"
+          });
+        })
+        .catch(res => {});
+    },
+    //打开批量导入弹出框
+    open_all_list_dialog(row) {
+      this.all_list_form.name = row.name;
+      this.all_list_form.id = row.id;
+      this.all_list_visible = true;
+    },
+    //上传一个文件
+    upload_img(e) {
+      this.file_list[0] = e;
+      var formData = new FormData();
+      formData.append("file", e.raw);
+      this.$post("api/exam/quesbank/uploadImportFile.do", formData, "form")
+        .then(res => {
+          this.file_name_list = res.path;
+          this.$message({
+            type: "success",
+            message: "上传文件成功"
+          });
+        })
+        .catch(res => {});
+    },
+    //删除上传文件
+    delete_file() {
+      this.file_name_list = "";
+      this.file_list = [];
+    },
+    // 删除一个题库
     del_question(id) {
       this.$swal({
         title: "您确定要删除当前题库吗？",
@@ -202,13 +285,19 @@ export default {
         }
       });
     },
+    // 条件查询
+    search_condition() {
+      this.pageNo = 1;
+      this.init(this.pageSize, 1);
+    },
+    //初始化
     init(pageSize, pageNo) {
       this.table_loading = true;
       this.$post("api/exam/quesbank/queryQuestLib.do", {
         sEcho: 1,
         iColumns: 7,
         sColumns: ",,,,,,",
-        iDisplayStart: pageNo - 1,
+        iDisplayStart: (pageNo - 1) * pageSize,
         iDisplayLength: pageSize,
         mDataProp_0: "name",
         mDataProp_1: "num",
@@ -219,7 +308,7 @@ export default {
         mDataProp_6: "function",
         iSortCol_0: 0,
         sSortDir_0: "asc",
-        qlibName: ""
+        qlibName: this.qlibName
       })
         .then(res => {
           this.table_loading = false;
@@ -241,7 +330,6 @@ export default {
     handleCurrentChange(e) {
       this.init(this.pageSize, e);
     },
-    handleDelete() {},
     onSubmit() {
       this.$refs.form.validate(valid => {
         if (valid) {
@@ -251,12 +339,12 @@ export default {
             status: this.form.status
           })
             .then(res => {
+              this.role_visible = false;
               this.$message({
                 type: "success",
                 message: "创建题库成功！"
               });
               this.init(this.pageSize, this.pageNo);
-              this.group_visible = false;
             })
             .catch(res => {});
         } else {
@@ -268,10 +356,17 @@ export default {
     add_role() {
       this.role_type = "add";
       this.role_visible = true;
+      this.$nextTick(res => {
+        this.$refs.form.resetFields();
+      });
+      this.form.name = "";
+      this.form.description = "";
     },
-    edit_role() {
-      this.role_type = "update";
-      this.role_visible = true;
+    edit_question(item) {
+      this.$store.commit(SET_QUESTION_DATA, item);
+      this.$router.push({
+        path: "/online-test/edit"
+      });
     },
     //创建试题
     create_question(item) {

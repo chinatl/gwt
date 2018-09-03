@@ -42,7 +42,7 @@ export default {
         case "下架":
           return {
             className: "xiajia",
-            iconName: "上架"
+            iconName: "下架"
           };
         case "编辑":
           return {
@@ -116,6 +116,31 @@ export default {
             className: "bianji",
             iconName: "增加"
           };
+        case "考试详情":
+          return {
+            className: "bianji",
+            iconName: "菜单"
+          };
+        case "试卷详情":
+          return {
+            className: "ziyuanguanli",
+            iconName: "菜单"
+          };
+        case "开启考试":
+          return {
+            className: "biangeng",
+            iconName: "飞机"
+          };
+        case "试卷配置":
+          return {
+            className: "bianji",
+            iconName: "设置"
+          };
+        case "详情":
+          return {
+            className: "bianji",
+            iconName: "放大镜"
+          };
         default:
           return {
             className: ""
@@ -133,12 +158,11 @@ export default {
       type: Boolean
     }
   },
-  methods:{
-    submit(){
-      this.$emit('click')
+  methods: {
+    submit() {
+      this.$emit("click");
     }
   }
-
 };
 </script>
 <style rel="stylesheet/scss" lang="scss">

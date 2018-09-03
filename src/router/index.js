@@ -371,21 +371,21 @@ export const constantRouterMap = [
         path: 'chapter',
         name: '课程章节',
         component: () => import('@/views/edu-train/chapter'),
-        meta: { title: '课程章节',up: true },
+        meta: { title: '课程章节', up: true },
         hidden: true
       },
       {
         path: 'progress',
         name: '学习进度',
         component: () => import('@/views/edu-train/progress'),
-        meta: { title: '学习进度',up: true },
+        meta: { title: '学习进度', up: true },
         hidden: true
       },
       {
         path: 'exercise',
         name: '课程练习题',
         component: () => import('@/views/edu-train/exercise'),
-        meta: { title: '课程练习题',up: true },
+        meta: { title: '课程练习题', up: true },
         hidden: true
       },
     ]
@@ -404,10 +404,31 @@ export const constantRouterMap = [
         meta: { title: '题库列表' }
       },
       {
+        path: 'edit',
+        name: '题库编辑',
+        component: () => import('@/views/online-test/question_edit'),
+        meta: { title: '题库编辑', up: true },
+        hidden: true
+      },
+      {
         path: 'testpaper',
         name: '试卷管理',
         component: () => import('@/views/online-test/testpaper'),
         meta: { title: '试卷管理' }
+      },
+      {
+        path: 'create',
+        name: '创建试卷',
+        component: () => import('@/views/online-test/createPaper'),
+        meta: { title: '创建试卷', up: true },
+        hidden: true
+      },
+      {
+        path: 'testdesc',
+        name: '考试详情',
+        component: () => import('@/views/online-test/testdesc'),
+        meta: { title: '考试详情', up: true },
+        hidden: true
       },
       {
         path: 'user',
@@ -420,13 +441,7 @@ export const constantRouterMap = [
         name: '历史考试',
         component: () => import('@/views/online-test/history'),
         meta: { title: '历史考试' }
-      },
-      {
-        path: 'test',
-        name: '在线考试-子菜单',
-        component: () => import('@/views/online-test/test'),
-        meta: { title: '在线考试' }
-      },
+      }
     ]
   },
   {

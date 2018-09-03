@@ -31,7 +31,7 @@ service.interceptors.response.use(
      * code为非20000是抛错 可结合自己业务进行修改
      */
     const res = response.data
-    if (res.sEcho === '1' || res.ret === 0 || typeof res.data === 'object' || typeof res.recordsTotal === 'number') {
+    if (res.sEcho === '1' || res.ret === 0 || typeof res.data === 'object' || typeof res.recordsTotal === 'number' || res.result) {
       return response.data
     } else {
       Message({

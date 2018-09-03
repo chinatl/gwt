@@ -1,9 +1,11 @@
-import { SET_TRAIN_LIST_DATA, SET_CLASS_LIST } from '../mutations'
+import { SET_TRAIN_LIST_DATA, SET_CLASS_LIST, SET_QUESTION_DATA ,SET_TEST_DESC_DATA} from '../mutations'
 import { post } from '@/utils/fetch'
 const edu = {
     state: {
         edu_list_data: {},
         class_list: {},
+        question_data: {},
+        test_desc_data: {}
     },
     mutations: {
         [SET_TRAIN_LIST_DATA](state, data) {
@@ -13,6 +15,19 @@ const edu = {
         [SET_CLASS_LIST](state, data) {
             state.class_list = data;
             sessionStorage.setItem(SET_CLASS_LIST, JSON.stringify(data));
+        },
+        [SET_QUESTION_DATA](state, data) {
+            state.question_data = data;
+            sessionStorage.setItem(SET_QUESTION_DATA, JSON.stringify(data));
+        },
+        [SET_TEST_DESC_DATA](state, data) {
+            state.test_desc_data = data;
+            sessionStorage.setItem(SET_TEST_DESC_DATA, JSON.stringify(data));
+        },
+        set_question_data(state, {
+            name, value
+        }) {
+            state.question_data[name] = value;
         }
     },
     actions: {

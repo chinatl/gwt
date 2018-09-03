@@ -27,6 +27,24 @@
         testResult().then(res => {
             console.log(res)
         })
+
+        //
+
+        const a = [{
+            "id": 29,
+            "label": "青海省",
+        },
+        { "label": "正在加载", "value": -1 },//去掉
+        {
+            "id": 28,
+            "label": "甘肃省",
+        },
+        { "label": "正在加载", "value": -1 } //去掉
+        ]
+        const a1 = a.filter(res => {
+            return res.id
+        });
+        console.log(a1)
     </script>
 </body>
 

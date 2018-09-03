@@ -22,7 +22,9 @@ const store = new Vuex.Store({
       title: 'temp'
     },
     // 面包屑导航条
-    levelList: []
+    levelList: [],
+    //分页数组
+    page_list: [5, 10, 15, 20]
   },
   mutations: {
     SET_FIELD_MANAGER_DATA: (state, data) => {
