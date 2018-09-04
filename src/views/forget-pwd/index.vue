@@ -12,11 +12,6 @@
                 <router-view></router-view>
             </transition>
           </div>
-          <div class="forget-action">
-                <el-button size="small" @click="return_login">返回登录页</el-button>
-                <el-button size="small" type='primary' @click="next_step" v-if='current !== 4'>下一步</el-button>
-                <el-button size="small" type='primary' v-else @click="return_login">完成</el-button>
-          </div>
       </div>
   </div>
 </template>
@@ -114,17 +109,9 @@ export default {
       }
     }
     .forget-con {
-      height: 260px;
+      height: 332px;
       background-color: rgb(250, 250, 250);
       border-bottom: solid 1px #e3eaf2;
-      border-top: solid 1px #e3eaf2;
-      padding: 60px 140px;
-    }
-    .forget-action {
-      height: 72px;
-      text-align: right;
-      line-height: 72px;
-      padding-right: 20px;
     }
   }
 }

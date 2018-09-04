@@ -81,6 +81,7 @@ import '@/icons' // icon
 //导入先后天发请求 api
 import * as api from '@/utils/fetch'
 import axios from 'axios'
+Vue.prototype.$axios = axios;
 Vue.prototype.$get = api.get;
 Vue.prototype.$post = api.post;
 Vue.prototype.$delete = api.deleteItem;

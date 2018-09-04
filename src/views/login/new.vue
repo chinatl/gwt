@@ -1,5 +1,5 @@
 <template>
-    <div class="first-login-new">
+    <div class="first-login-new" v-loading='loading'>
         <div class="first-login-content">
             <h3>新用户验证！</h3>
             <p>首次登录用户，请验证姓名并修改密码，才能使用本系统！</p>
@@ -30,16 +30,9 @@ export default {
             tigger: "blur"
           }
         ]
-      }
+      },
+      loading: false
     };
-  },
-  created() {
-    // this.$swal({
-    //   title: "操作成功！",
-    //   text: "当前操作您已设置成功。",
-    //   type: "success",
-    //   showConfirmButton: true
-    // });
   },
   methods: {
     next_step() {
@@ -50,6 +43,7 @@ export default {
     return_login() {
       this.$refs.form.validate(res => {
         if (res) {
+          this.loading = true;
           this.$post(
             "gwt/system/sysUser/validateName",
             {
@@ -59,15 +53,22 @@ export default {
             "json"
           )
             .then(res => {
-              console.log(res);
-
-              return;
+              this.loading = false;
+              if (res.result !== '0000') {
+                this.$swal({
+                  title: "操作失败！",
+                  text: res.msg,
+                  type: "error",
+                  showConfirmButton: true
+                });
+                return;
+              }
               this.$router.push({
                 path: "/firstlogin/edit"
               });
             })
             .catch(res => {
-              console.log(res);
+              this.loading = false;
             });
         }
       });

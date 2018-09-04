@@ -1,12 +1,12 @@
 <template>
-    <div class="first-login-new">
-        <div class="first-login-content">
-            <el-form ref="form" :model="form" label-width="120px" :rules="rules">
+    <div class="first-login-new" v-loading='loading'>
+        <div class="first-login-edit">
+            <el-form ref="form" :model="form" label-width="120px" :rules="rules" status-icon>
                 <el-form-item label="新密码" prop='passWord'>
-                        <el-input v-model="form.passWord" size="small" placeholder="请输入姓名"></el-input>
+                    <el-input v-model="form.passWord" size="small" placeholder="请输入8-20位，字母与数字组合的新密码" type="password"></el-input>
                 </el-form-item>
-                <el-form-item label="确认密码" prop='re_passWord'>
-                        <el-input v-model="form.name" size="small" placeholder="请输入姓名"></el-input>
+                <el-form-item label="确认密码" prop='re_password'>
+                    <el-input v-model="form.re_password" size="small" placeholder="请再次输入新密码" type="password"></el-input>
                 </el-form-item>
             </el-form>
         </div>
@@ -19,19 +19,46 @@
 <script>
 export default {
   data() {
+    var validatePass = (rule, value, callback) => {
+      if (value === "") {
+        callback(new Error("请输入密码"));
+      } else {
+        if (!/^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{8,16}$/.test(value)) {
+          callback("请输入8位以上，字母与数字组合的新密码");
+        } else {
+          callback();
+        }
+      }
+    };
+    var validatePass2 = (rule, value, callback) => {
+      if (value === "") {
+        callback(new Error("请再次输入密码"));
+      } else if (value !== this.form.passWord) {
+        callback(new Error("两次输入密码不一致!"));
+      } else {
+        callback();
+      }
+    };
     return {
       form: {
-        name: ""
+        passWord: "",
+        re_password: ""
       },
       rules: {
-        name: [
+        passWord: [
           {
-            required: true,
-            message: "请输入姓名",
+            validator: validatePass,
+            tigger: "blur"
+          }
+        ],
+        re_password: [
+          {
+            validator: validatePass2,
             tigger: "blur"
           }
         ]
-      }
+      },
+      loading: false
     };
   },
   methods: {
@@ -43,10 +70,11 @@ export default {
     return_login() {
       this.$refs.form.validate(res => {
         if (res) {
+          this.loading = true;
           this.$post(
             "gwt/system/sysUser/resetPwd",
             {
-              realName: 'test125',
+              realName: this.$store.getters.user_info.realName,
               passWord: this.form.passWord,
               mobilePhone: this.$store.getters.user_info.mobilePhone,
               status: 1000,
@@ -55,10 +83,22 @@ export default {
             "json"
           )
             .then(res => {
-              console.log(res);
+              this.loading = false;
+              if (res.result !== "0000") {
+                this.$swal({
+                  title: "操作失败！",
+                  text: res.msg,
+                  type: "error",
+                  showConfirmButton: true
+                });
+                return;
+              }
+              this.$router.push({
+                path: "/firstlogin/edit"
+              });
             })
             .catch(res => {
-              console.log(res);
+              this.loading = false;
             });
         }
       });
@@ -70,9 +110,9 @@ export default {
 .first-login-new {
   position: relative;
   height: 100%;
-  .first-login-content {
+  .first-login-edit {
     text-align: center;
-    padding: 40px 80px;
+    padding: 80px 80px;
     h3 {
       letter-spacing: 2px;
       color: #f1a917;

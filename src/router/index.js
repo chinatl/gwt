@@ -77,6 +77,11 @@ export const constantRouterMap = [
         name: '修改密码',
         component: () => import('@/views/login/edit'),
       },
+      {
+        path: 'success',
+        name: '修改成功',
+        component: () => import('@/views/login/success'),
+      },
     ]
   },
 

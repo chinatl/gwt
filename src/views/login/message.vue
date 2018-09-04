@@ -6,11 +6,11 @@
           </div>
           <div class="message-con">
                <h3>手机短信验证！</h3>
-               <p>您的绑定手机号为：155****5555</p>
+               <p>您的绑定手机号为：{{$store.getters.user_info.mobilePhone}}</p>
                <div class="send">
-                   <el-input size="small" placeholder="请输入验证码"></el-input>
+                   <el-input size="small" placeholder="请输入验证码" v-model="userCode" maxlength="6"></el-input>
                    <!-- <el-button size="small" type="success" v-wave>获取验证码</el-button> -->
-                   <div :class="isSend ? 'erp-btn info' : 'erp-btn'" v-wave>{{send_message}}</div>
+                   <div :class="isSend ? 'erp-btn info' : 'erp-btn'" v-wave @click="get_validate">{{send_message}}</div>
                </div>
           </div>
           <div class="message-action">
@@ -22,18 +22,40 @@
 </template>
 
 <script>
+import Cookies from "js-cookie";
 export default {
   data() {
     return {
       send_message: "获取验证码",
       loading: false,
-      isSend: true
+      isSend: false,
+      userCode: "",
+      isSendPhone: false
     };
   },
-  computed: {},
   created() {
-    var isSend = sessionStorage.getItem("isSend");
+    var isSend = sessionStorage.getItem("login-isSend");
     this.isSend = isSend === "true" ? true : false;
+    var send_message = sessionStorage.getItem("login-message");
+    this.send_message = send_message ? send_message : "send_message";
+    if (this.isSend) {
+      var isSend = sessionStorage.setItem("login-isSend", "true");
+      var a = 61 - parseInt(this.send_message);
+      this.send_message = 60 - a + "秒";
+      clearInterval(this.timer);
+      this.timer = setInterval(res => {
+        a++;
+        this.send_message = 60 - a + "秒";
+        sessionStorage.setItem("login-message", this.send_message);
+        if (a == 60) {
+          this.send_message = "获取验证码";
+          this.isSend = false;
+          clearInterval(this.timer);
+          var isSend = sessionStorage.setItem("login-isSend", "false");
+          sessionStorage.setItem("login-message", this.send_message);
+        }
+      }, 1000);
+    }
   },
   methods: {
     /*获取验证码*/
@@ -41,30 +63,45 @@ export default {
       if (this.isSend) {
         this.$message({
           message: "您已发送验证码，请稍后再发",
-          type: "error"
+          type: "warning"
         });
         return;
       }
       this.loading = true;
-      this.$get("user/mailVerification", {
-        email: this.register_form.email
+      this.$get("gwt/getPhoneValidateCode", {
+        phone: this.$store.getters.user_info.mobilePhone
       })
         .then(res => {
+          if (res.result !== "0000") {
+            this.$swal({
+              title: "操作失败！",
+              text: res.msg,
+              type: "error",
+              showConfirmButton: true
+            });
+            return;
+          }
           clearInterval(this.timer);
           this.loading = false;
+          this.isSendPhone = true;
           this.$message({
-            message: res.data,
+            message: "短信验证码已发送，请注意查收",
             type: "success"
           });
           this.isSend = true;
+          var isSend = sessionStorage.setItem("login-isSend", "true");
           var a = 0;
+          this.send_message = 60 - a + "秒";
           this.timer = setInterval(res => {
             a++;
-            this.email_message = 60 - a + "s para reenviar";
+            this.send_message = 60 - a + "秒";
+            sessionStorage.setItem("login-message", this.send_message);
             if (a == 60) {
-              this.email_message = "email_message";
+              this.send_message = "获取验证码";
               this.isSend = false;
               clearInterval(this.timer);
+              var isSend = sessionStorage.setItem("login-isSend", "false");
+              sessionStorage.setItem("login-message", this.send_message);
             }
           }, 1000);
         })
@@ -77,7 +114,58 @@ export default {
         path: "/login"
       });
     },
-    submit() {}
+    submit() {
+      if (!this.isSendPhone) {
+        this.$message({
+          message: "请先获取验证码",
+          type: "error"
+        });
+        return;
+      }
+      if (!this.userCode) {
+        this.$message({
+          message: "请输入短信验证码",
+          type: "error"
+        });
+        return;
+      }
+      this.$post(
+        "gwt/checkPhoneValidateCode",
+        {
+          userCode: this.userCode,
+          phone: this.$store.getters.user_info.mobilePhone
+        },
+        "json"
+      )
+        .then(res => {
+          if (res.result !== "0000") {
+            this.$swal({
+              title: "操作失败！",
+              text: res.msg,
+              type: "error",
+              showConfirmButton: true
+            });
+            return;
+          }
+          this.$post("gwt/system/sysEquipmentAuth/save", {}, "json").then(
+            res => {
+              Cookies.set("equipmentUuid1", res.data.equipmentUuid1);
+            }
+          );
+          this.$message({
+            type: "success",
+            message: "登录成功！"
+          });
+          this.isSend = false;
+          this.$router.push({ path: "/message/index" });
+          clearInterval(this.timer);
+          sessionStorage.setItem("login-isSend", "false");
+          sessionStorage.setItem("login-message", "获取验证码");
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    }
   }
 };
 </script>
@@ -127,7 +215,7 @@ export default {
       .send {
         display: flex;
         margin-top: 12px;
-        padding: 0 20px;
+        padding: 0 30px;
         .erp-btn {
           font-size: 14px;
           font-size: 14px;

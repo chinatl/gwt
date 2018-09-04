@@ -3,10 +3,10 @@
         <div class="forget-pwd">
             <p class="forget-icon"><i class="el-icon-success"></i></p>   
             <p class="forget-text">您的密码已修改成功</p>
-            <p class="forget-tips">密码修改成功，请重新登陆</p>
+            <p class="forget-tips">首次验证已完成，请重新登陆</p>
         </div>
         <div class="first-action">
-            <el-button size="small" type='primary' @click.prevent.stop="next_step">返回登录</el-button>
+            <el-button size="small" type='primary' @click="next_step">返回登录</el-button>
         </div>
     </div>
 </template>

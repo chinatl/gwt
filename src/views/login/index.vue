@@ -17,6 +17,13 @@
             </i>
           </el-input>
         </el-form-item>
+        <el-form-item prop="userCode" v-if="show_code">
+          <div class="login-flex">
+            <el-input v-model.trim="loginForm.userCode" size="medium" placeholder="请输入图片验证码" maxlength="6"  @keyup.native.enter="handleLogin">
+            </el-input>
+            <img :src="img_src" alt="" title="" @click="get_img_code">
+          </div>
+        </el-form-item>
         <p class="forget-pwd">
           <span @click="$router.push({path:'/forgetpwd/phone'})">忘记密码了？</span>
         </p>
@@ -27,14 +34,14 @@
     </div>
     <div class="login-qrcode">
         <div class="qrcode-block">
-          <div id="and_qrcode" ref="and_qrcode"></div>
+          <div id="and_qrcode" ref="and_qrcode" style="height:100px"></div>
           <div class="phone-btn">
             <svg-icon icon-class='Android'></svg-icon>
-            <span>iphone</span>
+            <span>Android</span>
           </div>
         </div>
         <div class="qrcode-block">
-          <div id="app_qrcode" ref="app_qrcode"></div>
+          <div id="app_qrcode" ref="app_qrcode"  style="height:100px"></div>
           <div class="phone-btn">
             <svg-icon icon-class='Iphone'></svg-icon>
             <span>iphone</span>
@@ -48,8 +55,6 @@
 <script>
 import { isvalidUsername } from "@/utils/validate";
 import QRCode from "qrcodejs2";
-import { Base64 } from "js-base64";
-import md5 from "js-md5";
 import {
   SET_USER_INFO,
   SET_USER_SIGN,
@@ -76,7 +81,8 @@ export default {
     return {
       loginForm: {
         username: "",
-        password: ""
+        password: "",
+        userCode: ""
       },
       note: {
         backgroundImage: "url(" + require("@/assets/imgs/logo2.png") + ")"
@@ -88,32 +94,86 @@ export default {
         username: [
           { required: true, trigger: "blur", validator: validateUsername }
         ],
-        password: [{ required: true, trigger: "blur", message: "请输入密码" }]
+        password: [{ required: true, trigger: "blur", message: "请输入密码" }],
+        userCode: [
+          {
+            required: true,
+            trigger: "change",
+            message: "请输入图片验证码"
+          }
+        ]
       },
       loading: false,
-      pwdType: "password"
+      pwdType: "password",
+      app_loading: true,
+      apple_qrcode: null,
+      android_qrcode: null,
+      show_code: false,
+      img_src: ""
     };
   },
   created() {
-    this.$nextTick(() => {
-      this.app_qrcode();
-      this.and_qrcode();
+    this.$nextTick(res => {
+      this.android_qrcode = new QRCode("and_qrcode", {
+        width: 100, // 设置宽度
+        height: 100 // 设置高度
+      });
+      this.apple_qrcode = new QRCode("app_qrcode", {
+        width: 100, // 设置宽度
+        height: 100 // 设置高度
+      });
+      var iosUrl = localStorage.getItem("iosUrl");
+      if (iosUrl) {
+        this.app_qrcode(iosUrl);
+      }
+      var androidUrl = localStorage.getItem("androidUrl");
+      if (androidUrl) {
+        this.and_qrcode(androidUrl);
+      }
     });
+    this.getQRURL();
   },
   methods: {
-    app_qrcode() {
-      let qrcode = new QRCode("app_qrcode", {
-        width: 100, // 设置宽度
-        height: 100, // 设置高度
-        text: "hello world"
-      });
+    //获取图片验证码
+    get_img_code() {
+      this.$axios({
+        url: "gwt/getValidateCode",
+        headers: {
+          Authorization:
+            "Bearer eyJhbGciOiJIUzUxMiJ9.eyJyYW5kb21LZXkiOiJvdnp4NjIiLCJzdWIiOiIwMzY1MV80NzIxY2ZlMS05ZjliLTRhMmYtYmE3NS1iZDY3N2M5ODFhNTYiLCJleHAiOjE1MzY2NjM2MDMsImlhdCI6MTUzNjA1ODgwM30.K4SzgVFE28vZCmdXYOIZkoKM6uZLjUYoJdtSAkFWtyiwEalte72mtYRftmsKFbAft7IZrn-IC_16kc-CA3nwJw"
+        },
+        responseType: "blob"
+      })
+        .then(res => {
+          this.img_src = window.URL.createObjectURL(res.data);
+        })
+        .catch(res => {
+          console.log(res);
+        });
     },
-    and_qrcode() {
-      let qrcode = new QRCode("and_qrcode", {
-        width: 100, // 设置宽度
-        height: 100, // 设置高度
-        text: "hello world"
-      });
+    //获取二维码下载地址
+    getQRURL() {
+      this.app_loading = true;
+      this.$get("gwt/getQRCodeUrl")
+        .then(res => {
+          this.app_loading = false;
+          if (res.result !== "0000") {
+            return;
+          }
+          localStorage.setItem("iosUrl", res.data.iosUrl);
+          localStorage.setItem("androidUrl", res.data.androidUrl);
+          this.app_qrcode(res.data.iosUrl);
+          this.and_qrcode(res.data.androidUrl);
+        })
+        .catch(res => {
+          this.app_loading = false;
+        });
+    },
+    app_qrcode(text) {
+      this.apple_qrcode.makeCode(text);
+    },
+    and_qrcode(text) {
+      this.android_qrcode.makeCode(text);
     },
     showPwd() {
       if (this.pwdType === "password") {
@@ -122,28 +182,7 @@ export default {
         this.pwdType = "password";
       }
     },
-    set_sign(randomKey) {
-      console.log(
-        md5(
-          Base64.encode(
-            JSON.stringify({
-              username: this.loginForm.username,
-              password: this.loginForm.password,
-              loginCodeFlag: false
-            })
-          ) + randomKey
-        )
-      );
-      return md5(
-        Base64.encode(
-          JSON.stringify({
-            username: this.loginForm.username,
-            password: this.loginForm.password,
-            loginCodeFlag: false
-          })
-        ) + randomKey
-      );
-    },
+
     handleLogin() {
       this.$refs.loginForm.validate(valid => {
         if (valid) {
@@ -153,19 +192,34 @@ export default {
             {
               username: this.loginForm.username,
               password: this.loginForm.password,
+              userCode: this.loginForm.userCode,
               loginCodeFlag: false
             },
             "json"
           )
             .then(res => {
               this.loading = false;
+              if (!res.data.code) {
+                this.$swal({
+                  title: "登陆失败",
+                  text: res.msg,
+                  type: "error",
+                  confirmButtonColor: "#DD6B55",
+                  confirmButtonText: "确定",
+                  showConfirmButton: true
+                });
+                return;
+              }
               if (res.data.code === "usererror") {
+                this.show_code = true;
+                this.get_img_code();
                 this.$swal({
                   title: "登陆失败",
                   text: `用户名或密码错误,剩余${res.data.resCounts}次重试机会`,
                   type: "error",
-                  timer: 1500,
-                  showConfirmButton: false
+                  confirmButtonColor: "#DD6B55",
+                  confirmButtonText: "确定",
+                  showConfirmButton: true
                 });
               } else if (res.data.code === "locked") {
                 this.$swal({
@@ -174,8 +228,9 @@ export default {
                     res.data.locktime
                   }后再操作`,
                   type: "error",
-                  timer: 1500,
-                  showConfirmButton: false
+                  confirmButtonColor: "#DD6B55",
+                  confirmButtonText: "确定",
+                  showConfirmButton: true
                 });
               } else if (res.data.code === "unauthorized") {
                 this.$router.push({
@@ -183,30 +238,21 @@ export default {
                 });
                 this.$store.commit(SET_USER_INFO, res.data);
                 this.$store.commit(SET_USER_TOKEN, "Bearer " + res.data.token);
-                this.$store.commit(
-                  SET_USER_SIGN,
-                  this.set_sign(res.data.randomKey)
-                );
+                this.$store.commit(SET_USER_SIGN, res.data.randomKey);
               } else if (res.data.code === "firstlogin") {
                 this.$router.push({
                   path: "/firstlogin"
                 });
                 this.$store.commit(SET_USER_INFO, res.data);
                 this.$store.commit(SET_USER_TOKEN, "Bearer " + res.data.token);
-                this.$store.commit(
-                  SET_USER_SIGN,
-                  this.set_sign(res.data.randomKey)
-                );
+                this.$store.commit(SET_USER_SIGN, res.data.randomKey);
               } else {
                 this.$store.commit(SET_USER_INFO, res.data);
                 this.$store.commit(SET_USER_TOKEN, "Bearer " + res.data.token);
-                this.$store.commit(
-                  SET_USER_SIGN,
-                  this.set_sign(res.data.randomKey)
-                );
+                this.$store.commit(SET_USER_SIGN, res.data.randomKey);
                 this.$message({
                   type: "success",
-                  message: "登陆成功！"
+                  message: "登录成功！"
                 });
                 this.$router.push({ path: "/message/index" });
               }
@@ -233,6 +279,20 @@ export default {
     color: #409eff;
   }
 }
+.login-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  img {
+    display: inline-block;
+    width: 100%;
+    height: 36px;
+    border-radius: 4px;
+    border: solid 1px #e6e6e6;
+    margin-left: 12px;
+    cursor: pointer;
+  }
+}
 .login-container {
   position: absolute;
   top: 0;
@@ -244,14 +304,13 @@ export default {
   background-image: linear-gradient(to bottom, #001f79, #1e74c7, #80ddff);
   .login-form {
     width: 360px;
-    height: 320px;
     background-color: #fff;
     margin: 0 auto;
     background: #fff;
     border: 1px solid rgba(255, 255, 255, 0.3);
     box-shadow: 0 3px 0 rgba(12, 12, 12, 0.03);
     border-radius: 3px;
-    padding: 30px;
+    padding: 30px 30px 0 30px;
     margin-top: 10%;
     .login-img {
       height: 59px;

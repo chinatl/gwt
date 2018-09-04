@@ -2,6 +2,7 @@ import request from './request'
 import config from '@/config'
 import qs from 'qs';
 import { Base64 } from 'js-base64';
+import md5 from 'js-md5';
 import store from '@/store'
 export function get(url, data) {
 	if (!url.includes('http')) {
@@ -17,12 +18,13 @@ export function post(url, data, type) {
 	var content_type;
 	if (type === 'json') {
 		content_type = 'application/json';
+		var object = Base64.encode(JSON.stringify(data));
 		var sign;
 		if (store.getters.sign) {
-			sign = store.getters.sign;
+			sign = md5(object + store.getters.sign);
 		}
 		data = {
-			object: Base64.encode(JSON.stringify(data)),
+			object,
 			sign
 		};
 	} else if (type === 'form') {
