@@ -13,6 +13,9 @@ const getters = {
   question_data: state => state.edu_train.question_data,
   test_desc_data: state => state.edu_train.test_desc_data,
   refresh_data: state => state.edu_train.refresh_data,
-  page_list: state => state.page_list
+  page_list: state => state.page_list,
+  sign: state => state.sign,
+  user_info: state => state.user_info,
+  token: state => state.token,
 }
 export default getters

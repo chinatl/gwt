@@ -6,14 +6,14 @@ import { getToken } from '@/utils/auth'
 // 创建axios实例
 const service = axios.create({
   //baseURL: process.env.BASE_API, // api的base_url
-  timeout: 5000 // 请求超时时间
+  timeout: 15000 // 请求超时时间
 })
 
 // request拦截器
 service.interceptors.request.use(
   config => {
     if (store.getters.token) {
-      config.headers['X-Token'] = getToken() // 让每个请求携带自定义token 请根据实际情况自行修改
+      config.headers.Authorization = store.getters.token;// 让每个请求携带自定义token 请根据实际情况自行修改
     }
     return config
   },
@@ -35,11 +35,10 @@ service.interceptors.response.use(
       return response.data
     } else {
       Message({
-        message: res.msg,
+        message: res.msg || res.message,
         type: 'error',
         duration: 5 * 1000
       })
-
       // 50008:非法的token; 50012:其他客户端登录了;  50014:Token 过期了;
       if (res.code === 50008 || res.code === 50012 || res.code === 50014) {
         MessageBox.confirm(
@@ -56,7 +55,7 @@ service.interceptors.response.use(
           })
         })
       }
-      return Promise.reject('error')
+      return Promise.reject(res)
     }
   },
   error => {

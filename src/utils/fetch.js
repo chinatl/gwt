@@ -1,6 +1,8 @@
 import request from './request'
 import config from '@/config'
-import qs from 'qs'
+import qs from 'qs';
+import { Base64 } from 'js-base64';
+import store from '@/store'
 export function get(url, data) {
 	if (!url.includes('http')) {
 		url = config + url
@@ -15,6 +17,14 @@ export function post(url, data, type) {
 	var content_type;
 	if (type === 'json') {
 		content_type = 'application/json';
+		var sign;
+		if (store.getters.sign) {
+			sign = store.getters.sign;
+		}
+		data = {
+			object: Base64.encode(JSON.stringify(data)),
+			sign
+		};
 	} else if (type === 'form') {
 		content_type = '';
 	}
@@ -23,9 +33,9 @@ export function post(url, data, type) {
 		data = qs.stringify(data);
 	}
 	return request.post(config + url, data, {
-		// headers: {
-		// 	'Content-Type': content_type
-		// }
+		headers: {
+			'Content-Type': content_type
+		}
 	})
 }
 export function update(url, data) {

@@ -3,3 +3,6 @@ export const SET_CLASS_LIST = 'SET_CLASS_LIST';
 export const SET_QUESTION_DATA = 'SET_QUESTION_DATA';
 export const SET_TEST_DESC_DATA = 'SET_TEST_DESC_DATA';
 export const SET_REFRESH_DATA = 'SET_REFRESH_DATA';
+export const SET_USER_INFO = 'SET_USER_INFO';
+export const SET_USER_SIGN = 'SET_USER_SIGN';
+export const SET_USER_TOKEN = 'SET_USER_TOKEN';

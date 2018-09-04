@@ -29,7 +29,7 @@
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
             :current-page="pageNo"
-            :page-sizes="[10, 20, 30, 40]"
+            :page-sizes="$store.getters.page_list"
             :page-size="pageSize"
             layout="total, sizes, prev, pager, next, jumper"
             background
@@ -62,7 +62,7 @@ export default {
       this.pageNo = 1;
       this.init(e, 1);
     },
-    handleCurrentChange() {
+    handleCurrentChange(e) {
       this.init(this.pageSize, e);
     },
     init(pageSize, pageNo) {
@@ -71,8 +71,8 @@ export default {
         sEcho: 1,
         iColumns: 7,
         sColumns: ",,,,,,",
-        iDisplayStart: 0,
-        iDisplayLength: 10,
+        iDisplayStart: (pageNo - 1) * pageSize,
+        iDisplayLength: pageSize,
         mDataProp_0: "paperName",
         mDataProp_1: "function",
         mDataProp_2: "examLong",

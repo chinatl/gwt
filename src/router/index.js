@@ -24,6 +24,7 @@ import Layout from '../views/layout/Layout'
 import store from '@/store'
 export const constantRouterMap = [
   { path: '/login', component: () => import('@/views/login/index'), hidden: true },
+  { path: '/login/message', component: () => import('@/views/login/message'), hidden: true },
   { path: '/404', component: () => import('@/views/404'), hidden: true },
   {
     path: '/dashboard',
@@ -58,6 +59,23 @@ export const constantRouterMap = [
         path: 'finish',
         name: '成功',
         component: () => import('@/views/forget-pwd/finish'),
+      },
+    ]
+  },
+  {
+    path: '/firstlogin',
+    component: () => import('@/views/login/first'), hidden: true,
+    redirect: '/firstlogin/new',
+    children: [
+      {
+        path: 'new',
+        name: '新用户验证',
+        component: () => import('@/views/login/new'),
+      },
+      {
+        path: 'edit',
+        name: '修改密码',
+        component: () => import('@/views/login/edit'),
       },
     ]
   },
@@ -386,6 +404,13 @@ export const constantRouterMap = [
         name: '课程练习题',
         component: () => import('@/views/edu-train/exercise'),
         meta: { title: '课程练习题', up: true },
+        hidden: true
+      },
+      {
+        path: 'create',
+        name: '创建课程',
+        component: () => import('@/views/edu-train/createSubject.vue'),
+        meta: { title: '创建课程', up: true },
         hidden: true
       },
     ]

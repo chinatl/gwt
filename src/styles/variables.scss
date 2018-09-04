@@ -1,4 +1,33 @@
 //sidebar
-$menuBg:#304156;
-$subMenuBg:#1f2d3d;
-$menuHover:#001528;
+
+$menuBg:#1d1d1d; //Background Menu
+$subMenuBg:#2d2d2d; //Background Sub-Menu
+$menuHover:rgba(29, 29, 29, .6);
+$ok_search:#65afad; //Background Button Search and “ok” ok的背景
+$model:#FF024D; //Background Button body and modals 背景按钮身体与情态动词
+$titleButton:#666; //标题和应用按钮
+$body0: #999; //Body Content
+$body1: #e8e8e8; //Background 1 System
+$body2: #eaedf3; //Background 2 System
+$body2: #eaedf3; //Background 2 System
+$content: #f5f5f6; //Conteudo Bloco
+$select1: #FF9A23; //Destaque 1  精选1
+$select2: #FF0000; //Destaque 2  精选1
+$status: #009900; //状态
+$hoverMenuBg:#4a5064; //左下菜单
+$menuBackground:#3d465b; //Background Menu
+$submenuBackground:#2e3443; //Background Sub Menu
+$hideBg: #4a5064; //Background Hide/Show
+/*定义按钮*/
+$buttonRadius:4px;
+$buttonPadding: 8px 24px;
+$buttonIcon: 16rem;
+$buttonSize: 16rem;
+$buttonBgc: #00C1DE;
+$buttonHover: #00C1DE;
+$buttonActive: #00C1DE;
+$buttonColor: #fff;
+/*灰色按钮*/
+$buttonInfoBgc:#ccc;
+$buttonInfoHover:#ccc;
+$buttonInfoActive:#ccc;

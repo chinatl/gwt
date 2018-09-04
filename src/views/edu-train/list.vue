@@ -10,7 +10,7 @@
                >已发布课程</span>
             </div>
             <div>
-                <el-button icon="el-icon-plus" type="success" size="medium">创建课程</el-button>
+                <el-button icon="el-icon-plus" type="success" size="medium" v-wave @click="create_subject">创建课程</el-button>
             </div>
         </div>
         <div class="edu-train-select">
@@ -110,6 +110,12 @@ export default {
     ...mapGetters(["class_list"])
   },
   methods: {
+    //创建课程
+    create_subject() {
+      this.$router.push({
+        path: "/edu-train/create"
+      });
+    },
     //下架
     lower_frame(courseId) {
       this.$swal({

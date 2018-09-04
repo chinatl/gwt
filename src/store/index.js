@@ -7,6 +7,7 @@ import edu_train from './modules/edu_train'
 
 import getters from './getters'
 import { setItem, getItem } from '@/utils/auth'
+import { SET_USER_INFO, SET_USER_SIGN, SET_USER_TOKEN } from './mutations'
 Vue.use(Vuex)
 const store = new Vuex.Store({
   strict: process.env.NODE_ENV === 'development' ? true : false,
@@ -24,7 +25,12 @@ const store = new Vuex.Store({
     // 面包屑导航条
     levelList: [],
     //分页数组
-    page_list: [5, 10, 15, 20]
+    page_list: [5, 10, 15, 20],
+    user_info: {
+
+    },
+    sign: '',//签名,
+    token: ''
   },
   mutations: {
     SET_FIELD_MANAGER_DATA: (state, data) => {
@@ -42,7 +48,20 @@ const store = new Vuex.Store({
       };
       state.levelList = arr;
       setItem('levelList', arr);
-    }
+    },
+    [SET_USER_INFO]: (state, data) => {
+      state.user_info = data.loginInfo.sysUser;
+      sessionStorage.setItem(SET_USER_INFO, JSON.stringify(data));
+    },
+    [SET_USER_SIGN]: (state, data) => {
+      state.sign = data;
+      sessionStorage.setItem(SET_USER_SIGN, JSON.stringify(data));
+    },
+    [SET_USER_TOKEN]: (state, data) => {
+      state.token = data;
+      sessionStorage.setItem(SET_USER_TOKEN, JSON.stringify(data));
+    },
+
   }
 })
 

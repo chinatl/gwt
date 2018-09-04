@@ -3,7 +3,7 @@ import { post } from '@/utils/fetch'
 const edu = {
     state: {
         edu_list_data: {},
-        class_list: {},
+        class_list: [],
         question_data: {},
         test_desc_data: {
             passScore: ''
@@ -44,7 +44,13 @@ const edu = {
             name, value
         }) {
             state.refresh_data[name] = value;
-        }
+        },
+        del_one_class_list(state, ctypeId) {
+            state.class_list = state.class_list.filter(res => {
+                return res.ctypeId !== ctypeId
+            });
+            sessionStorage.setItem(SET_CLASS_LIST, JSON.stringify(state.class_list));
+        },
     },
     actions: {
         get_class_list({
@@ -55,7 +61,7 @@ const edu = {
                 iColumns: 4,
                 sColumns: ",,,",
                 iDisplayStart: 0,
-                iDisplayLength: 10,
+                iDisplayLength: 40,
                 mDataProp_0: "typeName",
                 mDataProp_1: "ceateUser",
                 mDataProp_2: "ceateTime",

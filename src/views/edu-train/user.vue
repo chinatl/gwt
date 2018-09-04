@@ -54,11 +54,11 @@
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
             :current-page="pageNo"
-            :page-sizes="[5, 10, 15, 20]"
+            :page-sizes="$store.getters.page_list"
             :page-size="pageSize"
             layout="total, sizes, prev, pager, next, jumper"
             background
-            :total="40">
+            :total="total">
             </el-pagination>
         </div>
     </div>

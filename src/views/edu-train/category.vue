@@ -49,8 +49,8 @@
             <el-pagination
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
-            :current-page="pageNo"
-            :page-sizes="[5, 10, 15, 20]"
+            :current-page.sync="pageNo"
+            :page-sizes="$store.getters.page_list"
             :page-size="pageSize"
             layout="total, sizes, prev, pager, next, jumper"
             background
@@ -62,7 +62,7 @@
             :title="group_type === 'add' ? '添加课程类别' :'修改课程类别'"
             class="common-dialog"
             :visible.sync="group_visible">
-            <el-form ref="form" :model="form" label-width="80px" :rules="rules"  class="demo-ruleForm">
+            <el-form ref="form" :model="form" label-width="80px" :rules="rules" v-loading = 'loading'>
                 <el-form-item label="类别名称" prop='typeName'>
                     <el-input v-model="form.typeName" size="small" placeholder=""></el-input>
                 </el-form-item>
@@ -98,11 +98,12 @@ export default {
           }
         ]
       },
-      table_loading: false
+      table_loading: false,
+      loading: false
     };
   },
   created() {
-    this.init();
+    this.init(this.pageSize, this.pageNo);
   },
   computed: {
     token() {
@@ -117,14 +118,14 @@ export default {
         this.$refs.form.resetFields();
       });
     },
-    init() {
+    init(pageSize, pageNo) {
       this.table_loading = true;
       this.$post("api/course/type/queryCourseType.do", {
         sEcho: 1,
         iColumns: 4,
         sColumns: ",,,",
-        iDisplayStart: this.pageNo - 1,
-        iDisplayLength: this.pageSize,
+        iDisplayStart: (pageNo - 1) * pageSize,
+        iDisplayLength: pageSize,
         mDataProp_0: "typeName",
         mDataProp_1: "ceateUser",
         mDataProp_2: "ceateTime",
@@ -160,8 +161,11 @@ export default {
         if (res.value) {
           this.$post(`api/course/type/delCourseType.do/${ctypeId}`)
             .then(res => {
-              this.$store.dispatch("get_class_list");
-              this.init();
+              this.$store.commit("del_one_class_list", ctypeId);
+              if (this.tableData.length === 1) {
+                this.pageNo -= 1;
+              }
+              this.init(this.pageSize, this.pageNo);
               this.$swal({
                 title: "操作成功！",
                 text: "当前操作您已设置成功。",
@@ -170,32 +174,43 @@ export default {
                 showConfirmButton: false
               });
             })
-            .catch(res => {});
+            .catch(res => {
+              console.log(res);
+            });
         }
       });
     },
-    handleSizeChange() {},
-    handleCurrentChange() {},
+    handleSizeChange(e) {
+      this.pageNo = 1;
+      this.init(e, 1);
+    },
+    handleCurrentChange(e) {
+      this.init(this.pageSize, e);
+    },
     onCancel_resource() {
       this.group_visible = false;
     },
     onSubmit_resource() {
       this.$refs.form.validate(valid => {
         if (valid) {
+          this.loading = true;
           this.$post("api/course/type/add.do", {
             typeName: this.form.typeName,
             token: this.token
           })
             .then(res => {
+              this.loading = false;
               this.$message({
                 type: "success",
                 message: "添加课程类别成功"
               });
-              this.init();
+              this.init(this.pageSize, this.pageNo);
               this.group_visible = false;
               this.$store.dispatch("get_class_list");
             })
-            .catch(res => {});
+            .catch(res => {
+              this.loading = false;
+            });
         } else {
           return false;
         }

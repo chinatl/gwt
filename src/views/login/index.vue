@@ -4,14 +4,14 @@
       <div class="login-img" :style="note"></div>
       <el-form  :model="loginForm" :rules="loginRules" ref="loginForm" v-loading='loading'>
         <el-form-item prop="username">
-          <el-input v-model="loginForm.username" size="medium" placeholder="用户名">
+          <el-input v-model.trim="loginForm.username" size="medium" placeholder="用户名" maxlength="30">
             <i slot="suffix" class="el-input__icon">
               <svg-icon icon-class='user' style="font-size:22px;color:#666;margin-top:8px"></svg-icon>
             </i>
           </el-input>
         </el-form-item>
         <el-form-item prop="password">
-          <el-input v-model="loginForm.password" size="medium" placeholder="密码" :type="pwdType" @keyup.native.enter="handleLogin">
+          <el-input v-model.trim="loginForm.password" size="medium" placeholder="密码" :type="pwdType" @keyup.native.enter="handleLogin" maxlength="30">
             <i slot="suffix" class="el-input__icon" @click="showPwd">
               <svg-icon :icon-class='pwdType === "password" ? "password":"logineye"' class="password-login"></svg-icon>
             </i>
@@ -21,7 +21,7 @@
           <span @click="$router.push({path:'/forgetpwd/phone'})">忘记密码了？</span>
         </p>
         <el-form-item>
-          <el-button type="primary" class="login-button" size="medium" @click="handleLogin">登录</el-button>
+          <el-button type="primary" class="login-button" size="medium" @click.prevent="handleLogin">登录</el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -48,7 +48,13 @@
 <script>
 import { isvalidUsername } from "@/utils/validate";
 import QRCode from "qrcodejs2";
-
+import { Base64 } from "js-base64";
+import md5 from "js-md5";
+import {
+  SET_USER_INFO,
+  SET_USER_SIGN,
+  SET_USER_TOKEN
+} from "@/store/mutations";
 export default {
   name: "login",
   components: { QRCode },
@@ -60,13 +66,13 @@ export default {
         callback();
       }
     };
-    const validatePass = (rule, value, callback) => {
-      if (value.length < 6) {
-        callback(new Error("密码不能小于6位"));
-      } else {
-        callback();
-      }
-    };
+    // const validatePass = (rule, value, callback) => {
+    //   if (value.length < 6) {
+    //     callback(new Error("密码不能小于6位"));
+    //   } else {
+    //     callback();
+    //   }
+    // };
     return {
       loginForm: {
         username: "",
@@ -82,7 +88,7 @@ export default {
         username: [
           { required: true, trigger: "blur", validator: validateUsername }
         ],
-        password: [{ required: true, trigger: "blur", validator: validatePass }]
+        password: [{ required: true, trigger: "blur", message: "请输入密码" }]
       },
       loading: false,
       pwdType: "password"
@@ -93,7 +99,6 @@ export default {
       this.app_qrcode();
       this.and_qrcode();
     });
-    
   },
   methods: {
     app_qrcode() {
@@ -117,18 +122,98 @@ export default {
         this.pwdType = "password";
       }
     },
+    set_sign(randomKey) {
+      console.log(
+        md5(
+          Base64.encode(
+            JSON.stringify({
+              username: this.loginForm.username,
+              password: this.loginForm.password,
+              loginCodeFlag: false
+            })
+          ) + randomKey
+        )
+      );
+      return md5(
+        Base64.encode(
+          JSON.stringify({
+            username: this.loginForm.username,
+            password: this.loginForm.password,
+            loginCodeFlag: false
+          })
+        ) + randomKey
+      );
+    },
     handleLogin() {
       this.$refs.loginForm.validate(valid => {
         if (valid) {
           this.loading = true;
-          setTimeout(res => {
-            this.loading = false;
-            this.$message({
-              type: "success",
-              message: "登陆成功！"
+          this.$post(
+            "gwt/login",
+            {
+              username: this.loginForm.username,
+              password: this.loginForm.password,
+              loginCodeFlag: false
+            },
+            "json"
+          )
+            .then(res => {
+              this.loading = false;
+              if (res.data.code === "usererror") {
+                this.$swal({
+                  title: "登陆失败",
+                  text: `用户名或密码错误,剩余${res.data.resCounts}次重试机会`,
+                  type: "error",
+                  timer: 1500,
+                  showConfirmButton: false
+                });
+              } else if (res.data.code === "locked") {
+                this.$swal({
+                  title: "登陆失败",
+                  text: `用户名或密码错误次数上限,账号已被锁定,请${
+                    res.data.locktime
+                  }后再操作`,
+                  type: "error",
+                  timer: 1500,
+                  showConfirmButton: false
+                });
+              } else if (res.data.code === "unauthorized") {
+                this.$router.push({
+                  path: "/login/message"
+                });
+                this.$store.commit(SET_USER_INFO, res.data);
+                this.$store.commit(SET_USER_TOKEN, "Bearer " + res.data.token);
+                this.$store.commit(
+                  SET_USER_SIGN,
+                  this.set_sign(res.data.randomKey)
+                );
+              } else if (res.data.code === "firstlogin") {
+                this.$router.push({
+                  path: "/firstlogin"
+                });
+                this.$store.commit(SET_USER_INFO, res.data);
+                this.$store.commit(SET_USER_TOKEN, "Bearer " + res.data.token);
+                this.$store.commit(
+                  SET_USER_SIGN,
+                  this.set_sign(res.data.randomKey)
+                );
+              } else {
+                this.$store.commit(SET_USER_INFO, res.data);
+                this.$store.commit(SET_USER_TOKEN, "Bearer " + res.data.token);
+                this.$store.commit(
+                  SET_USER_SIGN,
+                  this.set_sign(res.data.randomKey)
+                );
+                this.$message({
+                  type: "success",
+                  message: "登陆成功！"
+                });
+                this.$router.push({ path: "/message/index" });
+              }
+            })
+            .catch(res => {
+              this.loading = false;
             });
-            this.$router.push({ path: "/message/index" });
-          }, 1000);
         } else {
           return false;
         }

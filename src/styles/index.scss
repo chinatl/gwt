@@ -53,8 +53,61 @@ a:active {
   outline: none;
 }
 
-
-
+.erp-btn {
+	font-family: "Montserrat-Regular";
+	background-color: $buttonBgc;
+	color: $buttonColor;
+	padding: $buttonPadding;
+	outline: none;
+	border: none;
+	border-radius: $buttonRadius;
+	cursor: pointer;
+	white-space: nowrap;
+	height: 32px;
+	&:hover {
+		background-color: $buttonHover;
+		opacity: .8
+	}
+	&:active {
+		background-color: $buttonActive;
+		opacity: 1
+	}
+	i {
+		margin-right: 8px;
+	}
+	&.info {
+		background-color: $buttonInfoBgc;
+		color: $titleButton;
+		&:hover {
+			background-color: $buttonInfoHover;
+			opacity: .8
+		}
+		&:active {
+			background-color: $buttonInfoActive;
+			opacity: 1
+		}
+	}
+	&size16 {
+		font-size: 16rem;
+	}
+	&.circle {
+		border-radius: 50px;
+	}
+	&.status {
+		background-color: $status;
+		color: $buttonColor;
+		border-radius: 50px;
+		&:hover {
+			background-color: $status;
+			opacity: .8
+		}
+		&:active {
+			background-color: $status;
+			opacity: 1
+		}
+	}
+}
+/*新版的头部点击事件栏*/
 
 .scrollbar::-webkit-scrollbar {  
   width: 6px;  
