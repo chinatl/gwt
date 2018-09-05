@@ -87,6 +87,7 @@ Vue.prototype.$post = api.post;
 Vue.prototype.$delete = api.deleteItem;
 //导入自定义提示框
 import Swal from "sweetalert2";
+import 'sweetalert2/src/sweetalert2.scss'
 Vue.prototype.$swal = Swal;
 //导出一个公用的标题
 import tTitle from "@/components/NavTitle";

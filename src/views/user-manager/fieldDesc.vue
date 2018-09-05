@@ -1,19 +1,15 @@
 <template>
     <div>
         <div class="field-desc">
-            <div class="common-title">{{field_manager_data.title}}
+            <div class="common-title">{{field_manager_data.name}}
                 <el-button size='medium' type='success' icon="el-icon-edit-outline" @click="edit_role">编辑域</el-button>
             </div>
             <div class="field-con">
                 <h3>已授权应用</h3>
                 <ul>
-                    <li>
+                    <li v-for="(item,index) in app_list" :key="index">
                         <img :src="require('@/assets/imgs/yingyong.png')" alt="">
-                        <p>网站信息</p>
-                    </li>
-                    <li>
-                        <img :src="require('@/assets/imgs/yingyong.png')" alt="">
-                        <p>公务通知</p>
+                        <p>{{item.appName}}</p>
                     </li>
                     <li @click="go_field_auth">
                         <img :src="require('@/assets/imgs/add-1.png')" alt="">
@@ -29,12 +25,10 @@
             </div>
             <div class="desc-action-content">
               <ul class="common-table-bar">
-                <li>根目录</li>
-                <li class="current">卫生局</li>
-                <li>工商局</li>
-                <li>省政府办公厅</li>
-                <li>教育局</li>
-                <li>司法局</li>
+                <li  @click="change_group(-1)" :class="current == -1 ? 'current':''">默认分组</li>
+                <li v-for="(item,index) in category"
+                  @click="change_group(index)"
+                 :key="index" :class="current == index ? 'current':''">{{item.name}}</li>
               </ul>
             </div>
           </div>
@@ -42,13 +36,12 @@
             <div class="desc-group">
               <i class="el-icon-caret-right"></i>
               <el-breadcrumb separator-class="el-icon-arrow-right">
-                <el-breadcrumb-item>卫生局</el-breadcrumb-item>
-                <el-breadcrumb-item>卫生局</el-breadcrumb-item>
+                <el-breadcrumb-item>{{select_name}}</el-breadcrumb-item>
               </el-breadcrumb>
               <span class="rename" @click="update_grounp">
                 <i class="el-icon-edit-outline"></i>重命名
               </span>
-              <span class="delete">
+              <span class="delete" @click="delete_group">
                 <i class="el-icon-close"></i>删除
               </span>
             </div>
@@ -107,11 +100,11 @@
                 @size-change="handleSizeChange"
                 @current-change="handleCurrentChange"
                 :current-page="pageNo"
-                :page-sizes="[10, 20, 30, 40]"
+                :page-sizes="$store.getters.page_list"
                 :page-size="pageSize"
                 layout="total, sizes, prev, pager, next, jumper"
                 background
-                :total="40">
+                :total="total">
                 </el-pagination>
             </div>
           </div>
@@ -121,11 +114,11 @@
             title="编辑域"
             class="common-dialog padding0"
             :visible.sync="role_visible">
-            <el-form ref="form" :model="form" label-width="80px" :rules="rules"  class="demo-ruleForm">
-                <el-form-item label="域名称" prop='title'>
-                    <el-input v-model="form.title" size="small"></el-input>
+            <el-form ref="form" :model="form" label-width="80px" :rules="rules" @submit.native.prevent v-loading='role_loading'>
+                <el-form-item label="域名称" prop='name'>
+                    <el-input v-model="form.name" size="small" @keyup.native.enter='onSubmit_yield'></el-input>
                 </el-form-item>
-                <form-button @cancel='onCancel' @submit="onSubmit"></form-button>
+                <form-button @cancel='onCancel_yidld' @submit="onSubmit_yield"></form-button>
             </el-form>
         </el-dialog>
         <!-- 分组编辑 -->
@@ -133,9 +126,9 @@
             :title="group_type === 'add' ? '新增域分组' :'编辑域分组'"
             class="common-dialog padding0"
             :visible.sync="group_visible">
-            <el-form ref="form" :model="form" label-width="120px" :rules="rules"  class="demo-ruleForm">
-                <el-form-item label="域分组名称" prop='title'>
-                    <el-input v-model="form.title" size="small" placeholder="请输入域分组名称"></el-input>
+            <el-form ref="group_form" :model="group_form" label-width="120px" :rules="group_rules"  @submit.native.prevent v-loading='group_loading'>
+                <el-form-item label="域分组名称" prop='name'>
+                    <el-input v-model="group_form.name" size="small" placeholder="请输入域分组名称" @keyup.native.enter='onSubmit'></el-input>
                 </el-form-item>
                 <form-button @cancel='onCancel' @submit="onSubmit"></form-button>
             </el-form>
@@ -149,6 +142,7 @@ import { mapGetters } from "vuex";
 import formButton from "@/components/Button/formButton";
 import arrowButton from "@/components/Button/arrowButton";
 import AddPart from "@/components/AddPart";
+import { SET_FIELD_MANAGER_DATA } from "@/store/mutations";
 export default {
   components: {
     formButton,
@@ -161,15 +155,33 @@ export default {
       tableData: [
         {
           name: "陕西测试部门1",
-          type: "地市政府"
+          type: "地市政府",
+          children: [
+            {
+              name: "陕西测试部门1",
+              type: "地市政府"
+            },
+            {
+              name: "陕西测试部门2",
+              type: "地市政府"
+            }
+          ]
         },
         {
           name: "NB电子竞技俱乐部",
           type: "地市政府"
         }
       ],
+      role_loading: false,
       rules: {
-        title: [{ required: true, message: "请输入域名城", trigger: "blur" }]
+        name: [{ required: true, message: "请输入域名城", trigger: "blur" }]
+      },
+      group_rules: {
+        name: [{ required: true, message: "请输入域分组名称", trigger: "blur" }]
+      },
+      group_loading: false,
+      group_form: {
+        name: ""
       },
       role_visible: false,
       group_visible: false,
@@ -177,45 +189,257 @@ export default {
       part_visible: false,
       pageNo: 1,
       pageSize: 5,
+      total: 0,
       form: {
-        title: ""
-      }
+        name: ""
+      },
+      category: [], //目录
+      current: -1
     };
   },
   computed: {
-    ...mapGetters(["field_manager_data"])
+    ...mapGetters(["field_manager_data", "field_app_list"]),
+    app_list() {
+      return this.field_app_list.filter(res => {
+        return res.isActive === "1";
+      });
+    },
+    select_name() {
+      if (this.current === -1) {
+        return "默认分组";
+      }
+      return this.category[this.current].name;
+    }
+  },
+  created() {
+    var pageSize = localStorage.getItem("user-manager/field-desc/pageSize");
+    this.pageSize = pageSize ? pageSize - 0 : 5;
+    this.$store.dispatch("get_all_app_list", this.field_manager_data.domainId);
+    this.search_all_group();
   },
   methods: {
+    //查询所有分组
+    search_all_group() {
+      this.$post(
+        "gwt/system/sysDomain/sysgroup/list",
+        {
+          domainId: this.field_manager_data.domainId
+        },
+        "json"
+      )
+        .then(res => {
+          if (res.result !== "0000") {
+            return;
+          }
+          this.category = res.data.sysGroupPageBean.datas;
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
     add_part() {
       this.part_visible = true;
     },
-    //新增域分组
+    //打开新增域分组弹窗
     add_group() {
       this.group_type = "add";
       this.group_visible = true;
+      this.group_form.name = "";
+      this.$nextTick(res => {
+        this.$refs.group_form.resetFields();
+      });
     },
+
     update_grounp() {
+      if (!this.category.length) {
+        return;
+      }
       this.group_type = "update";
       this.group_visible = true;
+      this.group_form.name = this.category[this.current].name;
     },
-    onSubmit() {
+    edit_role() {
+      this.form.name = this.field_manager_data.name;
+      this.role_visible = true;
+      this.$nextTick(res => {
+        this.$refs.form.resetFields();
+      });
+    },
+    //关闭域
+    onCancel_yidld() {
       this.role_visible = false;
+    },
+    //提交域
+    onSubmit_yield() {
+      this.$refs.form.validate(res => {
+        if (!res) return;
+        this.form_loading = true;
+        this.$post("gwt/system/sysDomain/save", {
+          name: this.form.name,
+          domainId: this.field_manager_data.domainId
+        })
+          .then(res => {
+            this.form_loading = false;
+            if (res.result !== "0000") {
+              this.$swal({
+                title: "操作失败！",
+                text: res.msg,
+                type: "error",
+                confirmButtonColor: "#DD6B55",
+                confirmButtonText: "确定",
+                showConfirmButton: true
+              });
+              return;
+            }
+            this.$store.commit("SET_FIELD_MANAGER_DATA_VALUE", this.form.name);
+            this.$message({
+              type: "success",
+              message: "编辑域操作成功"
+            });
+            this.role_visible = false;
+            this.init(this.pageSize, this.pageNo);
+          })
+          .catch(res => {
+            console.log(res);
+            this.form_loading = false;
+          });
+      });
+    },
+    change_group(index) {
+      this.current = index;
+      if (index === -1) {
+        this.search_group_part(-1);
+      } else {
+        this.search_group_part(this.category[index].id);
+      }
+    },
+    //查询分组所带的部门
+    search_group_part(groupId) {
+      this.$post(
+        "gwt/system/sysDomain/getOrgByDomainIdPage",
+        {
+          domainId: this.field_manager_data.domainId,
+          groupId,
+          Q_orgName_SL: this.Q_orgName_SL,
+          currentPage: this.pageNo,
+          pageSize: this.pageSize
+        },
+        "json"
+      )
+        .then(res => {
+          if (res.result !== "0000") {
+            this.tableData = [];
+            return;
+          }
+          this.tableData = res.data.sysDomainPageBean.datas;
+          this.total = res.data.sysDomainPageBean.totalCount - 0;
+        })
+        .catch(res => {});
+    },
+    //删除添加分组
+    delete_group() {
+      this.$swal({
+        title: "您确定要删除这条分组吗？",
+        text: "删除后将无法恢复，请谨慎操作！",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#DD6B55",
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        confirmButtonClass: "btn btn-success"
+      }).then(res => {
+        if (res.value) {
+          this.$post(
+            `gwt/system/sysDomain/sysgroup/del`,
+            {
+              id: this.category[this.current].id
+            },
+            "json"
+          )
+            .then(res => {
+              if (res.result !== "0000") {
+                this.$swal({
+                  title: "操作失败！",
+                  text: res.msg,
+                  type: "error",
+                  confirmButtonColor: "#DD6B55",
+                  confirmButtonText: "确定",
+                  showConfirmButton: true
+                });
+                return;
+              }
+              this.search_all_group();
+              this.$message({
+                type: "success",
+                message: "删除分组成功"
+              });
+            })
+            .catch(res => {
+              console.log(res);
+            });
+        }
+      });
+    },
+    //提交添加分组
+    onSubmit() {
+      this.$refs.group_form.validate(res => {
+        if (!res) return;
+        this.group_loading = true;
+        var id;
+        var message = "添加分组成功";
+        if (this.group_type === "update") {
+          id = this.category[this.current].id;
+          message = "修改分组名称成功";
+        }
+        this.$post(
+          "gwt/system/sysDomain/sysgroup/save",
+          {
+            name: this.group_form.name,
+            domainId: this.field_manager_data.domainId,
+            pid: 0,
+            id
+          },
+          "json"
+        )
+          .then(res => {
+            this.group_loading = false;
+            if (res.result !== "0000") {
+              this.$swal({
+                title: "操作失败！",
+                text: res.msg,
+                type: "error",
+                confirmButtonColor: "#DD6B55",
+                confirmButtonText: "确定",
+                showConfirmButton: true
+              });
+              return;
+            }
+            this.$message({
+              type: "success",
+              message
+            });
+            this.group_visible = false;
+            this.search_all_group();
+          })
+          .catch(res => {
+            this.group_loading = false;
+          });
+      });
     },
     //
     onCancel() {
-      this.role_visible = false;
+      this.group_visible = false;
     },
-    edit_role() {
-      this.role_visible = true;
-      this.form.title = this.field_manager_data.title;
-    },
+
     go_field_auth() {
       this.$router.push({
         path: "/user-manager/field-auth"
       });
     },
     handleDelete(index, item) {},
-    handleSizeChange() {},
+    handleSizeChange(e) {
+      localStorage.setItem("user-manager/field-desc", e);
+    },
     handleCurrentChange() {}
   }
 };

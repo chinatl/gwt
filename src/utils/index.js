@@ -348,7 +348,7 @@ export function dealImage(path, callback) {
   };
 };
 export function getFileType(name) {
-  if(!name){
+  if (!name) {
     return 'unknown'
   }
   if (/\.(docx?)$/.test(name)) {

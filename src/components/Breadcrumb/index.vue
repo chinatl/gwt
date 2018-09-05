@@ -32,7 +32,7 @@ export default {
       let matched = this.$route.matched.filter(item => item.name);
       const second = matched[matched.length - 1];
       if (second.meta.temp) {
-        second.meta.title = this.$store.getters.field_manager_data.title;
+        second.meta.title = this.$store.getters.field_manager_data.name;
       }
       if (second.meta.up) {
         var newArr = [];
@@ -41,7 +41,7 @@ export default {
             break;
           }
           newArr.push(this.levelList[i]);
-        };
+        }
         newArr.push(second);
         this.$store.commit("SET_LEVELLIST", newArr);
       } else {

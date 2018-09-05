@@ -7,8 +7,9 @@ import edu_train from './modules/edu_train'
 
 import getters from './getters'
 import { setItem, getItem } from '@/utils/auth'
-import { SET_USER_INFO, SET_USER_SIGN, SET_USER_TOKEN } from './mutations'
-Vue.use(Vuex)
+import { SET_USER_INFO, SET_USER_SIGN, SET_USER_TOKEN, SET_FIELD_MANAGER_DATA, SET_FIELD_APP_LIST } from './mutations'
+Vue.use(Vuex);
+import { post } from '@/utils/fetch'
 const store = new Vuex.Store({
   strict: process.env.NODE_ENV === 'development' ? true : false,
   modules: {
@@ -20,7 +21,7 @@ const store = new Vuex.Store({
   getters,
   state: {
     field_manager_data: {
-      title: 'temp'
+      name: 'temp'
     },
     // 面包屑导航条
     levelList: [],
@@ -30,12 +31,17 @@ const store = new Vuex.Store({
 
     },
     sign: '',//签名,
-    token: ''
+    token: '',
+    field_app_list: [],
   },
   mutations: {
-    SET_FIELD_MANAGER_DATA: (state, data) => {
+    [SET_FIELD_MANAGER_DATA](state, data) {
       state.field_manager_data = data;
-      setItem('field_manager_data', data)
+      setItem(SET_FIELD_MANAGER_DATA, data)
+    },
+    SET_FIELD_MANAGER_DATA_VALUE: (state, name) => {
+      state.field_manager_data.name = name;
+      setItem(SET_FIELD_MANAGER_DATA, state.field_manager_data)
     },
     SET_LEVELLIST: (state, data) => {
       //解决json 序列化的问题
@@ -61,7 +67,36 @@ const store = new Vuex.Store({
       state.token = data;
       sessionStorage.setItem(SET_USER_TOKEN, JSON.stringify(data));
     },
-
+    [SET_FIELD_APP_LIST]: (state, data) => {
+      state.field_app_list = data;
+      sessionStorage.setItem(SET_FIELD_APP_LIST, JSON.stringify(data));
+    },
+    set_field_appList: (state, { index, isActive }) => {
+      state.field_app_list[index].isActive = isActive;
+      sessionStorage.setItem(SET_FIELD_APP_LIST, JSON.stringify(state.field_app_list));
+    }
+  },
+  actions: {
+    readSession: ({
+      commit
+    }, key) => {
+      var data = getItem(key);
+      if (data) {
+        store.commit(key, data)
+      }
+    },
+    get_all_app_list: ({ commit, state }, domainId) => {
+      post('gwt/system/sysDomain/getAppByDomainId', {
+        domainId
+      }, 'json').then(res => {
+        if (res.result !== '0000') {
+          return
+        };
+        commit(SET_FIELD_APP_LIST, res.data.appList)
+      }).catch(res => {
+        console.log(res)
+      });
+    },
   }
 })
 

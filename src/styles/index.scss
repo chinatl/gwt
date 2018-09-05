@@ -52,7 +52,9 @@ a:focus,
 a:active {
   outline: none;
 }
-
+.swal2-container.swal2-shown {
+  z-index: 2200;
+}
 .erp-btn {
 	font-family: "Montserrat-Regular";
 	background-color: $buttonBgc;

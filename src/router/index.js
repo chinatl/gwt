@@ -171,7 +171,7 @@ export const constantRouterMap = [
         path: 'field-desc',
         name: '域管理-子列表',
         component: () => import('@/views/user-manager/fieldDesc'),
-        meta: { title: store.getters.field_manager_data.title, hidden: true, temp: true, up: true },
+        meta: { title: store.getters.field_manager_data.name, hidden: true, temp: true, up: true },
         hidden: true,
       },
       {

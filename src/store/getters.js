@@ -17,5 +17,6 @@ const getters = {
   sign: state => state.sign,
   user_info: state => state.user_info,
   token: state => state.token,
+  field_app_list: state => state.field_app_list,
 }
 export default getters

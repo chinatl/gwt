@@ -101,6 +101,7 @@ export default {
     };
   },
   created() {
+    this.$store.dispatch('readSession',SET_TRAIN_LIST_DATA);
     var current = sessionStorage.getItem("edu-list");
     this.current = current ? current - 0 : 1;
     this.$store.dispatch("get_class_list");

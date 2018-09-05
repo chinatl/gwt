@@ -82,12 +82,12 @@ export default {
             },
             {
               id: 14,
-              label: "省开发委",
+              label: "省开发委"
             },
             {
               id: 10,
-              label: "省教育厅",
-            },
+              label: "省教育厅"
+            }
           ]
         },
         {
@@ -97,9 +97,9 @@ export default {
             {
               id: 5,
               label: "碑林区区政府"
-            },
+            }
           ]
-        },
+        }
       ],
       defaultProps: {
         children: "children",
@@ -123,6 +123,17 @@ export default {
         this.$emit("close");
       }
     }
+  },
+  created() {
+    this.$post("gwt/system/sysOrg/getAreaOrgTreeData", {
+      showAllOrgFlag: "N"
+    })
+      .then(res => {
+        console.log(res);
+      })
+      .catch(res => {
+        console.log(res);
+      });
   },
   methods: {
     handleNodeClick() {},

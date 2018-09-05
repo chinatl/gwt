@@ -37,7 +37,7 @@ export default {
     var isSend = sessionStorage.getItem("login-isSend");
     this.isSend = isSend === "true" ? true : false;
     var send_message = sessionStorage.getItem("login-message");
-    this.send_message = send_message ? send_message : "send_message";
+    this.send_message = send_message ? send_message : "获取验证码";
     if (this.isSend) {
       var isSend = sessionStorage.setItem("login-isSend", "true");
       var a = 61 - parseInt(this.send_message);
