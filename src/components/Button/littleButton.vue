@@ -1,8 +1,5 @@
 <template>
-    <span  :class="'little-button ' + classTitle" @click="submit">
-        <svg-icon :icon-class='className.iconName' v-if="className.iconName"></svg-icon>
-        {{name}}
-    </span>
+    <span  :class="'little-button ' + classTitle" @click="submit"><svg-icon :icon-class='className.iconName' v-if="className.iconName"></svg-icon>{{name}}</span>
 </template>
 <script>
 export default {
@@ -72,6 +69,10 @@ export default {
         case "举报":
           return {
             className: "jubao"
+          };
+        case "调岗":
+          return {
+            className: "tongzhibiangeng"
           };
         case "通知变更":
           return {
@@ -168,7 +169,7 @@ export default {
 <style rel="stylesheet/scss" lang="scss">
 .little-button {
   font-size: 12px;
-  padding: 5px 8px;
+  padding: 4px 8px;
   border-radius: 3px;
   margin: 0 5px;
   color: #ffff;

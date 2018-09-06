@@ -107,6 +107,8 @@ Vue.directive('drag', Drag);
 import Wave from "@/directive/waves"
 Vue.directive('wave', Wave);
 //住
+import { get_color_number } from "@/utils";
+Vue.prototype.$get_color_number = get_color_number;
 
 // import '@/permission' // permission control
 import '@/session'

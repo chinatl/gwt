@@ -313,8 +313,10 @@ export function get_color_number(source, keyword) {
       return_arr[j].name = 'red';
       return_arr[j].value = old_keyword_arr.splice(0, 1)[0];
     }
-  }
-  return return_arr;
+  };
+  return return_arr.filter(res => {
+    return res.value
+  });
 }
 //跳路由
 export function go_route(str) {
@@ -370,4 +372,26 @@ export function getFileType(name) {
     return "文件夹";
   }
   return 'unknown'
+}
+//根据array的name属性生成树
+export function GetTreeData(array, name) {
+  var childArray = GetParentData(id, array);
+  if (childArray.length > 0) { //如果有值，采用递归得到他的子元素
+    menus += '<ul>'
+    for (var i in childArray) {
+      menus += '<li>' + childArray[i].name;
+      GetData(childArray[i].id, array);
+      menus += '</li>';
+    }
+    menus += '</ul>';
+  }
+}
+
+function GetParentData(id, array) {
+  var newArray = [];
+  for (var i in array) {
+    if (array[i].pid == id)
+      newArray.push(array[i]);
+  }
+  return newArray;
 }

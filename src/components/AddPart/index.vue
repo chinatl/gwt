@@ -1,45 +1,41 @@
 <template>
 <el-dialog :visible.sync="dialog" title='添加部门' class="select-user-dialog" v-drag>
+  <div  v-loading ='loading'>
     <div class="select-user-container">
         <div class="select-left">
             <div class="select-part-top">
-                <el-input v-model="input" size="small" placeholder="请选择部门名称">
+                <el-input v-model="filterText" size="small" placeholder="请选择部门名称">
                     <i slot="suffix" class="el-input__icon el-icon-search"></i>
                 </el-input>
             </div>
             <div class="select-part-bottom common-temp">
                 <el-tree
-                :data="data2"
+                :data="$store.getters.tree_data"
                 show-checkbox
                 node-key="id"
-                :default-expanded-keys="[2, 3]"
-                :default-checked-keys="[5]"
+                @check="handleCheckChange"
+                :filter-node-method="filterNode"
+                ref="tree"
+                :highlight-current= 'true'
                 :props="defaultProps">
                 </el-tree>
             </div>
         </div>
+         <!-- :default-expanded-keys="[2, 3]"
+                :default-checked-keys="[5]" -->
         <div class="select-right">
             <div class="has-selected">
-                <span>已选(2)</span>
-                <el-button size="mini" v-wave><span class="span">清空</span></el-button>
+                <span>已选({{has_checked_item.length}})</span>
+                <el-button size="mini" v-wave @click="remove_all"><span class="span">清空</span></el-button>
             </div>
             <div class="has-yield-list">
                 <ul>
-                    <li>
+                    <li v-for='(item,index) in has_checked_item' :key="index">
                         <div>
                             <svg-icon icon-class='tree'></svg-icon>
-                            <span class="user-name">省办公厅</span>
+                            <span class="user-name">{{item.name}}</span>
                         </div>
-                        <div>
-                            <i class="el-icon-close"></i>
-                        </div>
-                    </li>
-                    <li>
-                        <div>
-                            <svg-icon icon-class='tree'></svg-icon>
-                            <span class="user-name">西安神航星云科技有限公司</span>
-                        </div>
-                        <div>
+                        <div @click="del_tree_node(item.id,index)">
                             <i class="el-icon-close"></i>
                         </div>
                     </li>
@@ -51,6 +47,7 @@
         <el-button size="small" @click="cancel" v-wave>取消</el-button>
         <el-button type="primary" @click="onSubmit" size="small" v-wave>确定</el-button>
     </div>
+  </div>
 </el-dialog>
 </template>
 <script>
@@ -58,53 +55,14 @@ export default {
   data() {
     return {
       part: "1",
-      checked: false,
-      input: "",
-      activeNames: "",
-      data2: [
-        {
-          id: 1,
-          label: "陕西省",
-          children: [
-            {
-              id: 4,
-              label: "省政府办公厅",
-              children: [
-                {
-                  id: 9,
-                  label: "三级 1-1-1"
-                },
-                {
-                  id: 10,
-                  label: "三级 1-1-2"
-                }
-              ]
-            },
-            {
-              id: 14,
-              label: "省开发委"
-            },
-            {
-              id: 10,
-              label: "省教育厅"
-            }
-          ]
-        },
-        {
-          id: 2,
-          label: "西安市碑林区",
-          children: [
-            {
-              id: 5,
-              label: "碑林区区政府"
-            }
-          ]
-        }
-      ],
+      filterText: "",
+      tree_data: [],
       defaultProps: {
-        children: "children",
-        label: "label"
-      }
+        children: "childrens",
+        label: "name"
+      },
+      has_checked_item: [],
+      checkedKeys: []
     };
   },
   props: {
@@ -112,6 +70,16 @@ export default {
       type: Boolean,
       default: false,
       required: true
+    },
+    loading: {
+      type: Boolean,
+      default: false,
+      required: true
+    },
+  },
+  watch: {
+    filterText(val) {
+      this.$refs.tree.filter(val);
     }
   },
   computed: {
@@ -125,23 +93,36 @@ export default {
     }
   },
   created() {
-    this.$post("gwt/system/sysOrg/getAreaOrgTreeData", {
-      showAllOrgFlag: "N"
-    })
-      .then(res => {
-        console.log(res);
-      })
-      .catch(res => {
-        console.log(res);
-      });
+    this.$store.dispatch("get_all_tree_data");
   },
   methods: {
+    filterNode(value, data) {
+      if (!value) return true;
+      return data.name.indexOf(value) !== -1;
+    },
+
+    //过滤
+
+    // 清空
+    remove_all() {
+      this.$refs.tree.setCheckedKeys([]);
+      this.has_checked_item = [];
+    },
+    del_tree_node(id, index) {
+      this.$refs.tree.setChecked(id, false);
+      this.has_checked_item.splice(index, 1);
+    },
+    handleCheckChange(e, { checkedKeys, checkedNodes }) {
+      this.checkedKeys = checkedKeys;
+      this.has_checked_item = checkedNodes.filter(res => {
+        return res.childrens === "";
+      });
+    },
     handleNodeClick() {},
     onSubmit() {
-      this.$emit("ok");
+      this.$emit("submit", this.checkedKeys);
     },
     cancel() {
-      console.log(1);
       this.$emit("close");
     },
     save_message() {},
@@ -184,9 +165,11 @@ export default {
           align-items: center;
         }
         .select-part-bottom {
-          padding: 10px 8px 10px 8px;
+          padding: 10px 8px 20px 8px;
           background-color: #fff;
-          overflow: hidden;
+          overflow: auto;
+          width: 100%;
+          height: 100%;
           .el-icon-star-off {
             color: #ffa227;
             font-size: 18px;
@@ -271,7 +254,7 @@ export default {
               line-height: 28px;
               .svg-icon {
                 font-size: 16px;
-                vertical-align: sub;
+                vertical-align: baseline;
               }
               .user-name {
                 letter-spacing: 1px;
@@ -279,7 +262,11 @@ export default {
                 white-space: nowrap;
                 text-overflow: ellipsis;
                 overflow: hidden;
-                max-width: 80px;
+                display: inline-block;
+                width: 160px;
+                height: 16px;
+                line-height: 16px;
+                margin-left: 5px;
               }
               .part-name {
                 width: 110px;

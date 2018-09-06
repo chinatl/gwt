@@ -8,3 +8,4 @@ export const SET_USER_SIGN = 'SET_USER_SIGN';
 export const SET_USER_TOKEN = 'SET_USER_TOKEN';
 export const SET_FIELD_MANAGER_DATA = 'SET_FIELD_MANAGER_DATA';
 export const SET_FIELD_APP_LIST = 'SET_FIELD_APP_LIST';
+export const SET_TREE_DATE = 'SET_TREE_DATE';

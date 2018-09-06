@@ -7,7 +7,7 @@ import edu_train from './modules/edu_train'
 
 import getters from './getters'
 import { setItem, getItem } from '@/utils/auth'
-import { SET_USER_INFO, SET_USER_SIGN, SET_USER_TOKEN, SET_FIELD_MANAGER_DATA, SET_FIELD_APP_LIST } from './mutations'
+import { SET_USER_INFO, SET_USER_SIGN, SET_USER_TOKEN, SET_FIELD_MANAGER_DATA, SET_FIELD_APP_LIST, SET_TREE_DATE } from './mutations'
 Vue.use(Vuex);
 import { post } from '@/utils/fetch'
 const store = new Vuex.Store({
@@ -33,6 +33,7 @@ const store = new Vuex.Store({
     sign: '',//签名,
     token: '',
     field_app_list: [],
+    tree_data: []
   },
   mutations: {
     [SET_FIELD_MANAGER_DATA](state, data) {
@@ -71,6 +72,10 @@ const store = new Vuex.Store({
       state.field_app_list = data;
       sessionStorage.setItem(SET_FIELD_APP_LIST, JSON.stringify(data));
     },
+    [SET_TREE_DATE]: (state, data) => {
+      state.tree_data = data;
+      sessionStorage.setItem(SET_TREE_DATE, JSON.stringify(data));
+    },
     set_field_appList: (state, { index, isActive }) => {
       state.field_app_list[index].isActive = isActive;
       sessionStorage.setItem(SET_FIELD_APP_LIST, JSON.stringify(state.field_app_list));
@@ -85,7 +90,7 @@ const store = new Vuex.Store({
         store.commit(key, data)
       }
     },
-    get_all_app_list: ({ commit, state }, domainId) => {
+    get_all_app_list: ({ commit }, domainId) => {
       post('gwt/system/sysDomain/getAppByDomainId', {
         domainId
       }, 'json').then(res => {
@@ -97,6 +102,18 @@ const store = new Vuex.Store({
         console.log(res)
       });
     },
+    get_all_tree_data: ({ commit }) => {
+      post('gwt/system/sysOrg/getAreaOrgTreeData', {
+        showAllOrgFlag: 'N'
+      },'json').then(res => {
+        if (res.result !== '0000') {
+          return
+        };
+        commit(SET_TREE_DATE, res.data.nodes)
+      }).catch(res => {
+        console.log(res)
+      });
+    }
   }
 })
 

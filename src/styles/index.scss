@@ -43,7 +43,11 @@ a:hover {
   outline: none;
   text-decoration: none;
 }
-
+.red {
+  color: #00C1DE;
+  font-family:"Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+  font-size:14px;
+}
 div:focus{
   outline: none;
  }
@@ -319,6 +323,7 @@ a:active {
   }
   .el-dialog {
     width: 600px;
+    // margin-top: 10vh!important;
     .el-dialog__header {
       border-bottom: 1px solid #e5e5e5;
       .el-dialog__title {

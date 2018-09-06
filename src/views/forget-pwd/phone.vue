@@ -1,12 +1,12 @@
 <template>
-<div class="forget-sub">
+  <div class="forget-sub" v-loading='loading'>
     <el-form ref="form" :model="form" label-width="120px" :rules="rules" status-icon :validate-on-rule-change='false'>
         <el-form-item label="验证手机号:" prop="phone" required>
             <el-input v-model="form.phone" size='medium' placeholder="请输入手机号" maxlength="20"></el-input>
         </el-form-item>
         <el-form-item label="验证码:" prop="userCode">
             <div class='phone-flex'>
-                <el-input v-model="form.userCode" placeholder="请输入手机号" maxlength="6" size='medium'></el-input>
+                <el-input v-model="form.userCode" placeholder="请输入短信验证码" maxlength="6" size='medium'></el-input>
                 <el-button :type="isSend ? 'info':'primary'" style="margin-left:10px;width:140px" size='medium' v-wave @click="get_validate">{{send_message}}</el-button>
             </div>
         </el-form-item>
@@ -76,6 +76,9 @@ export default {
   },
   methods: {
     get_validate() {
+      if (!this.form.phone) {
+        return;
+      }
       if (this.isSend) {
         this.$message({
           message: "您已发送验证码，请稍后再发",
@@ -131,11 +134,17 @@ export default {
     submit() {
       this.$refs.form.validate(res => {
         if (!res) return;
-        this.$post("gwt/checkPhoneValidateCode", {
-          userCode: this.form.userCode,
-          phone: this.form.phone
-        },'json')
+        this.loading = true;
+        this.$post(
+          "gwt/checkPhoneValidateCode",
+          {
+            userCode: this.form.userCode,
+            phone: this.form.phone
+          },
+          "json"
+        )
           .then(res => {
+            this.loading = false;
             if (res.result !== "0000") {
               this.$swal({
                 title: "操作失败！",
@@ -153,6 +162,7 @@ export default {
             sessionStorage.setItem("login-user-phone", this.form.phone);
           })
           .catch(res => {
+            this.loading = false;
             console.log(res);
           });
       });

@@ -17,6 +17,7 @@ export function get(url, data) {
 export function post(url, data, type) {
 	var content_type;
 	if (type === 'json') {
+		console.log(JSON.stringify(data, {}, 4))
 		content_type = 'application/json';
 		var object = Base64.encode(JSON.stringify(data));
 		var sign;

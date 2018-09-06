@@ -18,5 +18,6 @@ const getters = {
   user_info: state => state.user_info,
   token: state => state.token,
   field_app_list: state => state.field_app_list,
+  tree_data: state => state.tree_data,
 }
 export default getters

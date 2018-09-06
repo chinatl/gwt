@@ -12,7 +12,8 @@ module.exports = {
     proxyTable: {
       '/gwt': {
         // 测试环境
-        target: 'http://192.168.31.169:8080',  // 接口域名
+        target: 'http://192.168.31.169:8080',  // 接口域名 -谢震
+        // target: 'http://192.168.31.7:8080',  // 接口域名 - 陈普
         // changeOrigin: true,  //是否跨域
         // pathRewrite: {
         //   '^/apis': ''   //需要rewrite重写的,

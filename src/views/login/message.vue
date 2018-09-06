@@ -8,7 +8,7 @@
                <h3>手机短信验证！</h3>
                <p>您的绑定手机号为：{{$store.getters.user_info.mobilePhone}}</p>
                <div class="send">
-                   <el-input size="small" placeholder="请输入验证码" v-model="userCode" maxlength="6"></el-input>
+                   <el-input size="small" placeholder="请输入验证码" v-model="userCode" maxlength="6" @keyup.native.enter='submit'></el-input>
                    <!-- <el-button size="small" type="success" v-wave>获取验证码</el-button> -->
                    <div :class="isSend ? 'erp-btn info' : 'erp-btn'" v-wave @click="get_validate">{{send_message}}</div>
                </div>
@@ -129,6 +129,7 @@ export default {
         });
         return;
       }
+      this.loading = true;
       this.$post(
         "gwt/checkPhoneValidateCode",
         {
@@ -138,6 +139,7 @@ export default {
         "json"
       )
         .then(res => {
+          this.loading = false;
           if (res.result !== "0000") {
             this.$swal({
               title: "操作失败！",
@@ -159,10 +161,11 @@ export default {
           this.isSend = false;
           this.$router.push({ path: "/message/index" });
           clearInterval(this.timer);
-          sessionStorage.setItem("login-isSend", "false");
           sessionStorage.setItem("login-message", "获取验证码");
+          sessionStorage.setItem("login-isSend", "false");
         })
         .catch(res => {
+          this.loading = false;
           console.log(res);
         });
     }

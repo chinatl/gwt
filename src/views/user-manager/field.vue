@@ -148,7 +148,7 @@ export default {
         this.$post("gwt/system/sysDomain/save", {
           name: this.form.name,
           domainId: ""
-        })
+        },'json')
           .then(res => {
             this.form_loading = false;
             if (res.result !== "0000") {
@@ -164,12 +164,13 @@ export default {
             }
             this.$message({
               type: "success",
-              message: res.msg
+              message: '删除域操作成功！'
             });
             this.role_visible = false;
             this.init(this.pageSize, this.pageNo);
           })
           .catch(res => {
+            console.log(res)
             this.form_loading = false;
           });
       });
@@ -209,7 +210,7 @@ export default {
         }
         this.$post("gwt/system/sysDomain/del", {
           domainId
-        })
+        },'json')
           .then(res => {
             if (res.result !== "0000") {
               this.$swal({

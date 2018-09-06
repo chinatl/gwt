@@ -70,12 +70,12 @@
                        </template>
                     </el-table-column>
                     <el-table-column
-                    prop="name"
+                    prop="orgName"
                     align="center"
                     label="部门名称">
                     </el-table-column>
                     <el-table-column
-                    prop="type"
+                    prop="orgTypeName"
                     align="center"
                     label="部门类型">
                     </el-table-column>
@@ -134,7 +134,8 @@
             </el-form>
         </el-dialog>
         <!-- 添加部门 -->
-        <add-part :show='part_visible' @close='part_visible = false'></add-part>
+        <add-part :show='part_visible' 
+        @close='part_visible = false' @submit="submit_part" :loading='loading'></add-part>
     </div>
 </template>
 <script>
@@ -142,7 +143,7 @@ import { mapGetters } from "vuex";
 import formButton from "@/components/Button/formButton";
 import arrowButton from "@/components/Button/arrowButton";
 import AddPart from "@/components/AddPart";
-import { SET_FIELD_MANAGER_DATA } from "@/store/mutations";
+import { SET_TREE_DATE } from "@/store/mutations";
 export default {
   components: {
     formButton,
@@ -151,27 +152,9 @@ export default {
   },
   data() {
     return {
+      loading: false,
       input: "",
-      tableData: [
-        {
-          name: "陕西测试部门1",
-          type: "地市政府",
-          children: [
-            {
-              name: "陕西测试部门1",
-              type: "地市政府"
-            },
-            {
-              name: "陕西测试部门2",
-              type: "地市政府"
-            }
-          ]
-        },
-        {
-          name: "NB电子竞技俱乐部",
-          type: "地市政府"
-        }
-      ],
+      tableData: [],
       role_loading: false,
       rules: {
         name: [{ required: true, message: "请输入域名城", trigger: "blur" }]
@@ -212,10 +195,12 @@ export default {
     }
   },
   created() {
+    this.$store.dispatch("readSession", SET_TREE_DATE);
     var pageSize = localStorage.getItem("user-manager/field-desc/pageSize");
     this.pageSize = pageSize ? pageSize - 0 : 5;
     this.$store.dispatch("get_all_app_list", this.field_manager_data.domainId);
     this.search_all_group();
+    this.search_group_part(-1);
   },
   methods: {
     //查询所有分组
@@ -313,6 +298,25 @@ export default {
         this.search_group_part(this.category[index].id);
       }
     },
+    handleSizeChange(e) {
+      localStorage.setItem("user-manager/field-desc/pageSize", e);
+      this.pageNo = 1;
+      this.pageSize = e;
+      if (this.index === -1) {
+        this.search_group_part(-1);
+      } else {
+        this.search_group_part(this.category[index].id);
+      }
+    },
+    handleCurrentChange(e) {
+      sessionStorage.setItem("user-manager/field-desc/pageNo", e);
+      this.pageNo = e;
+      if (this.index === -1) {
+        this.search_group_part(-1);
+      } else {
+        this.search_group_part(this.category[index].id);
+      }
+    },
     //查询分组所带的部门
     search_group_part(groupId) {
       this.$post(
@@ -331,8 +335,8 @@ export default {
             this.tableData = [];
             return;
           }
-          this.tableData = res.data.sysDomainPageBean.datas;
-          this.total = res.data.sysDomainPageBean.totalCount - 0;
+          this.tableData = res.data.sysOrgPageBean.datas;
+          this.total = res.data.sysOrgPageBean.totalCount - 0;
         })
         .catch(res => {});
     },
@@ -427,20 +431,54 @@ export default {
       });
     },
     //
-    onCancel() {
-      this.group_visible = false;
-    },
-
     go_field_auth() {
       this.$router.push({
         path: "/user-manager/field-auth"
       });
     },
-    handleDelete(index, item) {},
-    handleSizeChange(e) {
-      localStorage.setItem("user-manager/field-desc", e);
+    onCancel() {
+      this.group_visible = false;
     },
-    handleCurrentChange() {}
+    //提交 添加部门
+    submit_part(checkedKeys) {
+      this.loading = true;
+      this.$post(
+        "gwt/system/sysDomain/addOrg",
+        {
+          ids: checkedKeys
+            .filter(res => {
+              return res.includes("region") === false;
+            })
+            .join(","),
+          domainId: this.field_manager_data.domainId,
+          groupId: -1
+        },
+        "json"
+      )
+        .then(res => {
+          this.loading = false;
+          if (res.result !== "0000") {
+            this.$swal({
+              title: "操作失败！",
+              text: res.msg,
+              type: "error",
+              confirmButtonColor: "#DD6B55",
+              confirmButtonText: "确定",
+              showConfirmButton: true
+            });
+            return;
+          }
+          this.$message({
+            type: "success",
+            message: "添加部门成功"
+          });
+          this.part_visible = false;
+        })
+        .catch(res => {
+          this.loading = false;
+        });
+    },
+    handleDelete(index, item) {}
   }
 };
 </script>

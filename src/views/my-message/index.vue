@@ -2,19 +2,20 @@
     <div class="my-message">
         <t-title>我的消息</t-title>
         <!-- <el-button @click.prevent.stop="dasdsad">adasdada</el-button> -->
-        <ul class="message-list">
-            <li v-for="(item,index) in [1,2,3]" :key="index" @click="$router.push({path:'desc'})">
+        <ul class="message-list" v-loading='loading'>
+            <li v-for="(item,index) in tableData" :key="index" @click="go_desc(item)">
                 <div class="message-area">
-                    <img :src="require('@/assets/imgs/report-s.png')">
+                    <img :src="require('@/assets/imgs/report-s.png')" v-if='item.TYPE_ID === 5'>
+                    <img :src="require('@/assets/imgs/message.png')" v-else>
                     <i class="el-icon-close" @click.stop="del_one_list"></i>
                 </div>
                 <div class="message-info">
-                    <div class="h3">标题为“bcbcn”的通知被举报，点击查看详情</div>
+                    <div class="h3">{{item.TITLE}}</div>
                     <div class="caozuo">
-                        <span class="reportColor">举报</span>
-                        <span class="info-detail">text01</span>
-                        <span class="info-detail">神航2部</span>
-                        <span class="info-time"> 2018-08-07 23:49:34</span>
+                        <little-button :name='item.TYPE_DESC'></little-button>
+                        <span class="info-detail">{{item.CREATE_USER_NAME}}</span>
+                        <span class="info-detail">{{item.DEPT}}</span>
+                        <span class="info-time"> {{item.UPDATE_TIME}}</span>
                     </div>
                 </div>
             </li>
@@ -24,38 +25,77 @@
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
             :current-page="pageNo"
-            :page-sizes="[10, 20, 30, 40]"
+            :page-sizes="$store.getters.page_list"
             :page-size="pageSize"
             layout="total, sizes, prev, pager, next, jumper"
             background
-            :total="40">
+            :total="total">
             </el-pagination>
         </div>
     </div>
 </template>
 <script>
-// import * as Driver from "driver.js"; // import driver.js
-// import "driver.js/dist/driver.min.css"; // import driver.js css
-// import steps from "./defineSteps";
-
+import littleButton from "@/components/Button/littleButton";
 export default {
+  components: {
+    littleButton
+  },
   data() {
     return {
       pageNo: 1,
-      pageSize: 5,
-      driver: null
+      loading: false,
+      pageSize: 10,
+      total: 0,
+      tableData: []
     };
   },
-  mounted() {
-    // this.driver = new Driver();
+
+  created() {
+    var total = sessionStorage.getItem("message/index/total");
+    this.total = total ? total - 0 : 0;
+    var pageNo = sessionStorage.getItem("message/index/pageNo");
+    this.pageNo = pageNo ? pageNo - 0 : 1;
+    var pageSize = localStorage.getItem("message/index/pageSize");
+    this.pageSize = pageSize ? pageSize - 0 : 10;
+    this.init(this.pageSize, this.pageNo);
   },
   methods: {
-    // dasdsad() {
-    //   this.driver.defineSteps(steps);
-    //   this.driver.start();
-    // },
-    handleSizeChange(e) {},
-    handleCurrentChange(e) {},
+    handleSizeChange(e) {
+      localStorage.setItem("message/index/pageSize", e);
+      this.pageNo = 1;
+      this.pageSize = e;
+      this.init(e, 1);
+    },
+    handleCurrentChange(e) {
+      sessionStorage.setItem("message/index/pageNo", e);
+      this.pageNo = e;
+      this.init(this.pageSize, e);
+    },
+    init(pageSize, pageNo) {
+      this.loading = true;
+      this.$post("gwt/business/msgRecvUser/list", {
+        currentPage: pageNo,
+        pageSize: pageSize
+      },'json')
+        .then(res => {
+          this.loading = false;
+          if (res.result !== "0000") {
+            return;
+          }
+          this.tableData = res.data.messagePageBean.datas;
+          this.total = res.data.messagePageBean.totalCount - 0;
+          sessionStorage.setItem(
+            "message/index/total",
+            res.data.messagePageBean.totalCount
+          );
+        })
+        .catch(res => {
+          this.loading = false;
+        });
+    },
+    go_desc(item) {
+      console.log(JSON.stringify(item, {}, 6));
+    },
     del_one_list(index) {
       this.$swal({
         title: "您确定要删除的信息吗？",
@@ -67,9 +107,7 @@ export default {
         cancelButtonText: "取消",
         confirmButtonClass: "btn btn-success"
       })
-        .then(function() {
-          Swal("删除！", "你的文件已经被删除。", "success");
-        })
+        .then(function() {})
         .catch(res => {
           console.log(1);
         });
