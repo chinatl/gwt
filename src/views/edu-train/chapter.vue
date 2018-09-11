@@ -58,6 +58,7 @@
           </div>
         </div> -->
         <el-dialog
+          :close-on-click-modal='false'
             :title="group_type === 'add' ? '添加章节' :'编辑章节'"
             class="common-dialog edu"
             :visible.sync="group_visible">

@@ -3,15 +3,15 @@
         <t-title title="会议通知" warning></t-title>
         <div class="page-form">
               <el-form ref="form" :model="form" label-width="80px" :rules="rules">
-                    <el-form-item label="标题" prop='name'>
-                        <el-input v-model="form.name" size="small"></el-input>
+                    <el-form-item label="标题" prop='noticeTitle'>
+                        <el-input v-model="form.noticeTitle" size="small"></el-input>
                     </el-form-item>
-                    <el-form-item label="会议地点">
-                        <el-input v-model="form.name" size="small"></el-input>
+                    <el-form-item label="会议地点" prop="noticeAdress">
+                        <el-input v-model="form.noticeAdress" size="small" maxlength="20"></el-input>
                     </el-form-item>
-                    <el-form-item label="开始时间" prop='date'>
+                    <el-form-item label="开始时间" prop='startTime'>
                         <el-date-picker
-                            v-model="form.date"
+                            v-model="form.startTime"
                             type="datetime"
                             size="small"
                             placeholder="选择日期时间">
@@ -30,7 +30,7 @@
                         </div>
                     </el-form-item>
                     <el-form-item label="通知简介">
-                        <el-input type="textarea" v-model="form.desc" :autosize="{ minRows: 4, maxRows: 6}"></el-input>
+                        <el-input type="textarea" v-model="form.noticeProfile" :autosize="{ minRows: 6, maxRows: 10}"></el-input>
                     </el-form-item>
                     <el-form-item label="附件">
                         <upload-button  @on-change="upload_img">添加附件</upload-button>
@@ -39,7 +39,7 @@
                     <el-form-item align='left'>
                         <el-checkbox v-model="form.checked"><span>我已确认本通知不含涉密信息</span></el-checkbox>
                     </el-form-item>
-                    <form-button cancel_name='保持草稿' submit_name='发送'></form-button>
+                    <form-button cancel_name='保持草稿' submit_name='发送' @submit="onSubmit" @cancel='save_message'></form-button>
             </el-form>
         </div>
         <add-yield :show="yield_dialog" @ok='yield_dialog = false' @close='yield_dialog = false'></add-yield>
@@ -53,7 +53,7 @@ import addUserButton from "@/components/Button/addUserButton";
 import addUser from "@/components/AddUser";
 import addYield from "@/components/AddYield";
 import formButton from "@/components/Button/formButton";
-// import localforage from "localforage";
+import { parseTime } from "@/utils";
 export default {
   components: {
     fileList,
@@ -66,23 +66,27 @@ export default {
   data() {
     return {
       dialog: false,
-      input: "",
+      loading: false,
       form: {
-        name: "",
-        name1: "",
-        type: "",
-        city: [],
-        jiaose: ""
+        noticeTitle: "",
+        noticeAdress: "",
+        noticeProfile: "",
+        date: null
       },
-      part: "1",
       rules: {
-        name: [{ required: true, message: "请输入部门名称", trigger: "blur" }],
-        name1: [{ required: true, message: "请输入部门全称", trigger: "blur" }],
-        city: [{ required: true, message: "请输入活动名称", trigger: "blur" }],
-        date: [{ required: true, message: "请选择开始时间", trigger: "blur" }]
+        noticeTitle: [
+          { required: true, message: "请输入会议标题", trigger: "blur" }
+        ],
+        noticeAdress: [
+          { required: true, message: "请输入会议地点", trigger: "blur" }
+        ],
+        startTime: [
+          { required: true, message: "请选择开始时间", trigger: "blur" }
+        ]
       },
       file_list: [],
-      yield_dialog: false //部门管理弹窗
+      yield_dialog: false, //部门管理弹窗
+      file_id_list: []
     };
   },
   created() {},
@@ -91,10 +95,111 @@ export default {
       this.file_list.splice(index, 1);
     },
     upload_img(e) {
-      this.file_list.push(e);
+      var formData = new FormData();
+      formData.append("selectFile", e.raw);
+      formData.append("ownerSystem", "gwt-platform");
+      formData.append("ownerModule", "Anno");
+      formData.append("ownerAperation", "ownerAperation");
+      formData.append("userId", "1");
+      formData.append("uploadOpt", "add");
+      formData.append("editFileId", undefined);
+      this.$post("gwt/uploadFile/upload", formData, "form")
+        .then(res => {
+          if (res.result !== "0000") {
+            this.$swal({
+              title: "上传失败！",
+              text: res.msg,
+              type: "error",
+              confirmButtonColor: "#DD6B55",
+              confirmButtonText: "确定",
+              showConfirmButton: true
+            });
+            return;
+          }
+          this.file_list.push(e);
+          this.file_id_list.push(res.data.attachment.id);
+        })
+        .catch(res => {
+          console.log(res);
+        });
     },
-    onSubmit() {},
-    save_message() {},
+    onSubmit() {
+      if (!this.form.startTime) {
+        this.$message({
+          message: "请选择会议开始时间",
+          type: "warning"
+        });
+      }
+      this.$post(
+        "gwt/notice/tbNotice/save",
+        {
+          token: this.$store.getters.user.token,
+          noticeId: "",
+          noticeTitle: this.form.noticeTitle,
+          noticeType: 1,
+          noticeAdress: this.form.noticeAdress,
+          noticeStatus: "1001",
+          noticeProfile: this.form.noticeProfile,
+          createUser: 1,
+          createOrg: 1,
+          startTime: parseTime(this.form.startTime, "{y}-{m}-{d} {h}:{i}:{s}"),
+          endTime: "",
+          attrArray: 7260,
+          changeType: "",
+          changeNoticeId: "",
+          domainArray: "",
+          orgArray: "",
+          selectedUsers: 3585
+        },
+        "json"
+      )
+        .then(res => {
+          if (res.result !== "0000") {
+            this.$swal({
+              title: "上传失败！",
+              text: res.msg,
+              type: "error",
+              confirmButtonColor: "#DD6B55",
+              confirmButtonText: "确定",
+              showConfirmButton: true
+            });
+            return;
+          }
+          this.$message({
+            message: "会议创建成功！",
+            type: "success"
+          });
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
+    save_message() {
+      this.$post("gwt/notice/tbNoticeDraft/save", {
+        token: "01_033facf6-1700-49f8-ba55-3688cbf4a12c",
+        draftUserId: "3585,3586",
+        draftUserName: "test15,test16",
+        draftOrgId: "",
+        draftOrgName: "",
+        noticeId: "",
+        noticeTitle: "网站暂存01",
+        noticeType: "1",
+        noticeAdress: "测试会议地点",
+        noticeStatus: "1001",
+        noticeProfile: "eccccccccccccccccccccc",
+        createUser: "1",
+        createOrg: 1,
+        startTime: "2018/09/11 20:50:00",
+        endTime: "",
+        attrArray: 7287
+      },'json')
+        .then(res => {
+          console.log(res);
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
     handleNodeClick() {}
   }
 };

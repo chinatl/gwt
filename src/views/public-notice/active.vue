@@ -4,10 +4,7 @@
         <div class="common-action">
             <div>
                 <el-select v-model="type" size="medium" style="margin-right:8px;">
-                    <el-option value='0' label='全部类型'></el-option>
-                    <el-option value='1' label='会议通知'></el-option>
-                    <el-option value='2' label='通知'></el-option>
-                    <el-option value='3' label='材料征集'></el-option>
+                    <el-option v-for="(item,index) in meeting_type_list" :key='index' :label="item.itemName" :value="item.itemKey"></el-option>
                 </el-select>
                 <el-date-picker
                     v-model="date"
@@ -25,14 +22,14 @@
                 <el-button type="primary" icon="el-icon-search" size='medium' v-wave>搜索</el-button>
             </div>
         </div>
-        <ul class="message-list">
-            <li v-for="(item,index) in [1,2,3]" :key="index">
+        <ul class="message-list" v-loading ='loading'>
+            <li v-for="(item,index) in message_list" :key="index">
               <div class="message-area">
                   <img :src="require('@/assets/imgs/message.png')">
               </div>
               <div class="message-info">
                   <div class="h3">
-                    标题为“bcbcn”的通知被举报，点击查看详情
+                    {{item.NOTICE_TITLE}}
                     <div class="message-action">
                       <little-button name='撤销'></little-button>
                       <little-button name='变更'></little-button>
@@ -40,9 +37,9 @@
                   </div>
                   <div class="caozuo">
                       <span class="reportColor">会议通知</span>
-                      <span class="info-detail">text01</span>
-                      <span class="info-detail">神航2部</span>
-                      <span class="info-time"> 2018-08-07 23:49:34</span>
+                      <span class="info-detail">{{item.REAL_NAME}}</span>
+                      <span class="info-detail">{{item.ORG_ALL_NAME}}</span>
+                      <span class="info-time">{{item.CREATE_TIME}}</span>
                   </div>
               </div>
             </li>
@@ -52,15 +49,15 @@
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
             :current-page="pageNo"
-            :page-sizes="[10, 20, 30, 40]"
+            :page-sizes="$store.getters.page_list"
             :page-size="pageSize"
             layout="total, sizes, prev, pager, next, jumper"
             background
-            :total="40">
+            :total="total">
             </el-pagination>
         </div>
         <!-- 删除弹窗 -->
-        <el-dialog
+        <el-dialog :close-on-click-modal='false'
         :visible.sync="del_dialog"
         width="40%"
         v-drag
@@ -78,6 +75,9 @@
 </template>
 <script>
 import littleButton from "@/components/Button/littleButton";
+import { SET_MEETING_TYPE_LIST } from "@/store/mutations";
+import { mapGetters } from "vuex";
+import qs from "qs";
 export default {
   components: {
     littleButton
@@ -86,16 +86,74 @@ export default {
     return {
       pageNo: 1,
       pageSize: 5,
+      total: 0,
+      loading: false,
       del_dialog: false,
       type: "",
       daterange: "",
       input: "",
-      date: ""
+      date: "",
+      message_list: []
     };
   },
+  created() {
+    this.$store.dispatch("readSession", SET_MEETING_TYPE_LIST);
+
+    var total = sessionStorage.getItem("public-notice/active/total");
+    this.total = total ? total - 0 : 0;
+    var pageNo = sessionStorage.getItem("public-notice/active/pageNo");
+    this.pageNo = pageNo ? pageNo - 0 : 1;
+    //页数存到localstorage里面
+    var pageSize = localStorage.getItem("public-notice/active/pageSize");
+    this.pageSize = pageSize ? pageSize - 0 : 5;
+
+    this.init(this.pageSize, this.pageNo);
+  },
+  computed: {
+    ...mapGetters(["meeting_type_list"])
+  },
   methods: {
-    handleSizeChange(e) {},
-    handleCurrentChange(e) {},
+    handleSizeChange(e) {
+      localStorage.setItem("public-notice/active/pageSize", e);
+      this.pageNo = 1;
+      this.pageSize = e;
+      this.init(e, 1);
+    },
+    handleCurrentChange(e) {
+      sessionStorage.setItem("public-notice/active/pageNo", e);
+      this.pageNo = e;
+      this.init(this.pageSize, e);
+    },
+    init(pageSize, pageNo) {
+      this.$post(
+        `gwt/notice/tbNotice/sendedList?${qs.stringify({
+          currentPage: pageNo,
+          pageSize: pageSize
+        })}`,
+        {
+          token: " 01_f5d80ef6-4118-4586-9837-eb3b8b17ea9f",
+          noticeType: "",
+          startTime: "",
+          endTime: "",
+          Q_noticeTitle_SL: ""
+        },
+        "json"
+      )
+        .then(res => {
+          if (res.result !== "0000") {
+            return;
+          }
+          this.message_list = res.data.noticePageBean.datas;
+          this.total = res.data.noticePageBean.totalCount - 0;
+          sessionStorage.setItem(
+            "public-notice/active/total",
+            res.data.noticePageBean.totalCount
+          );
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
     del_one_list(index) {
       this.del_dialog = true;
     },

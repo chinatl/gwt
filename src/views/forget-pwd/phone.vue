@@ -87,9 +87,9 @@ export default {
         return;
       }
       this.loading = true;
-      this.$get("gwt/getPhoneValidateCode", {
+      this.$post("gwt/getPhoneValidateCode", {
         phone: this.form.phone
-      })
+      },'json')
         .then(res => {
           if (res.result !== "0000") {
             this.$swal({

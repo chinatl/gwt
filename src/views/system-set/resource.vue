@@ -49,7 +49,7 @@
             </el-form>
           </div>
         </div> -->
-        <el-dialog
+        <el-dialog :close-on-click-modal='false'
             :title="group_type === 'add' ? '新增资源' :'编辑资源'"
             class="common-dialog"
             :visible.sync="group_visible">

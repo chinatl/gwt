@@ -142,6 +142,21 @@ export default {
             className: "bianji",
             iconName: "放大镜"
           };
+        case "停用":
+          return {
+            className: "tongzhibiangeng",
+            iconName: "暂停"
+          };
+        case "转出":
+          return {
+            className: "rukediaochan",
+            iconName: "导出"
+          };
+        case "启用":
+          return {
+            className: "biangeng",
+            iconName: "撤销"
+          };
         default:
           return {
             className: ""
@@ -175,6 +190,9 @@ export default {
   color: #ffff;
   cursor: pointer;
   text-align: center;
+  .svg-icon {
+    margin-right: 4px;
+  }
   &.yishangjia {
     background-color: #35ca79;
     cursor: default;
@@ -213,7 +231,7 @@ export default {
   &.biangeng {
     background-color: #35ca79;
     .svg-icon {
-      font-size: 16px;
+      font-size: 14px;
       vertical-align: sub;
     }
   }

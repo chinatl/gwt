@@ -68,10 +68,11 @@ export default {
         return;
       }
       this.loading = true;
-      this.$get("gwt/getPhoneValidateCode", {
+      this.$post("gwt/getPhoneValidateCode", {
         phone: this.$store.getters.user_info.mobilePhone
-      })
+      },'json')
         .then(res => {
+          this.loading = false;
           if (res.result !== "0000") {
             this.$swal({
               title: "操作失败！",
@@ -82,7 +83,6 @@ export default {
             return;
           }
           clearInterval(this.timer);
-          this.loading = false;
           this.isSendPhone = true;
           this.$message({
             message: "短信验证码已发送，请注意查收",

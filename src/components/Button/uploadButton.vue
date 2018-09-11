@@ -3,6 +3,7 @@
     action="https://jsonplaceholder.typicode.com/posts/"
     :on-change="upload_img"
     :show-file-list="false"
+    :before-upload="beforeAvatarUpload"
     :auto-upload="false">
         <el-button :size='size' :type="type" :icon="icon" v-wave>
             <slot></slot>
@@ -31,6 +32,9 @@ export default {
   methods: {
     upload_img(e) {
       this.$emit("on-change", e);
+    },
+    beforeAvatarUpload(file) {
+      this.$emit("beforeUpload", file);
     }
   }
 };

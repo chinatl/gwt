@@ -53,7 +53,7 @@
             :total="total">
             </el-pagination>
         </div>
-        <el-dialog
+        <el-dialog :close-on-click-modal='false'
             title="新增域"
             class="common-dialog padding0"
             v-drag
@@ -91,6 +91,10 @@ export default {
       total: 0
     };
   },
+  beforeDestroy(e) {
+    // sessionStorage.removeItem("user-manager/field/pageNo");
+    // sessionStorage.removeItem("user-manager/field/total");
+  },
   created() {
     var total = sessionStorage.getItem("user-manager/field/total");
     this.total = total ? total - 0 : 0;
@@ -119,11 +123,17 @@ export default {
     },
     init(pageSize, pageNo) {
       this.loading = true;
-      this.$get("gwt/system/sysDomain/list", {
-        Q_name_SL: this.Q_name_SL,
-        currentPage: pageNo,
-        pageSize: pageSize
-      })
+      this.$post(
+        "gwt/system/sysDomain/list",
+        {
+          Q_name_SL: this.Q_name_SL,
+          currentPage: pageNo,
+          pageSize: pageSize,
+          o: 2,
+          s: "DOMAIN_ID"
+        },
+        "json"
+      )
         .then(res => {
           this.loading = false;
           if (res.result !== "0000") {
@@ -145,10 +155,14 @@ export default {
       this.$refs.form.validate(res => {
         if (!res) return;
         this.form_loading = true;
-        this.$post("gwt/system/sysDomain/save", {
-          name: this.form.name,
-          domainId: ""
-        },'json')
+        this.$post(
+          "gwt/system/sysDomain/save",
+          {
+            name: this.form.name,
+            domainId: ""
+          },
+          "json"
+        )
           .then(res => {
             this.form_loading = false;
             if (res.result !== "0000") {
@@ -164,13 +178,13 @@ export default {
             }
             this.$message({
               type: "success",
-              message: '删除域操作成功！'
+              message: "操作成功！"
             });
             this.role_visible = false;
             this.init(this.pageSize, this.pageNo);
           })
           .catch(res => {
-            console.log(res)
+            console.log(res);
             this.form_loading = false;
           });
       });
@@ -208,9 +222,13 @@ export default {
         if (!res.value) {
           return;
         }
-        this.$post("gwt/system/sysDomain/del", {
-          domainId
-        },'json')
+        this.$post(
+          "gwt/system/sysDomain/del",
+          {
+            domainId
+          },
+          "json"
+        )
           .then(res => {
             if (res.result !== "0000") {
               this.$swal({
@@ -223,6 +241,10 @@ export default {
               });
               return;
             }
+            this.$message({
+              message: "删除成功！",
+              type: "success"
+            });
             this.init(this.pageSize, this.pageNo);
           })
           .catch(res => {

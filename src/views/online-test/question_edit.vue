@@ -82,7 +82,7 @@
         </div>
     </div>
     <!-- 创建或修改试题 -->
-        <el-dialog
+        <el-dialog :close-on-click-modal='false'
         :title="group_type === 'add' ? '创建试题' :'修改试题'"
         class="common-dialog"
         :visible.sync="group_visible">

@@ -36,9 +36,9 @@ import {
   Collapse,
   CollapseItem,
   Switch,
-  Cascader,
+  Radio
 } from 'element-ui';
-Vue.use(Cascader);
+Vue.use(Radio);
 Vue.use(Switch);
 Vue.use(Collapse);
 Vue.use(CollapseItem);

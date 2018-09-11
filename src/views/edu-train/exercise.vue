@@ -52,7 +52,7 @@
                 </el-pagination>
             </div>
         </div>
-        <el-dialog
+        <el-dialog :close-on-click-modal='false'
             :title="group_type === 'add' ? '添加练习题' :'修改练习题'"
             class="common-dialog"
             :visible.sync="group_visible">

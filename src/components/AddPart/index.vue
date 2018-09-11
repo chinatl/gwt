@@ -1,5 +1,5 @@
 <template>
-<el-dialog :visible.sync="dialog" title='添加部门' class="select-user-dialog" v-drag>
+<el-dialog :visible.sync="dialog" title='添加部门' class="select-user-dialog" v-drag :close-on-click-modal='false'>
   <div  v-loading ='loading'>
     <div class="select-user-container">
         <div class="select-left">

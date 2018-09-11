@@ -59,6 +59,7 @@
         </div>
         <!-- 弹窗 -->
         <el-dialog
+          :close-on-click-modal='false'
             :title="group_type === 'add' ? '添加课程类别' :'修改课程类别'"
             class="common-dialog"
             :visible.sync="group_visible">

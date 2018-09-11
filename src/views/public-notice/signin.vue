@@ -4,10 +4,7 @@
         <div class="common-action">
             <div>
                 <el-select v-model="type" size="medium" style="margin-right:8px;">
-                    <el-option value='0' label='全部类型'></el-option>
-                    <el-option value='1' label='会议通知'></el-option>
-                    <el-option value='2' label='通知'></el-option>
-                    <el-option value='3' label='材料征集'></el-option>
+                    <el-option v-for="(item,index) in meeting_type_list" :key='index' :label="item.itemName" :value="item.itemKey"></el-option>
                 </el-select>
                 <el-date-picker
                     v-model="date"
@@ -80,23 +77,33 @@
     </div>
 </template>
 <script>
+import { SET_MEETING_TYPE_LIST } from "@/store/mutations";
+import { mapGetters } from "vuex";
 export default {
   data() {
     return {
       pageNo: 1,
       pageSize: 5,
       input: "",
-      type: "0",
+      type: "",
       date: "0",
       tableData: []
     };
+  },
+  created() {
+    this.$store.dispatch("readSession", SET_MEETING_TYPE_LIST);
+  },
+  computed: {
+    ...mapGetters(["meeting_type_list"])
   },
   methods: {
     handleSizeChange() {},
     handleCurrentChange() {},
     handleEdit(index, item) {},
     handleDelete() {},
-    pickerOptions(e) {console.log(e)},
+    pickerOptions(e) {
+      console.log(e);
+    }
   }
 };
 </script>

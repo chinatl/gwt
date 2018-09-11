@@ -110,7 +110,7 @@
           </div>
         </t-layout>
         <!-- 域编辑 -->
-        <el-dialog
+        <el-dialog :close-on-click-modal='false'
             title="编辑域"
             class="common-dialog padding0"
             :visible.sync="role_visible">
@@ -122,7 +122,7 @@
             </el-form>
         </el-dialog>
         <!-- 分组编辑 -->
-        <el-dialog
+        <el-dialog :close-on-click-modal='false'
             :title="group_type === 'add' ? '新增域分组' :'编辑域分组'"
             class="common-dialog padding0"
             :visible.sync="group_visible">
@@ -302,19 +302,19 @@ export default {
       localStorage.setItem("user-manager/field-desc/pageSize", e);
       this.pageNo = 1;
       this.pageSize = e;
-      if (this.index === -1) {
+      if (this.current === -1) {
         this.search_group_part(-1);
       } else {
-        this.search_group_part(this.category[index].id);
+        this.search_group_part(this.category[this.current].id);
       }
     },
     handleCurrentChange(e) {
       sessionStorage.setItem("user-manager/field-desc/pageNo", e);
       this.pageNo = e;
-      if (this.index === -1) {
+      if (this.current === -1) {
         this.search_group_part(-1);
       } else {
-        this.search_group_part(this.category[index].id);
+        this.search_group_part(this.category[this.current].id);
       }
     },
     //查询分组所带的部门

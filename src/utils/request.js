@@ -2,7 +2,7 @@ import axios from 'axios'
 import { Message, MessageBox } from 'element-ui'
 import store from '../store'
 import { getToken } from '@/utils/auth'
-
+import router from '@/router'
 // 创建axios实例
 const service = axios.create({
   //baseURL: process.env.BASE_API, // api的base_url
@@ -39,6 +39,15 @@ service.interceptors.response.use(
         type: 'error',
         duration: 5 * 1000
       })
+      if (res.code === 7002) {
+        Message({
+          message: '该账号已在其他设备登陆，您已被登出！',
+          type: 'error'
+        });
+        router.push({
+          path: '/login'
+        })
+      }
       // 50008:非法的token; 50012:其他客户端登录了;  50014:Token 过期了;
       if (res.code === 50008 || res.code === 50012 || res.code === 50014) {
         MessageBox.confirm(

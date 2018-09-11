@@ -79,7 +79,7 @@
         </div>
         </div>
         <!-- 修改手机号第一步 -->
-        <el-dialog
+        <el-dialog :close-on-click-modal='false'
             title="为了保证公务通账号的安全，请验证账号和密码"
             class="common-dialog"
             center v-drag
@@ -92,7 +92,7 @@
             </el-form>
         </el-dialog>
         <!-- 修改手机号第二步 -->
-        <el-dialog
+        <el-dialog :close-on-click-modal='false'
             title="手机号绑定"
             class="common-dialog" v-drag
             @close="close_second_visible"
@@ -152,7 +152,7 @@
             </div>
         </el-dialog>
         <!-- 修改密码 -->
-        <el-dialog
+        <el-dialog :close-on-click-modal='false'
             title="修改密码"
             class="common-dialog"
             :visible.sync="role_visible" v-drag>

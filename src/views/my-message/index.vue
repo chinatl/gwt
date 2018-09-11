@@ -58,6 +58,8 @@ export default {
     var pageSize = localStorage.getItem("message/index/pageSize");
     this.pageSize = pageSize ? pageSize - 0 : 10;
     this.init(this.pageSize, this.pageNo);
+    //初始化查询
+    this.$store.dispatch("get_meeting_type_list");
   },
   methods: {
     handleSizeChange(e) {

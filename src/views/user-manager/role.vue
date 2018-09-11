@@ -57,7 +57,7 @@
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
             :current-page="pageNo"
-            :page-sizes="[10, 20, 30, 40]"
+            :page-sizes="$store.getters.page_list"
             :page-size="pageSize"
             layout="total, sizes, prev, pager, next, jumper"
             background
@@ -65,7 +65,7 @@
             </el-pagination>
         </div>
         <!-- 角色新增弹出框 -->
-            <el-dialog
+            <el-dialog :close-on-click-modal='false'
             :title="role_type === 'add' ? '新增角色':'编辑角色'"
             class="common-dialog padding0"
             v-drag
@@ -89,7 +89,7 @@
 </template>
 <script>
 import formButton from "@/components/Button/formButton";
-
+import qs from "qs";
 export default {
   components: {
     formButton
@@ -120,10 +120,19 @@ export default {
   },
   created() {
     //页数存到localstorage里面
-    var pageSize = localStorage.getItem("user-manager/role");
+    var total = sessionStorage.getItem("user-manager/role/total");
+    console.log(total);
+    this.total = total ? total - 0 : 0;
+    var pageNo = sessionStorage.getItem("user-manager/role/pageNo");
+    this.pageNo = pageNo ? pageNo - 0 : 1;
+    var pageSize = localStorage.getItem("user-manager/role/pageSize");
     this.pageSize = pageSize ? pageSize - 0 : 5;
     this.init(this.pageSize, this.pageNo);
     this.get_all_resource();
+  },
+  beforeDestroy(e) {
+    sessionStorage.removeItem("user-manager/role/pageNo");
+    sessionStorage.removeItem("user-manager/role/total");
   },
   methods: {
     get_all_resource() {
@@ -160,13 +169,17 @@ export default {
     //查询所有的资源
     init(pageSize, pageNo) {
       this.loading = true;
-      this.$get(
-        "gwt/system/sysRole/list",
+      this.$post(
+        `gwt/system/sysRole/list?${qs.stringify({
+          currentPage: pageNo,
+          pageSize: pageSize
+        })}`,
         {
           Q_roleName_SL: this.Q_name_SL,
-          currentPage: pageNo,
-          pageSize: pageSize,
+
           normal: true
+          // orderField: "role_id",
+          // orderSeq: "2"
         },
         "json"
       )
@@ -178,6 +191,10 @@ export default {
           }
           this.tableData = res.data.sysRolePageBean.datas;
           this.total = res.data.sysRolePageBean.totalCount - 0;
+          sessionStorage.setItem(
+            "user-manager/role/total",
+            res.data.sysRolePageBean.totalCount
+          );
         })
         .catch(res => {
           this.loading = false;
@@ -188,12 +205,13 @@ export default {
       this.init(this.pageSize, 1);
     },
     handleSizeChange(e) {
-      localStorage.setItem("user-manager/role", e);
+      localStorage.setItem("user-manager/role/pageSize", e);
       this.pageNo = 1;
       this.pageSize = e;
       this.init(e, 1);
     },
     handleCurrentChange(e) {
+      sessionStorage.setItem("user-manager/role/pageNo", e);
       this.pageNo = e;
       this.init(this.pageSize, e);
     },
@@ -324,9 +342,13 @@ export default {
       this.form.roleName = item.roleName;
       this.form.remark = item.remark;
       this.form.roleId = item.roleId;
-      this.$get("gwt/system/sysRole/editResRole", {
-        roleId: item.roleId
-      })
+      this.$post(
+        "gwt/system/sysRole/editResRole",
+        {
+          roleId: item.roleId
+        },
+        "json"
+      )
         .then(res => {
           if (res.result !== "0000") {
             return;
@@ -334,7 +356,7 @@ export default {
           this.checked_list.forEach(res => {
             res.checked = [];
           });
-         
+
           for (var i = 0; i < res.data.sysRoleResList.length; i++) {
             for (var j = 0; j < this.checked_list.length; j++) {
               if (

@@ -3,21 +3,32 @@
     <div slot="left">
         <div class="common-action">
           <div>
-            <el-input v-model="input" placeholder="请输入部门名称"  size='medium' style="width:100%"></el-input>
-            <el-button type="success" icon="el-icon-plus" size='medium' @click="add_part" style="padding:10px 10px;overflow:hidden;width:130px" v-wave>新增部门</el-button>
+            <el-input v-model="filterText" size="medium" placeholder="请输入部门名称">
+              <i slot="suffix" class="el-input__icon el-icon-search"></i>
+            </el-input>
+            <el-button type="success" icon="el-icon-plus" size='medium' @click="add_part" style="padding:10px 0px;overflow:hidden;width:180px" v-wave>新增部门</el-button>
           </div>
         </div>
-        <div class="part-content common-temp">
-            <el-tree :data="data" :props="defaultProps" @node-click="handleNodeClick"></el-tree>
+        <div class="part-content common-temp scrollbar" style="overflow: auto">
+            <el-tree :data="tree_data" :props="defaultProps"
+            node-key="id"
+            :filter-node-method="filterNode"
+            :default-expanded-keys="expand_arr"            
+             @node-click="handleNodeClick" :highlight-current= 'true' ref="tree"></el-tree>
         </div>
     </div>
     <div slot="right">
         <t-title>部门管理</t-title>
             <div class="part-action between">
                 <div class="part-action-left">
-                    当前位置：运城市
+                    当前位置：{{temp_data.name}}
                 </div>
-                <arrow-button></arrow-button>
+                <arrow-button 
+                  @setTop='setTop'
+                  @top='goTop'
+                  @bottom='goBottom'
+                  @setBottom='setBottom'
+                ></arrow-button>
             </div>
           <div class="common-table">
               <el-table
@@ -30,21 +41,22 @@
                   width="60"
                   label="选择">
                       <template slot-scope="scope">
-                          <el-checkbox v-model="scope.row.checked"></el-checkbox>
+                        <el-checkbox v-model="scope.row.checked"
+                         @change="change_table_checked($event,scope.$index)"></el-checkbox>
                       </template>
                   </el-table-column>
                   <el-table-column
-                  prop="type1"
+                  prop="orgName"
                   align="center"
                   label="部门名称">
                   </el-table-column>
                   <el-table-column
-                  prop="type2"
+                  prop="orgAllName"
                   align="center"
                   label="部门全程">
                   </el-table-column>
                   <el-table-column
-                  prop="type3"
+                  prop="orgAddr"
                   align="center"
                   label="部门地址">
                   </el-table-column>
@@ -59,12 +71,12 @@
                       size="mini"
                       type="success"
                       icon="el-icon-edit-outline"
-                      @click="handle_edit(scope.$index, scope.row)" v-wave>编辑</el-button>
+                      @click="handle_edit(scope.row)" v-wave>编辑</el-button>
                       <el-button
                       size="mini"
                       type="danger"
                       icon="el-icon-delete"
-                      @click="handle_delete(scope.$index, scope.row)" v-wave>删除</el-button>
+                      @click="handle_delete(scope.row.orgId)" v-wave>删除</el-button>
                   </template>
                   </el-table-column>
               </el-table>
@@ -74,47 +86,52 @@
               @size-change="handleSizeChange"
               @current-change="handleCurrentChange"
               :current-page="pageNo"
-              :page-sizes="[10, 20, 30, 40]"
+              :page-sizes="$store.getters.page_list"
               :page-size="pageSize"
               layout="total, sizes, prev, pager, next, jumper"
               background
-              :total="40">
+              :total="total">
               </el-pagination>
           </div>
       </div>
         <!-- 弹窗 -->
 <div class="common-dialog" slot="else">
-<el-dialog
+<el-dialog :close-on-click-modal='false'
 :title="part_type ==='add' ?'新增部门':'编辑部门'" v-drag
 :visible.sync="edit_visible">
-<el-form ref="form" :model="form" label-width="80px" :rules="rules"  class="demo-ruleForm">
-<el-form-item label="所属区域" prop='city'>
-      <el-cascader
-        :options="options"
-        size="small"
-        filterable
-        v-model="form.city"
-        style="width:100%"
-        change-on-select
-    ></el-cascader>
+<el-form ref="form" :model="form" label-width="80px" :rules="rules"  v-loading='form_loading'>
+<el-form-item label="所属区域" prop='city' v-if='temp_data.nodeType === "REGION"'>
+    <div class="flex">
+      <el-select v-model="option_value1" placeholder="" size="small" style="width:100%;margin-right:20px" @change="change_option1">
+        <el-option v-for="(item,index) in option1" :key="index" :label="item.itemName" :value="item.dicId"></el-option>
+      </el-select>
+      <el-select v-model="option_value2" placeholder="" size="small" style="width:100%"  @change="change_option2">
+        <el-option v-for="(item,index) in option2" :key="index" :label="item.itemName" :value="item.dicId"></el-option>
+      </el-select>
+      <el-select v-model="option_value3" placeholder="" size="small" style="width:100%;margin-left:20px">
+        <el-option v-for="(item,index) in option3" :key="index" :label="item.itemName" :value="item.dicId"></el-option>
+      </el-select>
+    </div>
 </el-form-item>
-<el-form-item label="部门名称" prop='name'>
-    <el-input v-model="form.name" size="small"></el-input>
+<el-form-item label="上级部门" v-if='temp_data.nodeType === "ORG"'>
+    <el-input v-model="temp_data.name" size="small" readonly></el-input>
 </el-form-item>
-<el-form-item label="部门全称" prop="name1">
-    <el-input v-model="form.name1" size="small"></el-input>
+<el-form-item label="部门名称" prop='orgName'>
+    <el-input v-model="form.orgName" size="small" maxlength="10"></el-input>
 </el-form-item>
-<el-form-item label="部门类型" prop="type">
-    <el-select v-model="form.type" placeholder="请选择活动区域" size="small" style="width:100%">
-      <el-option label="区域一" value="shanghai"></el-option>
-      <el-option label="区域二" value="beijing"></el-option>
+<el-form-item label="部门全称" prop="orgAllName">
+    <el-input v-model="form.orgAllName" size="small"></el-input>
+</el-form-item>
+<el-form-item label="部门类型" prop="deptType" v-if='temp_data.nodeType === "REGION"'>
+    <el-select v-model="form.deptType" placeholder="" size="small" style="width:100%;">
+        <el-option v-for="(item,index) in all_part_type" :key="index" :label="item.itemName" :value="item.dicId"></el-option>
     </el-select>
 </el-form-item>
 <el-form-item label="部门地址">
-    <el-input v-model="form.address" size="small"></el-input>
+    <el-input v-model="form.orgAddr" size="small"></el-input>
 </el-form-item>
 <el-form-item label="备注">
-        <el-input type="textarea" v-model="form.desc" :autosize="{ minRows: 4, maxRows: 6}"></el-input>
+        <el-input type="textarea" v-model="form.orgDesc" :autosize="{ minRows: 4, maxRows: 6}"></el-input>
 </el-form-item>
   <form-button @cancel='onCancel' @submit="onSubmit"></form-button>
 </el-form>
@@ -134,395 +151,465 @@ export default {
   data() {
     return {
       form: {
-        name: "",
-        name1: "",
-        type: "",
-        city: []
+        orgName: "",
+        orgAllName: "",
+        orgAddr: "",
+        orgDesc: "",
+        deptType: "",
+        city: ""
       },
+      filterText: "",
+      form_loading: false,
       part_type: "add",
       edit_visible: false,
       pageNo: 1,
       pageSize: 5,
+      total: 0,
       input: "",
       rules: {
-        name: [{ required: true, message: "请输入部门名称", trigger: "blur" }],
-        name1: [{ required: true, message: "请输入部门全称", trigger: "blur" }],
-        city: [{ required: true, message: "请输入活动名称", trigger: "blur" }],
-        type: [{ required: true, message: "请选择部门类型", trigger: "blur" }]
+        orgName: [
+          { required: true, message: "请输入部门名称", trigger: "blur" }
+        ],
+        orgAllName: [
+          { required: true, message: "请输入部门全称", trigger: "blur" }
+        ],
+        deptType: [
+          { required: true, message: "请选择部门类型", trigger: "change" }
+        ],
+        city: [{ required: true, message: "请至少选一个地区", trigger: "blur" }]
       },
-      tableData: [
-        {
-          type1: "运城扶贫办",
-          type2: "运城扶贫办",
-          type3: "运城市"
-        },
-        {
-          type1: "运城测试部",
-          type2: "运城扶贫办",
-          type3: "运城市"
-        },
-        {
-          type1: "运城扶贫办2",
-          type2: "运城扶贫办2",
-          type3: "研祥"
-        },
-        {
-          type1: "运城扶贫办",
-          type2: "运城扶贫办",
-          type3: "运城市"
-        }
-      ],
+      table_loading: false,
+      tableData: [],
       defaultProps: {
-        children: "children",
-        label: "label"
+        children: "childrens",
+        label: "name"
       },
-      options: [
-        {
-          value: "zhinan",
-          label: "指南",
-          children: [
-            {
-              value: "shejiyuanze",
-              label: "设计原则",
-              children: [
-                {
-                  value: "yizhi",
-                  label: "一致"
-                },
-                {
-                  value: "fankui",
-                  label: "反馈"
-                },
-                {
-                  value: "xiaolv",
-                  label: "效率"
-                },
-                {
-                  value: "kekong",
-                  label: "可控"
-                }
-              ]
-            },
-            {
-              value: "daohang",
-              label: "导航",
-              children: [
-                {
-                  value: "cexiangdaohang",
-                  label: "侧向导航"
-                },
-                {
-                  value: "dingbudaohang",
-                  label: "顶部导航"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          value: "zujian",
-          label: "组件",
-          children: [
-            {
-              value: "basic",
-              label: "Basic",
-              children: [
-                {
-                  value: "layout",
-                  label: "Layout 布局"
-                },
-                {
-                  value: "color",
-                  label: "Color 色彩"
-                },
-                {
-                  value: "typography",
-                  label: "Typography 字体"
-                },
-                {
-                  value: "icon",
-                  label: "Icon 图标"
-                },
-                {
-                  value: "button",
-                  label: "Button 按钮"
-                }
-              ]
-            },
-            {
-              value: "form",
-              label: "Form",
-              children: [
-                {
-                  value: "radio",
-                  label: "Radio 单选框"
-                },
-                {
-                  value: "checkbox",
-                  label: "Checkbox 多选框"
-                },
-                {
-                  value: "input",
-                  label: "Input 输入框"
-                },
-                {
-                  value: "input-number",
-                  label: "InputNumber 计数器"
-                },
-                {
-                  value: "select",
-                  label: "Select 选择器"
-                },
-                {
-                  value: "cascader",
-                  label: "Cascader 级联选择器"
-                },
-                {
-                  value: "switch",
-                  label: "Switch 开关"
-                },
-                {
-                  value: "slider",
-                  label: "Slider 滑块"
-                },
-                {
-                  value: "time-picker",
-                  label: "TimePicker 时间选择器"
-                },
-                {
-                  value: "date-picker",
-                  label: "DatePicker 日期选择器"
-                },
-                {
-                  value: "datetime-picker",
-                  label: "DateTimePicker 日期时间选择器"
-                },
-                {
-                  value: "upload",
-                  label: "Upload 上传"
-                },
-                {
-                  value: "rate",
-                  label: "Rate 评分"
-                },
-                {
-                  value: "form",
-                  label: "Form 表单"
-                }
-              ]
-            },
-            {
-              value: "data",
-              label: "Data",
-              children: [
-                {
-                  value: "table",
-                  label: "Table 表格"
-                },
-                {
-                  value: "tag",
-                  label: "Tag 标签"
-                },
-                {
-                  value: "progress",
-                  label: "Progress 进度条"
-                },
-                {
-                  value: "tree",
-                  label: "Tree 树形控件"
-                },
-                {
-                  value: "pagination",
-                  label: "Pagination 分页"
-                },
-                {
-                  value: "badge",
-                  label: "Badge 标记"
-                }
-              ]
-            },
-            {
-              value: "notice",
-              label: "Notice",
-              children: [
-                {
-                  value: "alert",
-                  label: "Alert 警告"
-                },
-                {
-                  value: "loading",
-                  label: "Loading 加载"
-                },
-                {
-                  value: "message",
-                  label: "Message 消息提示"
-                },
-                {
-                  value: "message-box",
-                  label: "MessageBox 弹框"
-                },
-                {
-                  value: "notification",
-                  label: "Notification 通知"
-                }
-              ]
-            },
-            {
-              value: "navigation",
-              label: "Navigation",
-              children: [
-                {
-                  value: "menu",
-                  label: "NavMenu 导航菜单"
-                },
-                {
-                  value: "tabs",
-                  label: "Tabs 标签页"
-                },
-                {
-                  value: "breadcrumb",
-                  label: "Breadcrumb 面包屑"
-                },
-                {
-                  value: "dropdown",
-                  label: "Dropdown 下拉菜单"
-                },
-                {
-                  value: "steps",
-                  label: "Steps 步骤条"
-                }
-              ]
-            },
-            {
-              value: "others",
-              label: "Others",
-              children: [
-                {
-                  value: "dialog",
-                  label: "Dialog 对话框"
-                },
-                {
-                  value: "tooltip",
-                  label: "Tooltip 文字提示"
-                },
-                {
-                  value: "popover",
-                  label: "Popover 弹出框"
-                },
-                {
-                  value: "card",
-                  label: "Card 卡片"
-                },
-                {
-                  value: "carousel",
-                  label: "Carousel 走马灯"
-                },
-                {
-                  value: "collapse",
-                  label: "Collapse 折叠面板"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          value: "ziyuan",
-          label: "资源",
-          children: [
-            {
-              value: "axure",
-              label: "Axure Components"
-            },
-            {
-              value: "sketch",
-              label: "Sketch Templates"
-            },
-            {
-              value: "jiaohu",
-              label: "组件交互文档"
-            }
-          ]
-        }
-      ],
-      data: [
-        {
-          label: "运城市",
-          children: [
-            {
-              label: "二级 1-1",
-              children: [
-                {
-                  label: "三级 1-1-1"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          label: "一级 2",
-          children: [
-            {
-              label: "二级 2-1",
-              children: [
-                {
-                  label: "三级 2-1-1"
-                }
-              ]
-            },
-            {
-              label: "二级 2-2",
-              children: [
-                {
-                  label: "三级 2-2-1"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          label: "一级 3",
-          children: [
-            {
-              label: "二级 3-1",
-              children: [
-                {
-                  label: "三级 3-1-1"
-                }
-              ]
-            },
-            {
-              label: "二级 3-2",
-              children: [
-                {
-                  label: "三级 3-2-1"
-                }
-              ]
-            }
-          ]
-        }
-      ]
+      tree_data: [],
+      temp_data: {
+        name: "----",
+        nodeType: "REGION"
+      },
+      all_part_type: [],
+      option1: [],
+      option2: [],
+      option3: [],
+      option_value1: "",
+      option_value2: "",
+      option_value3: "",
+      expand_arr: []
     };
   },
+  watch: {
+    filterText(val) {
+      this.$refs.tree.filter(val);
+    }
+  },
+  beforeDestroy(e) {
+    sessionStorage.removeItem("user-manager/part/pageNo");
+    sessionStorage.removeItem("user-manager/part/total");
+    sessionStorage.removeItem("user-manager/part/data");
+  },
+  created() {
+    var expand_arr = sessionStorage.getItem("user-manager/part/data");
+    if (expand_arr) {
+      this.temp_data = JSON.parse(expand_arr);
+      this.expand_arr = [this.temp_data.id];
+    }
+    var total = sessionStorage.getItem("user-manager/part/total");
+    this.total = total ? total - 0 : 0;
+    var pageNo = sessionStorage.getItem("user-manager/part/pageNo");
+    this.pageNo = pageNo ? pageNo - 0 : 1;
+    var pageSize = localStorage.getItem("user-manager/part/pageSize");
+    this.pageSize = pageSize ? pageSize - 0 : 5;
+    this.get_user_tree();
+    //获取所有的部门类型
+    this.get_all_part_type();
+    //地区
+    this.select_region();
+  },
   methods: {
+    filterNode(value, data) {
+      if (!value) return true;
+      return data.name.indexOf(value) !== -1;
+    },
+    change_option1(e) {
+      this.form.city = "e";
+      this.option_value2 = "";
+      this.option_value3 = "";
+      this.$post("gwt/system/sysOrg/getAreaByParent", {
+        parents: e
+      })
+        .then(res => {
+          if (res.result !== "0000") {
+            return;
+          }
+          this.option2 = res.data.areaParentList;
+          this.option2.unshift({
+            itemName: "请选择",
+            dicId: "-1"
+          });
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
+    change_option2(e) {
+      this.option_value3 = "";
+      this.$post("gwt/system/sysOrg/getAreaByParent", {
+        parents: e
+      })
+        .then(res => {
+          if (res.result !== "0000") {
+            return;
+          }
+          this.option3 = res.data.areaParentList;
+          this.option3.unshift({
+            itemName: "请选择",
+            dicId: "-1"
+          });
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
+    //获取所有的部门类型
+    get_all_part_type() {
+      this.$post("gwt/system/sysOrg/getDeptType")
+        .then(res => {
+          if (res.result !== "0000") {
+            return;
+          }
+          this.all_part_type = res.data.getDeptType;
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
+    // 地区选择
+    select_region() {
+      this.$post("gwt/system/sysOrg/getAreaByParent")
+        .then(res => {
+          if (res.result !== "0000") {
+            return;
+          }
+          this.option1 = res.data.areaParentList;
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
+    //根据部门id查子部门
+    search_child_part(pageSize, pageNo) {
+      this.table_loading = true;
+      var orgParentId = this.temp_data.id;
+      var areaId = this.temp_data.areaId;
+      if (orgParentId.includes("region")) {
+        orgParentId = "";
+      } else {
+        areaId = "";
+      }
+      this.$post("gwt/system/sysOrg/list", {
+        orgParentId,
+        areaId,
+        currentPage: pageNo,
+        pageSize: pageSize
+      })
+        .then(res => {
+          this.table_loading = false;
+          this.loading = false;
+          if (res.result !== "0000") {
+            this.tableData = [];
+            return;
+          }
+          this.tableData = res.data.sysOrgPageBean.datas.map((res, i) => {
+            res.checked = false;
+            return res;
+          });
+          this.total = res.data.sysOrgPageBean.totalCount - 0;
+          sessionStorage.setItem(
+            "user-manager/part/total",
+            res.data.sysOrgPageBean.totalCount
+          );
+        })
+        .catch(res => {
+          this.table_loading = false;
+          console.log(res);
+        });
+    },
+    //查询用户管理部门配置
+    get_user_tree() {
+      this.$post(
+        "gwt/system/sysOrg/getAreaOrgTreeData",
+        {
+          showAllOrgFlag: "Y"
+        },
+        "json"
+      )
+        .then(res => {
+          if (res.result !== "0000") {
+            return;
+          }
+          this.tree_data = res.data.nodes;
+          if (this.expand_arr.length) {
+            this.search_child_part(this.pageSize, this.pageNo);
+          } else {
+            this.temp_data = res.data.nodes[0];
+            this.expand_arr.push(res.data.nodes[0].id);
+            this.search_child_part(this.pageSize, this.pageNo);
+          }
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
     add_part() {
       this.edit_visible = true;
       this.part_type = "add";
+      this.$nextTick(res => {
+        this.option_value1 = "";
+        this.option_value2 = "";
+        this.option_value3 = "";
+        this.form.orgDesc = "";
+        this.form.orgName = "";
+        this.form.orgAddr = "";
+        this.form.deptType = "";
+        this.form.orgAllName = "";
+        this.form.city = "";
+        this.$refs.form.resetFields();
+      });
     },
     handleNodeClick(data) {
-      console.log(data);
+      if (data.id === this.temp_data.id) {
+        return;
+      }
+      this.temp_data = data;
+      this.pageNo = 1;
+      this.search_child_part(this.pageSize, 1);
+      sessionStorage.setItem("user-manager/part/data", JSON.stringify(data));
     },
-    handle_edit() {
+    handle_edit(data) {
       this.edit_visible = true;
-      this.part_type = "edit";
+      this.part_type = "update";
+      this.form.orgId = data.orgId;
+      this.form.orgName = data.orgName;
+      this.form.orgAllName = data.orgAllName;
+      this.form.deptType = data.deptType;
+      this.form.orgAddr = data.orgAddr;
+      this.form.orgDesc = data.orgDesc;
+      this.form.orgParentId = data.orgParentId;
+      this.$nextTick(res => {
+        this.$refs.form.resetFields();
+      });
+      if (this.temp_data.nodeType === "REGION") {
+        this.$post("gwt/system/sysOrg/edit", {
+          orgId: data.orgId
+        }).then(res => {
+          var region = res.data.region;
+          if (region[0]) {
+            this.option_value1 = region[0].dicId + "";
+            this.change_option1(region[0].dicId + "");
+          }
+          if (region[1]) {
+            this.option_value2 = region[1].dicId + "";
+            this.change_option2(region[1].dicId + "");
+          }
+          if (region[2]) {
+            this.option_value3 = region[2].dicId + "";
+          }
+        });
+      }
     },
-    handle_delete() {},
-    handleSizeChange() {},
-    handleCurrentChange() {},
+    handle_delete(orgId) {
+      this.$swal({
+        title: "您确定要删除的信息吗？",
+        text: "删除后将无法恢复，请谨慎操作！",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#DD6B55",
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        confirmButtonClass: "btn btn-success"
+      }).then(res => {
+        if (!res.value) {
+          return;
+        }
+        this.$post(
+          "gwt/system/sysOrg/del",
+          {
+            orgId
+          },
+          "json"
+        )
+          .then(res => {
+            if (res.result !== "0000") {
+              this.$swal({
+                title: "操作失败！",
+                text: res.msg,
+                type: "error",
+                confirmButtonColor: "#DD6B55",
+                confirmButtonText: "确定",
+                showConfirmButton: true
+              });
+              return;
+            }
+            this.$message({
+              message: "删除成功！",
+              type: "success"
+            });
+            this.search_child_part(this.pageSize, this.pageNo);
+          })
+          .catch(res => {
+            console.log(res);
+          });
+      });
+    },
+    handleSizeChange(e) {
+      localStorage.setItem("user-manager/part/pageSize", e);
+      this.pageNo = 1;
+      this.pageSize = e;
+      this.search_child_part(e, 1);
+    },
+    handleCurrentChange(e) {
+      sessionStorage.setItem("user-manager/part/pageNo", e);
+      this.pageNo = e;
+      this.search_child_part(this.pageSize, e);
+    },
     onSubmit() {
-      this.edit_visible = false;
+      var account = "";
+      if (this.option_value1 !== -1) {
+        account = this.option_value1;
+      }
+      account = this.option_value1;
+      if (this.option_value2 !== "-1" && this.option_value2) {
+        account = this.option_value2;
+      }
+      if (this.option_value3 !== "-1" && this.option_value3) {
+        account = this.option_value3;
+      }
+      this.$refs.form.validate(res => {
+        if (!res) return;
+        var orgId = "";
+        var orgParentId = "";
+        var deptType = this.form.deptType;
+        if (this.part_type === "update") {
+          orgId = this.form.orgId;
+          orgParentId = this.form.orgParentId;
+        }
+        if (this.temp_data.nodeType === "ORG") {
+          orgParentId = this.temp_data.id;
+          account = undefined;
+          deptType = undefined;
+        }
+        this.form_loading = true;
+        this.$post(
+          "gwt/system/sysOrg/save",
+          {
+            orgId,
+            orgParentId,
+            areaId: this.temp_data.areaId,
+            account,
+            orgName: this.form.orgName,
+            orgAllName: this.form.orgAllName,
+            deptType,
+            orgAddr: this.form.orgAddr,
+            orgDesc: this.form.orgDesc
+          },
+          "json"
+        )
+          .then(res => {
+            this.form_loading = false;
+            if (res.result !== "0000") {
+              this.$swal({
+                title: "操作失败！",
+                text: res.msg,
+                type: "error",
+                confirmButtonColor: "#DD6B55",
+                confirmButtonText: "确定",
+                showConfirmButton: true
+              });
+              return;
+            }
+            this.$message({
+              type: "success",
+              message: res.msg
+            });
+            this.search_child_part(this.pageSize, this.pageNo);
+            this.edit_visible = false;
+          })
+          .catch(res => {
+            this.form_loading = false;
+          });
+      });
     },
     onCancel() {
       this.edit_visible = false;
+    },
+    setTop() {
+      this.sort_fn("top");
+    },
+    goTop() {
+      this.sort_fn("previous");
+    },
+    goBottom() {
+      this.sort_fn("next");
+    },
+    setBottom() {
+      this.sort_fn("bottom");
+    },
+    sort_fn(sortType) {
+      var data = {};
+      for (var i = 0; i < this.tableData.length; i++) {
+        if (this.tableData[i].checked) {
+          data = this.tableData[i];
+        }
+      }
+      if (!data.orgId) {
+        this.$message({
+          message: "请选择一条记录进行排序！",
+          type: "warning"
+        });
+        return;
+      }
+      this.$post("gwt/system/sysOrg/sort", {
+        pk: "orgId",
+        sortType,
+        orgId: data.orgId
+      })
+        .then(res => {
+          if (res.result !== "0000") {
+            this.$swal({
+              title: "操作失败！",
+              text: res.msg,
+              type: "error",
+              confirmButtonColor: "#DD6B55",
+              confirmButtonText: "确定",
+              showConfirmButton: true
+            });
+            return;
+          }
+          this.$message({
+            message: "操作成功！",
+            type: "success"
+          });
+          this.get_user_tree();
+          // this.search_child_part(this.pageSize, this.pageNo);
+        })
+        .catch(res => {});
+    },
+    change_table_checked(event, index) {
+      if (event) {
+        this.tableData = this.tableData.map((res, i) => {
+          if (i === index) {
+            res.checked = true;
+          } else {
+            res.checked = false;
+          }
+          return res;
+        });
+        this.$set(this.tableData, index, this.tableData[index]);
+      } else {
+        this.$set(this.tableData, index, this.tableData[index]);
+      }
     }
   }
 };

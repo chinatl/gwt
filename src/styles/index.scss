@@ -48,6 +48,9 @@ a:hover {
   font-family:"Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
   font-size:14px;
 }
+.el-input .el-input__inner {
+  padding-left: 6px
+}
 div:focus{
   outline: none;
  }
@@ -392,6 +395,7 @@ a:active {
   padding: 4px 8px;
 }
 .page-form {
+  width: 840px;
   padding: 40px 60px;
 }
 .flex {

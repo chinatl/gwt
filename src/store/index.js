@@ -4,6 +4,7 @@ import app from './modules/app'
 import user from './modules/user'
 import tagsView from './modules/tagsView'
 import edu_train from './modules/edu_train'
+import meeting from './modules/meeting'
 
 import getters from './getters'
 import { setItem, getItem } from '@/utils/auth'
@@ -16,7 +17,8 @@ const store = new Vuex.Store({
     app,
     user,
     tagsView,
-    edu_train
+    edu_train,
+    meeting
   },
   getters,
   state: {
@@ -105,7 +107,7 @@ const store = new Vuex.Store({
     get_all_tree_data: ({ commit }) => {
       post('gwt/system/sysOrg/getAreaOrgTreeData', {
         showAllOrgFlag: 'N'
-      },'json').then(res => {
+      }, 'json').then(res => {
         if (res.result !== '0000') {
           return
         };

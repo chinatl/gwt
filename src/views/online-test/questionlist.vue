@@ -54,7 +54,7 @@
             </el-pagination>
         </div>
         <!-- 角色新增弹出框 -->
-          <el-dialog
+          <el-dialog :close-on-click-modal='false'
             :title="role_type === 'add' ? '创建题库':'修改题库'"
             class="common-dialog"
             v-drag
@@ -76,7 +76,7 @@
             </el-form>
         </el-dialog>
 <!-- 创建试题 -->
-        <el-dialog
+        <el-dialog :close-on-click-modal='false'
             title='创建试题'
             class="common-dialog"
             :visible.sync="subject_visible">
@@ -112,7 +112,7 @@
             </el-form>
         </el-dialog>
     <!-- 批量导入题库 -->
-          <el-dialog
+          <el-dialog :close-on-click-modal='false'
             title='批量导入试题'
             class="common-dialog"
             :visible.sync="all_list_visible">
