@@ -373,25 +373,28 @@ export function getFileType(name) {
   }
   return 'unknown'
 }
-//根据array的name属性生成树
-export function GetTreeData(array, name) {
-  var childArray = GetParentData(id, array);
-  if (childArray.length > 0) { //如果有值，采用递归得到他的子元素
-    menus += '<ul>'
-    for (var i in childArray) {
-      menus += '<li>' + childArray[i].name;
-      GetData(childArray[i].id, array);
-      menus += '</li>';
-    }
-    menus += '</ul>';
+export function fileType(name) {
+  if (!name) {
+    return 'unknown'
   }
+  if (/\.(docx?)$/.test(name)) {
+    return "doc";
+  }
+  if (name.includes('image')) {
+    return "png";
+  }
+  if (/\.(pptx?)$/.test(name)) {
+    return "ppt";
+  }
+  if (/\.(csv|xlsx?)$/.test(name)) {
+    return "excel";
+  }
+  if (/\.(pdf)$/.test(name)) {
+    return "pdf";
+  }
+  if (!/\.[a-zA-z]+$/.test(name)) {
+    return "文件夹";
+  }
+  return 'unknown'
 }
 
-function GetParentData(id, array) {
-  var newArray = [];
-  for (var i in array) {
-    if (array[i].pid == id)
-      newArray.push(array[i]);
-  }
-  return newArray;
-}

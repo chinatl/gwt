@@ -157,6 +157,22 @@ export default {
             className: "biangeng",
             iconName: "撤销"
           };
+        case "材料征集":
+          return {
+            className: "rukediaochan",
+          };
+        case "通知":
+          return {
+            className: "rukediaochan",
+          };
+        case "会议通知":
+          return {
+            className: "rukediaochan",
+          };
+        case "公告":
+          return {
+            className: "rukediaochan",
+          };
         default:
           return {
             className: ""
@@ -190,6 +206,7 @@ export default {
   color: #ffff;
   cursor: pointer;
   text-align: center;
+  vertical-align: middle;
   .svg-icon {
     margin-right: 4px;
   }

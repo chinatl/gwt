@@ -31,7 +31,7 @@ service.interceptors.response.use(
      * code为非20000是抛错 可结合自己业务进行修改
      */
     const res = response.data
-    if (res.sEcho === '1' || res.ret === 0 || typeof res.data === 'object' || typeof res.recordsTotal === 'number' || res.result) {
+    if (res.sEcho === '1' || res.ret === 0 || typeof res.data === 'object' || typeof res.recordsTotal === 'number' || res.result &&  res.result !== "7002") {
       return response.data
     } else {
       Message({
@@ -39,6 +39,15 @@ service.interceptors.response.use(
         type: 'error',
         duration: 5 * 1000
       })
+      if (res.result === '7002') {
+        Message({
+          message: '该账号已在其他设备登陆，您已被登出！',
+          type: 'error'
+        });
+        router.push({
+          path: '/login'
+        })
+      }
       if (res.code === 7002) {
         Message({
           message: '该账号已在其他设备登陆，您已被登出！',

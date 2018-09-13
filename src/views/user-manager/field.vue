@@ -58,7 +58,7 @@
             class="common-dialog padding0"
             v-drag
             :visible.sync="role_visible">
-            <el-form ref="form" :model="form" label-width="80px" :rules="rules"  class="demo-ruleForm" v-loading='form_loading' @submit.native.prevent>
+            <el-form ref="form" :model="form" label-width="80px" :rules="rules"  v-loading='form_loading' @submit.native.prevent>
                 <el-form-item label="域名称" prop='name'>
                     <el-input v-model="form.name" size="small" @keyup.native.enter='onSubmit'></el-input>
                 </el-form-item>
@@ -104,6 +104,8 @@ export default {
     var pageSize = localStorage.getItem("user-manager/field/pageSize");
     this.pageSize = pageSize ? pageSize - 0 : 5;
     this.init(this.pageSize, this.pageNo);
+  
+  console.log(this.$route.path)
   },
   methods: {
     condition() {

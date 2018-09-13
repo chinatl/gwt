@@ -255,6 +255,8 @@ export default {
                   message: "登录成功！"
                 });
                 this.$router.push({ path: "/message/index" });
+                //这里写一下初始化的数据
+                this.$store.dispatch("get_meeting_type_list");
               }
             })
             .catch(res => {

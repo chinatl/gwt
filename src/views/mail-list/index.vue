@@ -164,7 +164,17 @@ export default {
       ]
     };
   },
+  created() {
+    this.get_group_tree();
+  },
   methods: {
+    get_group_tree() {
+      this.$post("gwt/system/sysAddressBookGroup/getGroupTree", {
+        userxId:'148'
+      },'json')
+        .then(res => {})
+        .catch(res => {});
+    },
     handleNodeClick(data) {
       console.log(data);
     },

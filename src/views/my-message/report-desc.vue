@@ -1,262 +1,252 @@
 <template>
-    <div class="field">
-        <t-title title="举报详情"></t-title>
-        <div class="common-action">
-            <div>
-              <span style="color:rgb(103, 106, 108);font-weight:600;font-size:16px">神航2部</span>
+    <div class="report-notice-desc">
+        <div class="article-title">
+            <h3>{{data.noticeTitle}}</h3>
+            <p>
+                <span>【{{data.noticeTypeName}}】</span>
+                <span>{{data.userName}}</span>
+                <span>{{data.orgName}}</span>
+                <span>{{data.createTime}}</span>
+            </p>
+        </div>
+        <div class="article-main">
+            <div class="artive-address">
+                <p v-if="data.startTime">开始时间：<span>{{data.startTime}}</span></p>
+                <p v-if="data.noticeAdress">会议地点：<span>{{data.noticeAdress}}</span></p>
             </div>
-            <div>
-                <el-button type="primary" icon="el-icon-download" size='medium' v-wave>下载</el-button>
-                <el-button type="danger" icon="el-icon-close" size='medium' v-wave>删除</el-button>
+            <div class="active-content">
+                {{data.noticeProfile}}
             </div>
+            <div class="file-info">
+                附件： <span>{{file_length}} 个附件，共{{file_size | fileSize}}</span>
+            </div>
+            <file-list :list='file_list' @delete='delete_file'></file-list>
         </div>
-        <div class="disk-cloud-router">
-          <el-breadcrumb separator-class="el-icon-arrow-right">
-            <el-breadcrumb-item @click.native="show_all_file">全部文件</el-breadcrumb-item>
-            <el-breadcrumb-item v-for="(item,index) in file_nav" :key="index" @click.native="go_child_file(index)">{{item.name}}</el-breadcrumb-item>
-          </el-breadcrumb>
-        </div>
-        <div class="common-table">
-            <el-table
-                :data="tableData"
-                @selection-change="handleSelectionChange"
-              
-                style="width: 100%">
-                <el-table-column type="selection" width="60" align="center"></el-table-column>
-                <el-table-column prop="name"  :label="file_name"  align="left"  show-overflow-tooltip> 
-                    <template slot-scope="scope">
-                      <div class="disk-icon" @click="file_click(scope.$index)">
-                          <svg-icon :icon-class='get_svg_name(scope.row.name)'></svg-icon>
-                          <span>{{scope.row.name}}</span>
-                      </div>
-                    </template>
-                </el-table-column>
-                <el-table-column prop="size"  label="大小" align="center"  width="200"></el-table-column>
-                <el-table-column prop="time"  label="修改日期" align="center" width="200"></el-table-column>
-            </el-table>
-        </div>
-         <div class="common-page">
-            <el-pagination
-            @size-change="handleSizeChange"
-            @current-change="handleCurrentChange"
-            :current-page="pageNo"
-            :page-sizes="[10, 20, 30, 40]"
-            :page-size="pageSize"
-            layout="total, sizes, prev, pager, next, jumper"
-            background
-            :total="40">
-            </el-pagination>
-        </div>
+        <p style="text-align:right"><el-button @click="del_dialog" type="danger"  icon="el-icon-delete"  size="medium">删除</el-button></p>
+
+        <el-dialog :close-on-click-modal='false'
+            title="通知删除"
+            class="common-dialog"
+            v-drag
+            :visible.sync="visible">
+            <el-form ref="form" :model="form" label-width="80px" :rules="rules" v-loading='form_loading' @submit.native.prevent>
+                <el-form-item label="删除原因" prop='deleteReason'>
+                    <el-input v-model="form.deleteReason" size="small" placeholder="请输入删除原因"></el-input>
+                </el-form-item>
+                <form-button @cancel='onCancel_first' @submit="onSubmit_first" submit_name='确定'></form-button>
+            </el-form>
+        </el-dialog>
     </div>
 </template>
 <script>
-import uploadButton from "@/components/Button/uploadButton";
+import { SET_REPORT_DATA } from "@/store/mutations";
+import fileList from "@/components/FileList";
+import formButton from "@/components/Button/formButton";
+import { mapGetters } from "vuex";
 export default {
   components: {
-    uploadButton
+    fileList,
+    formButton
   },
   data() {
     return {
-      pageNo: 1,
-      pageSize: 5,
-      input: "",
-      checked: false,
-      pageData: [
-        {
-          name: "合计采购员合计采购员合计采购员",
-          size: "",
-          time: "2018-05-18 10:39:47",
-          children: [
-            {
-              name: "合计采购员合计采购员合计采购员",
-              size: "",
-              time: "2018-05-18 10:39:47",
-              children: [
-                {
-                  name: "合计采购员合计采购员合计采购员.doc",
-                  size: "",
-                  time: "2018-05-18 10:39:47"
-                },
-                {
-                  name: "合计采购员合计采购员合计采购员.doc",
-                  size: "",
-                  time: "2018-05-18 10:39:47"
-                },
-                {
-                  name: "合计采购员合计采购员合计采购员.doc",
-                  size: "",
-                  time: "2018-05-18 10:39:47"
-                }
-              ]
-            },
-            {
-              name: "合计采购员合计采购员合计采购员.doc",
-              size: "",
-              time: "2018-05-18 10:39:47"
-            },
-            {
-              name: "合计采购员合计采购员合计采购员.pdf",
-              size: "",
-              time: "2018-05-18 10:39:47"
-            }
-          ]
-        },
-        {
-          name: "快快快我哦啊看了几十次",
-          size: "",
-          time: "2018-05-18 10:39:47",
-          children: [
-            {
-              name: "合计采购员合计采购员合计采购员.jpg",
-              size: "",
-              time: "2018-05-18 10:39:47"
-            },
-            {
-              name: "合计采购员合计采购员合计采购员.doc",
-              size: "",
-              time: "2018-05-18 10:39:47"
-            },
-            {
-              name: "合计采购员合计采购员合计采购员.pdf",
-              size: "",
-              time: "2018-05-18 10:39:47"
-            }
-          ]
-        },
-        {
-          name: "合计采购员合计采购员合计采购员.jpg",
-          size: "",
-          time: "2018-05-18 10:39:47"
-        },
-        {
-          name: "合计采购员合计采购员合计采购员.doc",
-          size: "",
-          time: "2018-05-18 10:39:47"
-        },
-        {
-          name: "合计采购员合计采购员合计采购员.pdf",
-          size: "",
-          time: "2018-05-18 10:39:47"
-        }
-      ],
-      doc_reg: /\.(docx?)$/,
-      png_reg: /\.(png|jpe?g|gif|svg)(\?.*)?$/,
-      ppt_reg: /\.(pptx?)$/,
-      excel_reg: /\.(csv|xlsx?)$/,
-      pdf_reg: /\.(pdf)$/,
-      select_list: [],
-      tableData: [],
-      file_nav: [] //文件导航
+      file_list: [],
+      data: {},
+      file_length: 0,
+      file_size: 0,
+      form: {
+        deleteReason: ""
+      },
+      form_loading: false,
+      visible: false,
+      rules: {
+        deleteReason: [
+          { required: true, tigger: "blur", message: "请输入删除原因" }
+        ]
+      }
     };
   },
-  computed: {
-    file_name() {
-      if (this.select_list.length) {
-        return `已选中${this.select_list.length}个文件/文件夹`;
-      } else {
-        return "文件名";
-      }
-    }
-  },
   created() {
-    this.tableData = this.pageData;
+    this.$store.dispatch("readSession", SET_REPORT_DATA);
+    this.init(this.report_data.id);
+    this.init_file(this.report_data.id);
+  },
+  computed: {
+    ...mapGetters(["report_data"])
   },
   methods: {
-    //递归取数
-    go_child_file(index) {
-      if (index === this.file_nav.length) {
-        return;
-      }
-      var arr = JSON.parse(JSON.stringify(this.pageData));
-      for (var i = 0; i < this.file_nav.length; i++) {
-        arr = arr[this.file_nav[i].index].children;
-        if (i === index) {
-          break;
-        }
-      }
-      this.tableData = arr;
-      this.file_nav = this.file_nav.slice(0, index + 1);
+    del_dialog() {
+      this.visible = true;
+         this.$nextTick(res => {
+        this.$refs.form.resetFields();
+      });
+      this.form.deleteReason = "";
     },
-    //
-    show_all_file() {
-      this.tableData = this.pageData;
-      this.file_nav = [];
+    onCancel_first() {
+      this.visible = false;
     },
-    file_click(index) {
-      if (this.get_svg_name(this.tableData[index].name) === "文件夹") {
-        this.file_nav.push({
-          index,
-          name: this.tableData[index].name
+    onSubmit_first() {
+      this.$refs.form.validate(res => {
+        if (!res) return;
+        this.form_loading = true;
+        this.$post("gwt/business/tbAnnouncement/del", {
+          id: this.data.noticeId,
+          msgTitle: `标题为“${this.data.noticeTitle}”的公告因“${
+            this.form.deleteReason
+          }”被管理员删除，请知悉`,
+          deleteReason: this.form.deleteReason,
+          msgId: this.report_data.msgId
+        },'json')
+          .then(res => {
+            this.form_loading = false;
+            if (res.result !== "0000") {
+              this.$swal({
+                title: "操作失败！",
+                text: res.msg,
+                type: "error",
+                confirmButtonColor: "#DD6B55",
+                confirmButtonText: "确定",
+                showConfirmButton: true
+              });
+              return;
+            }
+            this.$message({
+              message: "删除成功！",
+              type: "success"
+            });
+            this.$router.push({
+              path: "/message/index"
+            });
+            this.visible = false;
+          })
+          .catch(res => {
+            this.form_loading = false;
+            console.log(res);
+          });
+      });
+    },
+    //查内容
+    init(noticeId) {
+      console.log(noticeId)
+      this.$post(
+        "gwt/notice/tbNotice/get",
+        {
+          noticeId
+        },
+        "json"
+      )
+        .then(res => {
+          if (res.result !== "0000") {
+            return;
+          }
+          this.data = res.data.tbNotice;
+        })
+        .catch(res => {
+          console.log(res);
         });
-        this.tableData = this.tableData[index].children;
-      }
     },
-    //row-click
-    get_svg_name(name) {
-      if (this.doc_reg.test(name)) {
-        return "doc";
-      }
-      if (this.png_reg.test(name)) {
-        return "png";
-      }
-      if (this.ppt_reg.test(name)) {
-        return "ppt";
-      }
-      if (this.excel_reg.test(name)) {
-        return "excel";
-      }
-      if (this.pdf_reg.test(name)) {
-        return "pdf";
-      }
-      return "文件夹";
+    //差附件
+    init_file(noticeId) {
+      this.$post(
+        "gwt/system/tbNoticeAttachment/attachmentList",
+        {
+          noticeId,
+          attaUploadNode: 1
+        },
+        "json"
+      )
+        .then(res => {
+          if (res.result !== "0000") {
+            return;
+          }
+          this.get_file_by_id(
+            res.data.tbNoticeAttachmentPageBean.map(res => res.ID).join(",")
+          );
+        })
+        .catch(res => {
+          console.log(res);
+        });
     },
-    handleSelectionChange(e) {
-      this.select_list = e;
+    //根据id 査附件地址
+    get_file_by_id(inIdAry) {
+      this.$post(
+        "gwt/cloudisk/attachment/list",
+        {
+          inIdAry
+        },
+        "json"
+      )
+        .then(res => {
+          if (res.result !== "0000") {
+            return;
+          }
+          this.file_length = res.data.attachmentList.length;
+          var num = 0;
+          for (var i = 0; i < res.data.attachmentList.length; i++) {
+            num += res.data.attachmentList[i].attaSize;
+            res.data.attachmentList[i].url =
+              res.data.uploadProjectUrl +
+              "/" +
+              res.data.attachmentList[i].attaPath +
+              "/" +
+              res.data.attachmentList[i].smallImgName;
+          }
+          this.file_size = num;
+          this.file_list = res.data.attachmentList;
+        })
+        .catch(res => {});
     },
-    handleSizeChange() {},
-    handleCurrentChange() {},
-    upload_img(e) {
-      console.log(e);
-    }
+    delete_file() {}
   }
 };
 </script>
-
-<style rel="stylesheet/scss" lang="scss" >
-.field {
+<style rel="stylesheet/scss" lang="scss" scoped>
+.report-notice-desc {
+  width: 90%;
+  margin: 40px auto;
+  padding: 40px 40px;
   background-color: #fff;
-  border-radius: 6px;
-  padding-bottom: 10px;
-  .common-action > div:nth-of-type(1) .el-button {
-    margin-left: 0px;
-  }
-  .disk-cloud {
-    .el-button {
-      margin-left: 0;
-      margin-right: 10px;
+  color: rgb(103, 106, 108);
+
+  .article-title {
+    text-align: center;
+    color: rgb(103, 106, 108);
+    border-bottom: solid 1px #e0e0e0;
+    padding-bottom: 30px;
+    h3 {
+      font-size: 24px;
+      font-weight: normal;
+      margin: 40px 0;
+    }
+    p {
+      font-size: 13px;
+      span {
+        margin: 0 10px;
+        color: #3271b4;
+      }
     }
   }
-}
-.disk-cloud-router {
-  overflow: hidden;
-  margin: 0px 20px;
-  padding-top: 0;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #efefef;
-  .el-breadcrumb__inner {
-    cursor: pointer;
-    color: #37aeeb;
-    &:hover {
-      color: #337ab7;
+  .article-main {
+    padding: 20px 0;
+    .artive-address {
+      font-size: 14px;
+      line-height: 32px;
+      p {
+        span {
+          color: #3271b4;
+        }
+      }
     }
-  }
-}
-.disk-icon {
-  text-align: left;
-  cursor: pointer;
-  .svg-icon {
-    font-size: 20px;
-    margin-right: 8px;
+    .active-content {
+      font-size: 15px;
+      line-height: 28px;
+      margin: 12px 0;
+    }
+    .file-info {
+      span {
+        font-size: 13px;
+      }
+    }
   }
 }
 </style>

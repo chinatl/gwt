@@ -5,6 +5,7 @@ import user from './modules/user'
 import tagsView from './modules/tagsView'
 import edu_train from './modules/edu_train'
 import meeting from './modules/meeting'
+import message from './modules/message'
 
 import getters from './getters'
 import { setItem, getItem } from '@/utils/auth'
@@ -18,7 +19,8 @@ const store = new Vuex.Store({
     user,
     tagsView,
     edu_train,
-    meeting
+    meeting,
+    message
   },
   getters,
   state: {

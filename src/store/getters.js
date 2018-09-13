@@ -21,5 +21,7 @@ const getters = {
   tree_data: state => state.tree_data,
   user: state => state.user,
   meeting_type_list: state => state.meeting.meeting_type_list,
+  message_data: state => state.message.message_data,
+  report_data: state => state.message.report_data,
 }
 export default getters

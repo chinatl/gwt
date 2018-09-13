@@ -463,7 +463,7 @@ export default {
       }
       this.$post(
         url +
-          "&" +
+          "?" +
           qs.stringify({
             currentPage: pageNo,
             pageSize: pageSize

@@ -107,6 +107,7 @@ export const constantRouterMap = [
   // 		}
   // 	]
   // },
+  
   {
     path: '/message',
     component: Layout,
@@ -114,7 +115,7 @@ export const constantRouterMap = [
     children: [
       {
         path: 'index',
-        name: '息',
+        name: '我的消息',
         component: () => import('@/views/my-message'),
         meta: { title: '我的消息', icon: '消息' },
       },
@@ -122,14 +123,21 @@ export const constantRouterMap = [
         path: 'desc',
         name: '举报详情',
         component: () => import('@/views/my-message/desc'),
-        meta: { title: '举报详情', icon: '消息', hidden: true, up: true },
+        meta: { title: '举报详情', icon: '消息',  up: true },
         hidden: true
       },
       {
         path: 'report-desc',
         name: '举报详情描述',
         component: () => import('@/views/my-message/report-desc'),
-        meta: { title: '详情列表', icon: '消息', hidden: true, up: true },
+        meta: { title: '详情列表', icon: '消息', up: true },
+        hidden: true
+      },
+      {
+        path: 'notice-desc',
+        name: '通知详情',
+        component: () => import('@/views/my-message/notice-desc'),
+        meta: { title: '通知详情', icon: '消息', up: true },
         hidden: true
       },
 
@@ -142,7 +150,6 @@ export const constantRouterMap = [
     name: '用户管理',
     meta: { title: '用户管理', icon: '用户' },
     children: [
-
       {
         path: 'field',
         name: '域管理',

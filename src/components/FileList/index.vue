@@ -2,8 +2,8 @@
 <div class="cnclosure-area" v-if="list.length">
     <div class="cnclosure-list" v-for='(item,index) in list' :key="index">
         <div class="file-logo">
-            <svg-icon :icon-class='get_svg_name(item.name)' v-if="get_svg_name(item.name) !=='png'"></svg-icon>
-            <img :src="item.url" v-else>
+            <img :src="item.url" v-if="item.type">
+            <svg-icon :icon-class='get_svg_name(item.type)' v-else></svg-icon>
         </div>
         <div class="file-name">{{item.name}}</div>
         <div class="cnclosure-mask">
@@ -12,17 +12,17 @@
                 <div class="file-action">
                     <i class="el-icon-delete" @click="delete_file(index)"></i>
                     <svg-icon icon-class='眼睛' @click="download_file(item.url)"
-                     v-if="get_svg_name(item.name) === 'pdf' || get_svg_name(item.name) === 'png'"></svg-icon>
+                     v-if="get_svg_name(item.type) === 'pdf' || get_svg_name(item.type) === 'png'"></svg-icon>
                     <i class="el-icon-download" @click="download_file(item.url)" v-else></i>
                 </div>
-                <div class="file-size">{{item.size | fileSize}}</div>
+                <div class="file-size">{{item.attaSize | fileSize}}</div>
             </div>
         </div>
     </div>
 </div>
 </template>
 <script>
-import { getFileType } from "@/utils";
+import { fileType } from "@/utils";
 export default {
   data() {
     return {};
@@ -44,7 +44,7 @@ export default {
     },
     //  获取文件类型
     get_svg_name(name) {
-      return getFileType(name);
+      return fileType(name);
     }
   }
 };

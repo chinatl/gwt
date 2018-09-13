@@ -1,25 +1,31 @@
 <template>
-    <div class="my-message">
+    <div class="common">
         <t-title>我的消息</t-title>
-        <!-- <el-button @click.prevent.stop="dasdsad">adasdada</el-button> -->
-        <ul class="message-list" v-loading='loading'>
-            <li v-for="(item,index) in tableData" :key="index" @click="go_desc(item)">
-                <div class="message-area">
-                    <img :src="require('@/assets/imgs/report-s.png')" v-if='item.TYPE_ID === 5'>
-                    <img :src="require('@/assets/imgs/message.png')" v-else>
-                    <i class="el-icon-close" @click.stop="del_one_list"></i>
-                </div>
-                <div class="message-info">
-                    <div class="h3">{{item.TITLE}}</div>
-                    <div class="caozuo">
-                        <little-button :name='item.TYPE_DESC'></little-button>
-                        <span class="info-detail">{{item.CREATE_USER_NAME}}</span>
-                        <span class="info-detail">{{item.DEPT}}</span>
-                        <span class="info-time"> {{item.UPDATE_TIME}}</span>
-                    </div>
-                </div>
-            </li>
-        </ul>
+        <div class="common-action">
+            <div>
+                <el-select v-model="APP_ID" size="medium" style="margin-right:8px;" @change="condition">
+                    <el-option v-for="(item,index) in meeting_type_list" :key='index' :label="item.itemName" :value="index"></el-option>
+                </el-select>
+                <el-date-picker
+                v-model="CREATE_TIME"
+                type="date"
+                size='medium' 
+                @change="condition"
+                placeholder="开始日期">
+              </el-date-picker>
+                <el-input v-model="TITLE" placeholder="请输入标题" style="width:200px" size='medium' @keyup.native.enter="condition"></el-input>
+                <el-button type="primary" icon="el-icon-search" size='medium' v-wave @click="condition">搜索</el-button>
+            </div>
+        </div>
+        <div class="message-list" v-loading='loading' style="min-height:500px;padding:0 20px">
+            <message-item 
+              v-for="(item,index) in tableData" 
+              :data='item'
+              :key='index'
+              @click="go_desc(item)"
+              @delete='del_one_list(item.RECV_ID)'
+              ></message-item>
+        </div>
         <div class="common-page">
             <el-pagination
             @size-change="handleSizeChange"
@@ -35,10 +41,14 @@
     </div>
 </template>
 <script>
-import littleButton from "@/components/Button/littleButton";
+import { SET_MESSAGE_DATA } from "@/store/mutations";
+import MessageItem from "@/components/MessageItem";
+import qs from "qs";
+import { delete_item } from "@/utils/user";
+import { parseTime } from "@/utils";
 export default {
   components: {
-    littleButton
+    MessageItem
   },
   data() {
     return {
@@ -46,11 +56,32 @@ export default {
       loading: false,
       pageSize: 10,
       total: 0,
-      tableData: []
+      tableData: [],
+      meeting_type_list: [],
+      TITLE: "",
+      CREATE_TIME: "",
+      APP_ID: ""
     };
   },
-
   created() {
+    // http://192.168.31.72:8888/uploadfiles/gwt-platform/Anno/ownerAperation/201809/20180913110635_1052e9a2-153a-4a87-a3d4-a57ec8566864.jpg
+    // this.$axios({
+    //   url:
+    //     "uploadfiles/gwt-platform/Anno/ownerAperation/201809/20180913110635_1052e9a2-153a-4a87-a3d4-a57ec8566864.jpg",
+    //   headers: {
+    //     Authorization:
+    //       "Bearer eyJhbGciOiJIUzUxMiJ9.eyJyYW5kb21LZXkiOiJvdnp4NjIiLCJzdWIiOiIwMzY1MV80NzIxY2ZlMS05ZjliLTRhMmYtYmE3NS1iZDY3N2M5ODFhNTYiLCJleHAiOjE1MzY2NjM2MDMsImlhdCI6MTUzNjA1ODgwM30.K4SzgVFE28vZCmdXYOIZkoKM6uZLjUYoJdtSAkFWtyiwEalte72mtYRftmsKFbAft7IZrn-IC_16kc-CA3nwJw"
+    //   },
+    //   responseType: "blob"
+    // })
+    //   .then(res => {
+    //     console.log(res);
+    //     this.img_src = window.URL.createObjectURL(res.data);
+    //     console.log(this.img_src);
+    //   })
+    //   .catch(res => {
+    //     console.log(res);
+    //   });
     var total = sessionStorage.getItem("message/index/total");
     this.total = total ? total - 0 : 0;
     var pageNo = sessionStorage.getItem("message/index/pageNo");
@@ -59,9 +90,12 @@ export default {
     this.pageSize = pageSize ? pageSize - 0 : 10;
     this.init(this.pageSize, this.pageNo);
     //初始化查询
-    this.$store.dispatch("get_meeting_type_list");
   },
   methods: {
+    //条件查询
+    condition() {
+      console.log(this.CREATE_TIME);
+    },
     handleSizeChange(e) {
       localStorage.setItem("message/index/pageSize", e);
       this.pageNo = 1;
@@ -75,149 +109,80 @@ export default {
     },
     init(pageSize, pageNo) {
       this.loading = true;
-      this.$post("gwt/business/msgRecvUser/list", {
-        currentPage: pageNo,
-        pageSize: pageSize
-      },'json')
+      this.$post(
+        `gwt/business/msgRecvUser/list?${qs.stringify({
+          currentPage: pageNo,
+          pageSize: pageSize
+        })}`,
+        {},
+        "json"
+      )
         .then(res => {
           this.loading = false;
           if (res.result !== "0000") {
             return;
           }
-          this.tableData = res.data.messagePageBean.datas;
+          var tableData = res.data.messagePageBean.datas;
           this.total = res.data.messagePageBean.totalCount - 0;
           sessionStorage.setItem(
             "message/index/total",
             res.data.messagePageBean.totalCount
           );
+          var arr = tableData.map(res => {
+            return { recvId: res.RECV_ID, msgId: res.MSG_ID };
+          });
+          this.$post(
+            "gwt/business/msgRecvUser/getMsgStateByMsgId",
+            { data: arr },
+            "json"
+          )
+            .then(res => {
+              if (res.result !== "0000") {
+                return;
+              }
+              for (var i = 0; i < tableData.length; i++) {
+                tableData[i].REC_STATUS = res.data.stateList[i].REC_STATUS;
+              }
+              this.tableData = tableData;
+            })
+            .catch(res => {
+              console.log(res);
+            });
         })
         .catch(res => {
           this.loading = false;
         });
     },
     go_desc(item) {
-      console.log(JSON.stringify(item, {}, 6));
-    },
-    del_one_list(index) {
-      this.$swal({
-        title: "您确定要删除的信息吗？",
-        text: "删除后将无法恢复，请谨慎操作！",
-        type: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#DD6B55",
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        confirmButtonClass: "btn btn-success"
-      })
-        .then(function() {})
-        .catch(res => {
-          console.log(1);
+      this.$store.commit(SET_MESSAGE_DATA, item);
+      // if(item.TYPE_ID === 1){
+
+      // }
+      if (item.TYPE_ID === 5) {
+        this.$store.dispatch("get_report_desc", item.MSG_ID);
+        this.$router.push({
+          path: "/message/desc"
         });
+      } else {
+        this.$router.push({
+          path: "/message/notice-desc"
+        });
+      }
+    },
+    del_one_list(id) {
+      delete_item({
+        url: "gwt/business/msgRecvUser/delete",
+        data: {
+          id
+        },
+        success: res => {
+          this.init(this.pageSize, this.pageNo);
+        }
+      });
     },
     handleClose(e) {
       console.log(e);
-    },
-    agree() {
-      this.del_dialog = false;
-      this.$message({
-        message: "删除成功",
-        type: "success"
-      });
-    },
-    cancel() {
-      this.$message({
-        message: "已取消删除",
-        type: "info"
-      });
-      this.del_dialog = false;
     }
   }
 };
 </script>
-<style rel="stylesheet/scss" lang="scss" scoped>
-.my-message {
-  background-color: #fff;
-  border-radius: 6px;
-  padding-bottom: 20px;
-  .message-block {
-    text-align: right;
-  }
-
-  .message-list {
-    padding: 0 20px;
-    padding-bottom: 10px;
-    li {
-      list-style: none;
-      overflow: hidden;
-      &:hover {
-        background-color: rgb(250, 250, 250);
-        cursor: pointer;
-        .message-info {
-          .h3 {
-            color: rgb(87, 144, 195);
-          }
-        }
-        .message-area {
-          .el-icon-close {
-            display: block;
-          }
-        }
-      }
-      .message-area {
-        padding: 20px 0;
-        width: 120px;
-        float: left;
-        text-align: center;
-        position: absolute;
-        .el-icon-close {
-          position: absolute;
-          top: 10px;
-          left: 10px;
-          display: none;
-          &:hover {
-            color: #54cfde;
-          }
-        }
-      }
-      .message-info {
-        padding: 20px 0;
-        margin-left: 120px;
-        border-bottom: 1px solid #ccc;
-        .h3 {
-          font-size: 15px;
-          letter-spacing: 0.5px;
-          margin-bottom: 22px;
-          color: #666;
-        }
-        .caozuo {
-          .reportColor {
-            background-color: #f47447;
-            font-weight: 100;
-            vertical-align: baseline;
-            padding: 4px 6px;
-            border-radius: 5px;
-            margin-right: 15px;
-            font-size: 11px;
-            color: #fff;
-          }
-          .info-detail {
-            letter-spacing: 0.5px;
-            color: #54cfde;
-            margin-right: 15px;
-            display: inline-block;
-            font-size: 14px;
-          }
-          .info-time {
-            position: relative;
-            font-size: 14px;
-            color: #989898;
-            display: inline-block;
-            float: right;
-          }
-        }
-      }
-    }
-  }
-}
-</style>
-

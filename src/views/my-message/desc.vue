@@ -4,33 +4,57 @@
         <div class="desc-con">
             <p>
                 <span class="span1">举报人：</span>
-                <span class="span2">yhj   运城扶贫办</span>
+                <span class="span2">
+                  {{report_data.realName}}
+                  {{report_data.orgAllName}}
+                </span>
             </p>
             <p>
                 <span class="span1">举报时间：</span>
-                <span class="span2">2018-08-06 17:03</span>
+                <span class="span2">{{report_data.reportTime}}</span>
             </p>
             <p>
                 <span class="span1">举报类型：</span>
-                <span class="span2">非法内容</span>
+                <span class="span2">{{report_data.contentType}}</span>
             </p>
             <p>
                 <span class="span1">举报说明：</span>
-                <span class="span2">非法</span>
+                <span class="span2">{{report_data.cause}}</span>
             </p>
             <p>
+                <el-button @click="retrun_message" size="medium">返回</el-button>
                 <el-button type="primary" size="medium" @click="report_desc" v-wave>查看详情</el-button>
             </p>
         </div>
     </div>
 </template>
 <script>
+import { SET_REPORT_DATA } from "@/store/mutations";
+import { mapGetters } from "vuex";
 export default {
   data() {
     return {};
   },
+  computed: {
+    ...mapGetters(["report_data"])
+  },
+  created() {
+    this.$store.dispatch("readSession", SET_REPORT_DATA);
+  },
   methods: {
+    retrun_message() {
+      this.$router.push({
+        path: "/message/index"
+      });
+    },
     report_desc() {
+      if (this.report_data.status === "2") {
+        this.$message({
+          message: "该信息已被管理员删除",
+          type: "error"
+        });
+        return;
+      }
       this.$router.push({
         path: "/message/report-desc"
       });
@@ -41,7 +65,7 @@ export default {
 <style rel="stylesheet/scss" lang="scss" scoped>
 .messgae-desc-list {
   width: 80%;
-  margin: 0 auto;
+  margin: 40px auto;
   background-color: #fff;
   padding: 40px;
   padding-top: 0;
@@ -52,7 +76,7 @@ export default {
     font-size: 24px;
     font-weight: normal;
     border-bottom: 1px solid #ccc;
-    padding: 20px;
+    padding: 40px;
   }
   .desc-con {
     margin-left: 50px;
