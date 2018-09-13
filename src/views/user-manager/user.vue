@@ -352,7 +352,17 @@ export default {
   created() {
     //查询所有人员级别
     this.get_user_level();
-    this.get_user_tree();
+    this.$post("gwt/system/sysOrg/getOrgTreeData", {
+      userExetendId: 3578
+    },'json')
+      .then(res => {
+        this.tree_data = res.data.nodes;
+        console.log(res);
+      })
+      .catch(res => {
+        console.log(res);
+      });
+    // this.get_user_tree();
     var pageSize = localStorage.getItem("user-manager/user/pageSize");
     this.pageSize = pageSize ? pageSize - 0 : 5;
   },
@@ -426,9 +436,13 @@ export default {
       }
       this.current = 0;
       this.temp_data = data;
-      this.$post("gwt/system/sysUser/getOrgInfo", {
-        orgId: data.id
-      })
+      this.$post(
+        "gwt/system/sysUser/getOrgInfo",
+        {
+          orgId: data.id
+        },
+        "json"
+      )
         .then(res => {
           if (res.result !== "0000") {
             return;

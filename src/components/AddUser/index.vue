@@ -13,7 +13,7 @@
             </div>
             <div class="select-part-bottom">
                 <div class="select-part-tree common-temp">
-                    <el-tree :data="data" :props="defaultProps" @node-click="handleNodeClick"></el-tree>
+                    <el-tree :data="tree_data" :props="defaultProps" @node-click="handleNodeClick"></el-tree>
                 </div>
                 <div class="select-part-checkbox">
                     <div class="all-checked">
@@ -72,62 +72,20 @@ export default {
   data() {
     return {
       part: "1",
-      data: [
-        {
-          label: "运城市"
-        },
-        {
-          label: "一级 2",
-          children: [
-            {
-              label: "二级 2-1",
-              children: [
-                {
-                  label: "三级 2-1-1"
-                }
-              ]
-            },
-            {
-              label: "二级 2-2",
-              children: [
-                {
-                  label: "三级 2-2-1"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          label: "一级 3",
-          children: [
-            {
-              label: "二级 3-1",
-              children: [
-                {
-                  label: "三级 3-1-1"
-                }
-              ]
-            },
-            {
-              label: "二级 3-2",
-              children: [
-                {
-                  label: "三级 3-2-1"
-                }
-              ]
-            }
-          ]
-        }
-      ],
       defaultProps: {
-        children: "children",
-        label: "label"
+        children: "childrens",
+        label: "allName"
       },
       checked: false,
       input: ""
     };
   },
   props: {
+    tree_data: {
+      type: Array,
+      default: [],
+      required: true
+    },
     show: {
       type: Boolean,
       default: false,

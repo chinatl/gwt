@@ -69,6 +69,8 @@
 </template>
 <script>
 import formButton from "@/components/Button/formButton";
+import { delete_item } from "@/utils/user";
+import qs from "qs";
 export default {
   components: {
     formButton
@@ -104,8 +106,6 @@ export default {
     var pageSize = localStorage.getItem("user-manager/field/pageSize");
     this.pageSize = pageSize ? pageSize - 0 : 5;
     this.init(this.pageSize, this.pageNo);
-  
-  console.log(this.$route.path)
   },
   methods: {
     condition() {
@@ -126,11 +126,12 @@ export default {
     init(pageSize, pageNo) {
       this.loading = true;
       this.$post(
-        "gwt/system/sysDomain/list",
+        `gwt/system/sysDomain/list?${qs.stringify({
+          currentPage: pageNo,
+          pageSize: pageSize
+        })}`,
         {
           Q_name_SL: this.Q_name_SL,
-          currentPage: pageNo,
-          pageSize: pageSize,
           o: 2,
           s: "DOMAIN_ID"
         },
@@ -211,47 +212,14 @@ export default {
       });
     },
     handleDelete(domainId) {
-      this.$swal({
-        title: "您确定要删除的信息吗？",
-        text: "删除后将无法恢复，请谨慎操作！",
-        type: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#DD6B55",
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        confirmButtonClass: "btn btn-success"
-      }).then(res => {
-        if (!res.value) {
-          return;
+      delete_item({
+        url: "gwt/system/sysDomain/del",
+        data: {
+          domainId
+        },
+        success: res => {
+          this.init(this.pageSize, this.pageNo);
         }
-        this.$post(
-          "gwt/system/sysDomain/del",
-          {
-            domainId
-          },
-          "json"
-        )
-          .then(res => {
-            if (res.result !== "0000") {
-              this.$swal({
-                title: "操作失败！",
-                text: res.msg,
-                type: "error",
-                confirmButtonColor: "#DD6B55",
-                confirmButtonText: "确定",
-                showConfirmButton: true
-              });
-              return;
-            }
-            this.$message({
-              message: "删除成功！",
-              type: "success"
-            });
-            this.init(this.pageSize, this.pageNo);
-          })
-          .catch(res => {
-            console.log(res);
-          });
       });
     }
   }

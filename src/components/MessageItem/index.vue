@@ -21,7 +21,7 @@
                 <little-button :name='data.TYPE_DESC'></little-button>
                 <span class="current">{{data.CREATE_USER_NAME}}</span>
                 <span class="current">{{data.DEPT}}</span>
-                <span class="time">{{data.UPdata_TIME}}</span>
+                <span class="time">{{data.UPDATE_TIME}}</span>
             </div>
         </div>
     </div>

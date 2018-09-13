@@ -60,6 +60,7 @@ import {
   SET_USER_SIGN,
   SET_USER_TOKEN
 } from "@/store/mutations";
+import config from "@/config";
 export default {
   name: "login",
   components: { QRCode },
@@ -137,7 +138,7 @@ export default {
     //获取图片验证码
     get_img_code() {
       this.$axios({
-        url: "gwt/getValidateCode",
+        url: config + "gwt/getValidateCode",
         headers: {
           Authorization:
             "Bearer eyJhbGciOiJIUzUxMiJ9.eyJyYW5kb21LZXkiOiJvdnp4NjIiLCJzdWIiOiIwMzY1MV80NzIxY2ZlMS05ZjliLTRhMmYtYmE3NS1iZDY3N2M5ODFhNTYiLCJleHAiOjE1MzY2NjM2MDMsImlhdCI6MTUzNjA1ODgwM30.K4SzgVFE28vZCmdXYOIZkoKM6uZLjUYoJdtSAkFWtyiwEalte72mtYRftmsKFbAft7IZrn-IC_16kc-CA3nwJw"

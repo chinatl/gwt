@@ -11,72 +11,145 @@
 <body>
     <div>hello world</div>
     <script>
-        function doubleAfter2seconds(num) {
-            return new Promise((resolve, reject) => {
-                setTimeout(() => {
-                    resolve(2 * num)
-                }, 500);
-            })
-        }
-        async function testResult(resolve) {
-            let first = await doubleAfter2seconds(30);
-            let second = await doubleAfter2seconds(50);
-            let third = await doubleAfter2seconds(30);
-            return first + second + third
-        };
-        testResult().then(res => {
-            console.log(res)
-        })
+        var arr = [
+            {
+                "createUser": null,
+                "createTime": null,
+                "updateTime": null,
+                "updateUser": null,
+                "id": "3537",
+                "pId": "3532",
+                "name": "永济扶贫办",
+                "allName": "运城扶贫办永济扶贫办",
+                "sn": 1,
+                "areaId": "630001",
+                "nodeType": "ORG",
+                "deptType": "null",
+                "managerFlag": true
+            },
+            {
+                "createUser": null,
+                "createTime": null,
+                "updateTime": null,
+                "updateUser": null,
+                "id": "3536",
+                "pId": "3532",
+                "name": "万荣扶贫办",
+                "allName": "运城扶贫办万荣扶贫办",
+                "sn": 2,
+                "areaId": "630001",
+                "nodeType": "ORG",
+                "deptType": "null",
+                "managerFlag": true
+            },
+            {
+                "createUser": null,
+                "createTime": null,
+                "updateTime": null,
+                "updateUser": null,
+                "id": "3675",
+                "pId": "3674",
+                "name": "d-1",
+                "allName": "运城扶贫办dd-1",
+                "sn": 2,
+                "areaId": "630001",
+                "nodeType": "ORG",
+                "deptType": "null",
+                "managerFlag": true
+            },
 
-        //
-        var one_page = {
-            noticeId: 29083,
-            dataType: 1,
-            token: '01_50e04ae5-c605-43e9-b503-1eba2169b8a8',
-            currentPage: 1,
-            pageSize: 10,
-        };
-        var two_page = {
-            noticeId: 29083,
-            dataType: 1,
-            currentPage: 2,
-            pageSize: 10,
-        };
-        //已签收
-        var one = {
-            noticeId: 29083,
-            dataType: 2,
-            currentPage: 1,
-            pageSize: 10,
-        };
-        var two = {
-            noticeId: 29083,
-            dataType: 2,
-            currentPage: 2,
-            pageSize: 10,
-        };
-        //
-        var now1 = {
-            noticeId: 29083,
-            dataType: 2,
-            currentPage: 1,
-            pageSize: 10,
-        }
-        const a = [{
-            "id": 29,
-            "label": "青海省",
-        },
-        { "label": "正在加载", "value": -1 },//去掉
-        {
-            "id": 28,
-            "label": "甘肃省",
-        },
-        { "label": "正在加载", "value": -1 } //去掉
+            {
+                "createUser": null,
+                "createTime": null,
+                "updateTime": null,
+                "updateUser": null,
+                "id": "3587",
+                "pId": "3537",
+                "name": "三级部门",
+                "allName": "运城扶贫办永济扶贫办三级部门",
+                "sn": 2,
+                "areaId": "630001",
+                "nodeType": "ORG",
+                "deptType": "null",
+                "managerFlag": true
+            },
+            {
+                "createUser": null,
+                "createTime": null,
+                "updateTime": null,
+                "updateUser": null,
+                "id": "3655",
+                "pId": "3532",
+                "name": "a",
+                "allName": "运城扶贫办a",
+                "sn": 3,
+                "areaId": "630001",
+                "nodeType": "ORG",
+                "deptType": "null",
+                "managerFlag": true
+            },
+            {
+                "createUser": null,
+                "createTime": null,
+                "updateTime": null,
+                "updateUser": null,
+                "id": "3657",
+                "pId": "3532",
+                "name": "b",
+                "allName": "运城扶贫办b",
+                "sn": 4,
+                "areaId": "630001",
+                "nodeType": "ORG",
+                "deptType": "null",
+                "managerFlag": true
+            },
+            {
+                "createUser": null,
+                "createTime": null,
+                "updateTime": null,
+                "updateUser": null,
+                "id": "3674",
+                "pId": "3532",
+                "name": "d",
+                "allName": "运城扶贫办d",
+                "sn": 5,
+                "areaId": "630001",
+                "nodeType": "ORG",
+                "deptType": "null",
+                "managerFlag": true
+            }
         ]
-        const a1 = a.filter(res => {
-            return res.id
-        });
-        console.log(a1)
+        var newArr = [
+            {
+                "createUser": null,
+                "createTime": null,
+                "updateTime": null,
+                "updateUser": null,
+                "id": "3532",
+                "pId": "region_630001",
+                "name": "运城扶贫办",
+                "allName": "运城扶贫办",
+                "sn": 2,
+                "areaId": "630001",
+                "nodeType": "ORG",
+                "deptType": "13",
+                "managerFlag": true
+            }
+        ];
+        function getTree(newArr) {
+            for (var k = 0; k < newArr.length; k++) {
+                newArr[k].children = [];
+                for (var i = arr.length - 1; i >= 0; i--) {
+                    if (arr[i].pId === newArr[k].id) {
+                        newArr[k].children.push(arr.splice(i, 1)[0]);
+                    }
+                };
+                getTree(newArr[k].children)
+            }
+        }
+        getTree(newArr)
+        console.log(JSON.stringify(newArr, {}, 4));
+        console.log(arr);
     </script>
 </body>
 

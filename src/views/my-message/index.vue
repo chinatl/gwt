@@ -3,17 +3,23 @@
         <t-title>我的消息</t-title>
         <div class="common-action">
             <div>
-                <el-select v-model="APP_ID" size="medium" style="margin-right:8px;" @change="condition">
-                    <el-option v-for="(item,index) in meeting_type_list" :key='index' :label="item.itemName" :value="index"></el-option>
+                <el-select v-model="msgType" size="medium" style="margin-right:8px;" @change="condition">
+                    <el-option label="全部类型" value=""></el-option>
+                    <el-option label="公告" value="1"></el-option>
+                    <el-option label="会议通知" value="2"></el-option>
+                    <el-option label="通知" value="3"></el-option>
+                    <el-option label="材料征集" value="4"></el-option>
+                    <el-option label="举报" value="5"></el-option>
+                    <el-option label="调岗" value="6"></el-option>
                 </el-select>
                 <el-date-picker
-                v-model="CREATE_TIME"
+                v-model="startTime"
                 type="date"
                 size='medium' 
                 @change="condition"
                 placeholder="开始日期">
               </el-date-picker>
-                <el-input v-model="TITLE" placeholder="请输入标题" style="width:200px" size='medium' @keyup.native.enter="condition"></el-input>
+                <el-input v-model="title" placeholder="请输入标题" style="width:200px" size='medium' @keyup.native.enter="condition"></el-input>
                 <el-button type="primary" icon="el-icon-search" size='medium' v-wave @click="condition">搜索</el-button>
             </div>
         </div>
@@ -58,9 +64,9 @@ export default {
       total: 0,
       tableData: [],
       meeting_type_list: [],
-      TITLE: "",
-      CREATE_TIME: "",
-      APP_ID: ""
+      title: "",
+      startTime: "",
+      msgType: ""
     };
   },
   created() {
@@ -94,7 +100,9 @@ export default {
   methods: {
     //条件查询
     condition() {
-      console.log(this.CREATE_TIME);
+      sessionStorage.setItem("message/index/pageNo", 1);
+      this.pageNo = 1;
+      this.init(this.pageSize, 1);
     },
     handleSizeChange(e) {
       localStorage.setItem("message/index/pageSize", e);
@@ -114,7 +122,12 @@ export default {
           currentPage: pageNo,
           pageSize: pageSize
         })}`,
-        {},
+        {
+          title: this.title,
+          startTime: this.startTime && parseTime(this.startTime, "{y}-{m}-{d}"),
+          msgType: this.msgType,
+          endTime: ""
+        },
         "json"
       )
         .then(res => {

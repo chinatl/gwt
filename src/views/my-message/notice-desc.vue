@@ -1,4 +1,5 @@
 <template>
+<div>
     <div class="notice-desc" v-loading='loading'>
         <div class="article-title">
             <h3>{{data.noticeTitle}}</h3>
@@ -58,22 +59,85 @@
                 </el-form-item>
                 <form-button @cancel='onCancel' @submit="onSubmit"></form-button>
             </el-form>
-        </el-dialog>        
+        </el-dialog>  
     </div>
+    <div class="sign-up">
+        <t-title>人员报名</t-title>
+         <div class="common-action">
+            <div class="common-table-bar">
+                <span v-for="(item,index) in select_arr" :key='index' 
+                @click='select_nav(index)'
+                :class="current == index ? 'current':''">{{item.name}}</span>
+            </div>
+            <div>
+                <el-button type="success" icon="el-icon-plus" size='medium' @click="import_part">部门导入</el-button>
+            </div>
+        </div>
+          <div class="common-table">
+            <el-table
+                :data="tableData"
+                border
+                v-loading ='table_loading'
+                style="width: 100%">
+                <el-table-column
+                prop="title"
+                align="center"
+                label="姓名">
+                </el-table-column>
+                <el-table-column
+                prop="appName"
+                align="center"
+                label="职务">
+                </el-table-column>
+                <el-table-column
+                prop="appName"
+                align="center"
+                label="联系方式">
+                </el-table-column>
+                <el-table-column
+                prop="name"
+                label="操作"
+                align="center"
+                width="240"
+                >
+                 <template slot-scope="scope">
+                    <little-button name='删除'></little-button>
+                </template>
+                </el-table-column>
+            </el-table>
+        </div>
+    </div>
+    <add-user :show='dialog' @close='dialog = false' :tree_data='tree_data'></add-user>
+</div>
 </template>
 <script>
 import { SET_MESSAGE_DATA } from "@/store/mutations";
 import fileList from "@/components/FileList";
 import { mapGetters } from "vuex";
 import formButton from "@/components/Button/formButton";
-
+import AddUser from "@/components/AddUser";
 export default {
   components: {
     fileList,
-    formButton
+    formButton,
+    AddUser
   },
   data() {
     return {
+      dialog: false,
+      current: false,
+      table_loading: false,
+      tableData: [],
+      select_arr: [
+        {
+          name: "人员报名",
+          Q_isActive_L: "all"
+        },
+        {
+          name: "上传附件",
+          Q_isActive_L: "1"
+        }
+      ],
       file_list: [],
       data: {},
       tbNoticeReceive: {},
@@ -88,7 +152,7 @@ export default {
       form_loading: {},
       role_visible: false,
       form_loading: false,
-      loading: true,
+      loading: false,
       rules: {
         cause: [{ required: true, tigger: "blur", message: "请输入举报原因" }],
         arrayContentType: [
@@ -99,17 +163,61 @@ export default {
             type: "array"
           }
         ]
-      }
+      },
+      tree_data: [
+        
+      ] //树的数据
     };
   },
   created() {
     this.$store.dispatch("readSession", SET_MESSAGE_DATA);
-    this.get_rece_id();
+    // this.get_rece_id();
+    this.get_tree_part();
   },
   computed: {
     ...mapGetters(["message_data"])
   },
   methods: {
+    //导入部门
+    import_part() {
+      this.dialog = true;
+    },
+    //查询当前用户对应的部门
+    get_tree_part() {
+      this.$post("gwt/system/sysOrg/getOrgTreeData", {}, "json")
+        .then(res => {
+          if (res.result !== "0000") {
+            return;
+          }
+          this.tree_data = res.data.nodes;
+          console.log(this.tree_data);
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
+    select_nav(index) {
+      this.current = index;
+    },
+    // 查看人员报名表数据
+    get_user_sign_table() {
+      this.$post(
+        "gwt/notice/tbNoticeRegister/getRegiseterList",
+        {
+          dataType: 1,
+          noticeId: this.data.noticeId,
+          currentPage: 1,
+          pageSize: 10
+        },
+        "json"
+      )
+        .then(res => {
+          console.log(res);
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
     //转发
     forward_report() {},
     //签收
@@ -224,6 +332,7 @@ export default {
           console.log(res);
         });
     },
+    //获取 init 数据
     get_meeting_data(receId) {
       this.$post(
         "gwt/notice/tbNotice/getNoticeTotalInfo",
@@ -241,6 +350,7 @@ export default {
           this.data = res.data.tbNotice;
           this.tbNoticeReceive = res.data.tbNoticeReceive;
           this.init_file(res.data.tbNotice.noticeId);
+          this.get_user_sign_table();
         })
         .catch(res => {
           this.loading = false;
@@ -350,12 +460,16 @@ export default {
           });
       });
     },
-    //gwt/system/tbNoticeAttachment/list
     delete_file() {}
   }
 };
 </script>
 <style rel="stylesheet/scss" lang="scss" scoped>
+.sign-up {
+  width: 90%;
+  margin: 0 auto;
+  background-color: #fff;
+}
 .notice-desc-button {
   .svg-icon {
     font-size: 16px;
@@ -419,6 +533,7 @@ export default {
       font-size: 15px;
       line-height: 28px;
       margin: 12px 0;
+      text-indent: 2em;
     }
     .file-info {
       span {
