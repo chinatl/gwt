@@ -2,30 +2,50 @@
     <div>
         <div class="common">
             <t-title title="基本信息">
-                <el-button style="float:right" size='small' type="success" v-wave>编辑</el-button>
+                <el-button style="float:right" size='small' type="success" v-wave @click="editUserInfo">编辑</el-button>
             </t-title>
             <div class="page-form" style="width:700px">
+<<<<<<< HEAD
                 <el-form label-width="120px">
                     <el-form-item label="标 题：" class="page-form-item">
                         <span>{{user_info.realName}}</span>
                     </el-form-item>
                     <el-form-item label="性 別：" class="page-form-item">
                         <span>{{user_info.sex === '1' ? '男':'女'}}</span>
+=======
+                <el-form label-width="120px" :model="currentform" :rules="editrules" ref="currentform">
+                    <el-form-item label="姓 名：" class="page-form-item">
+                        <span>{{user_info.realName}}</span>
+                    </el-form-item>
+                    <el-form-item label="性 別：" class="page-form-item">
+                        <span v-if="isHide">{{user_info.sex == "1" ? "男" : "女"}}</span>
+                        <template v-else prop="sex" >
+                          <el-radio v-model="radio" label="男">男</el-radio>
+                          <el-radio v-model="radio" label="女">女</el-radio>
+                        </template>                      
+>>>>>>> 68cc8b279d1432a22162c75ad35e82219784182d
                     </el-form-item>
                     <el-form-item label="部 门：" class="page-form-item">
-                        <span>系统管理员</span>
+                        <span>{{orgName}}</span>
                     </el-form-item>
                     <el-form-item label="人员级别：" class="page-form-item">
-                        <span>系统管理员</span>
+                        <span>{{user_info.sysOrgUserX.userLevelName}}</span>
                     </el-form-item>
-                    <el-form-item label="职 务：" prop='name' class="page-form-item">
-                        <el-input v-model="form.name" size="mini"></el-input>
+                    <el-form-item label="职 务：" prop='duty' class="page-form-item">
+                        <span v-if="isHide">{{user_info.sysOrgUserX.duty}}</span>
+                        <el-input v-model="currentform.duty" size="mini" v-else></el-input>
                     </el-form-item>
-                    <el-form-item label="固定电话:" prop='name' class="page-form-item">
-                        <el-input v-model="form.name" size="mini"></el-input>
+                    <el-form-item label="固定电话:" prop='phone' class="page-form-item">
+                        <span v-if="isHide">{{user_info.sysOrgUserX.phone}}</span>
+                        <el-input v-model="currentform.phone" size="mini" v-else></el-input>
                     </el-form-item>
-                    <el-form-item label="备 注:" prop='name' class="page-form-item">
-                        <el-input type="textarea" v-model="form.desc" :autosize="{ minRows: 4, maxRows: 6}"></el-input>
+                    <el-form-item label="备 注:" prop='remark' class="page-form-item">
+                        <span v-if="isHide">{{user_info.sysOrgUserX.remark}}</span>
+                        <el-input type="textarea" v-model="currentform.remark" :autosize="{ minRows: 4, maxRows: 6}" v-else></el-input>
+                    </el-form-item>
+                    <el-form-item style="float:right" size='small' class="itemBtn" v-if="!isHide">
+                      <el-button>取消</el-button>
+                      <el-button type="primary" @click="oneditSubmit">提交</el-button>
                     </el-form-item>
                 </el-form>
                 <div class="user-img" @click="upload_img">
@@ -177,7 +197,22 @@ import vueCropper from "vue-cropper";
 import uploadButton from "@/components/Button/uploadButton";
 import formButton from "@/components/Button/formButton";
 import littleButton from "@/components/Button/littleButton";
+<<<<<<< HEAD
 import { mapGetters } from "vuex";
+=======
+import { validatePhone } from "@/utils/validate";
+import { mapGetters} from 'vuex'
+//定义一个全局的变量
+var validPhone = (rule, value, callback) => {
+  if (!value) {
+    callback(new Error("请输入电话号码"));
+  } else if (!validatePhone(value)) {
+    callback(new Error("请输入正确的11位手机号码"));
+  } else {
+    callback();
+  }
+};
+>>>>>>> 68cc8b279d1432a22162c75ad35e82219784182d
 export default {
   components: {
     panThumb,
@@ -194,6 +229,7 @@ export default {
         name1: [{ required: true, message: "请输入部门全称", trigger: "blur" }],
         city: [{ required: true, message: "请输入活动名称", trigger: "blur" }]
       },
+      // loading:true,
       upload_img_dialog: false,
       role_visible: false,
       password_first_visible: false, //修改密码第一步
@@ -235,15 +271,83 @@ export default {
           time: "2018-08-24 17:23:51",
           logintime: "2018-08-24 17:23:51"
         }
-      ]
+      ],
+      orgName: "", //部门
+      //性别
+      radio: "男",
+      //编辑信息
+      currentform: {},
+      isShow: false,
+      isHide: true,
+      //编辑验证
+      editrules: {
+        duty: [
+          { required: true, message: "请输入职务", trigger: "blur" },
+          { min: 3, max: 5, message: "长度在 3 到 5 个字符", trigger: "blur" }
+        ],
+        phone: [{ required: true, trigger: "blur", validator: validPhone }],
+        remark: [
+          { required: true, message: "请输入备注", trigger: "blur" },
+          { min: 3, max: 8, message: "长度在 3 到 8 个字符", trigger: "blur" }
+        ]
+      },
+      userId: ""
     };
   },
+<<<<<<< HEAD
   computed: {
     ...mapGetters(["user_info"])
   },
   created() {
+=======
+  created() {
+    this.getUserInfo();
+  },
+  computed:{
+    ...mapGetters(["user_info"])
+>>>>>>> 68cc8b279d1432a22162c75ad35e82219784182d
   },
   methods: {
+    //获取用户基本信息
+    getUserInfo() {
+      this.$post(`gwt/system/sysUserZone/getUserInfo`).then(res => {
+        if (res.result === "0000") {
+          // console.log(res)
+          this.orgName = res.data.sysOrg.orgName;
+        }
+      });
+    },
+    //编辑用户信息
+    editUserInfo() {
+      // this.isHide = !this.isHide
+      this.$post(`gwt/getCurrentOrgUser`).then(res => {
+        // console.log(res)
+        if (res.result === "0000") {
+          this.currentform = res.data.hashMap;
+          this.userId = res.data.hashMap.userId;
+          // console.log(this.userId)
+          // console.log(res.data.hashMap.phone)                 
+          this.isShow = !this.isShow;
+          this.isHide = !this.isHide;
+        }
+      });
+    },
+    //提交编辑用户信息
+    oneditSubmit() {
+      const data = this.$refs.currentform;
+      this.$post(`gwt/system/sysUserZone/updateUser`, {
+        userId: this.userId,
+        sex: "0",
+        sysOrgUserX: {
+          id: 3578,
+          phone: this.currentform.phone,
+          remark: this.currentform.remark,
+          duty: this.currentform.remark
+        }
+      }).then(res => {
+        console.log(res);
+      });
+    },
     handleDelete(index) {
       this.$swal({
         title: "确定移除设备授权吗？",
@@ -391,5 +495,13 @@ export default {
       }
     }
   }
+}
+.itemBtn {
+  float: right;
+  margin: 10px 0;
+}
+.el-form-item__content .el-form-item__error {
+  position: static;
+  margin-bottom: 10px;
 }
 </style>
