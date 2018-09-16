@@ -2,11 +2,12 @@ import Vue from 'vue';
 import { post } from '@/utils/fetch';
 import { Message } from 'element-ui'
 export function delete_item({
-    url, data, success
+    url, data, success, title = "您确定要删除的信息吗？",
+    text = "删除后将无法恢复，请谨慎操作！"
 }) {
     Vue.swal({
-        title: "您确定要删除的信息吗？",
-        text: "删除后将无法恢复，请谨慎操作！",
+        title: title,
+        text: text,
         type: "warning",
         showCancelButton: true,
         confirmButtonColor: "#DD6B55",

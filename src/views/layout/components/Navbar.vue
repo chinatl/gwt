@@ -9,7 +9,16 @@
         </div>
         <div class="right-part">
           <span>当前部门：</span>
-          <span class="value">超级管理员机构<svg-icon icon-class="刷新" /></span>
+          <el-dropdown>
+            <span class="el-dropdown-link">
+              <span class="value">超级管理员机构</span>
+              <svg-icon icon-class="刷新" />
+            </span>
+            <el-dropdown-menu slot="dropdown">
+              <el-dropdown-item>其他部门1</el-dropdown-item>
+              <el-dropdown-item>其他部门2</el-dropdown-item>
+            </el-dropdown-menu>
+          </el-dropdown>
           <span class="user-pic">
             <svg-icon icon-class="头像" />
           </span>
@@ -173,7 +182,9 @@ export default {
       .value {
         color: #337ab7;
         font-weight: 600;
-        margin: 0px 8px;
+        margin-left: 8px;
+        margin-right: 4px;
+        cursor: pointer;
         .svg-icon {
           margin-left: 6px;
           font-size: 18px;

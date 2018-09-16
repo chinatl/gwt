@@ -258,6 +258,7 @@ export default {
                 this.$router.push({ path: "/message/index" });
                 //这里写一下初始化的数据
                 this.$store.dispatch("get_meeting_type_list");
+                this.$store.dispatch("get_part_tree");
               }
             })
             .catch(res => {

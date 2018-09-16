@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <script>
+        var data = {
+            "data": {
+                "nodes": [
+                    {
+                        "allName": "第三轮测试新",
+                        "areaId": "610010",
+                        "childrens": [
+                            {
+                                "allName": "第三轮测试二级A",
+                                "areaId": "61",
+                                "childrens": [
+                                    {
+                                        "allName": "第三轮测试二级A三级1",
+                                        "areaId": "610006",
+                                        "childrens": "",
+                                        "createTime": "",
+                                        "createUser": "",
+                                        "deptType": "null",
+                                        "id": "123",
+                                        "managerFlag": true,
+                                        "name": "三级1",
+                                        "nodeType": "ORG",
+                                        "pId": "119",
+                                        "sn": "118",
+                                        "updateTime": "",
+                                        "updateUser": ""
+                                    },
+                                    {
+                                        "allName": "第三轮测试二级A三级2",
+                                        "areaId": "610006",
+                                        "childrens": "",
+                                        "createTime": "",
+                                        "createUser": "",
+                                        "deptType": "null",
+                                        "id": "124",
+                                        "managerFlag": true,
+                                        "name": "三级2",
+                                        "nodeType": "ORG",
+                                        "pId": "119",
+                                        "sn": "119",
+                                        "updateTime": "",
+                                        "updateUser": ""
+                                    }
+                                ],
+                                "createTime": "",
+                                "createUser": "",
+                                "deptType": "null",
+                                "id": "119",
+                                "managerFlag": true,
+                                "name": "二级A",
+                                "nodeType": "ORG",
+                                "pId": "117",
+                                "sn": "114",
+                                "updateTime": "",
+                                "updateUser": ""
+                            },
+                            {
+                                "allName": "第三轮测试二级B",
+                                "areaId": "610002",
+                                "childrens": [
+                                    {
+                                        "allName": "第三轮测试二级B三级机要处",
+                                        "areaId": "600013",
+                                        "childrens": "",
+                                        "createTime": "",
+                                        "createUser": "",
+                                        "deptType": "null",
+                                        "id": "125",
+                                        "managerFlag": true,
+                                        "name": "三级机要处",
+                                        "nodeType": "ORG",
+                                        "pId": "120",
+                                        "sn": "120",
+                                        "updateTime": "",
+                                        "updateUser": ""
+                                    }
+                                ],
+                                "createTime": "",
+                                "createUser": "",
+                                "deptType": "null",
+                                "id": "120",
+                                "managerFlag": true,
+                                "name": "二级B",
+                                "nodeType": "ORG",
+                                "pId": "117",
+                                "sn": "115",
+                                "updateTime": "",
+                                "updateUser": ""
+                            },
+                            {
+                                "allName": "第三轮测试二级工程部",
+                                "areaId": "610001",
+                                "childrens": "",
+                                "createTime": "",
+                                "createUser": "",
+                                "deptType": "null",
+                                "id": "164",
+                                "managerFlag": true,
+                                "name": "二级工程部",
+                                "nodeType": "ORG",
+                                "pId": "117",
+                                "sn": "157",
+                                "updateTime": "",
+                                "updateUser": ""
+                            },
+                            {
+                                "allName": "第三轮测试二级外勤部",
+                                "areaId": "610001",
+                                "childrens": "",
+                                "createTime": "",
+                                "createUser": "",
+                                "deptType": "null",
+                                "id": "165",
+                                "managerFlag": true,
+                                "name": "二级外勤部",
+                                "nodeType": "ORG",
+                                "pId": "117",
+                                "sn": "158",
+                                "updateTime": "",
+                                "updateUser": ""
+                            }
+                        ],
+                        "createTime": "",
+                        "createUser": "",
+                        "deptType": "13",
+                        "id": "117",
+                        "managerFlag": true,
+                        "name": "第三轮测试新",
+                        "nodeType": "ORG",
+                        "pId": "region_610010",
+                        "sn": "113",
+                        "updateTime": "",
+                        "updateUser": ""
+                    },
+                    { "$ref": "$.data.nodes[0].childrens[0]" },
+                    { "$ref": "$.data.nodes[0].childrens[1]" },
+                    { "$ref": "$.data.nodes[0].childrens[0].childrens[0]" },
+                    { "$ref": "$.data.nodes[0].childrens[0].childrens[1]" },
+                    { "$ref": "$.data.nodes[0].childrens[1].childrens[0]" },
+                    { "$ref": "$.data.nodes[0].childrens[2]" },
+                    { "$ref": "$.data.nodes[0].childrens[3]" }
+                ]
+            },
+            "errorCode": 0,
+            "msg": "查询部门树数据",
+            "result": "0000",
+            "title": ""
+        }
+
+        var node = data.data.nodes;
+        console.log(node)
+
+        function resolve_tree(arr) {
+            var newArr = [];
+            function getChild(arr) {
+                for (var i = 0; i < arr.length; i++) {
+                    if (arr[i].id) {
+                        newArr.push(arr[i]);
+                        if (arr[i].childrens.length) {
+                            getChild(arr[i].childrens)
+                        }
+                    }
+                }
+            }
+            getChild(arr)
+            return newArr
+        };
+        resolve_tree(node)
+    </script>
+</body>
+
+</html>

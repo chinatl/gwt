@@ -398,3 +398,43 @@ export function fileType(name) {
   return 'unknown'
 }
 
+export function resolve_tree(arr) {
+  var newArr = [];
+  function getChild(arr) {
+    for (var i = 0; i < arr.length; i++) {
+      if (arr[i].id) {
+        newArr.push(arr[i]);
+        if (arr[i].childrens.length) {
+          getChild(arr[i].childrens)
+        }
+      }
+    }
+  }
+  getChild(arr)
+  return newArr
+};
+export function generate_tree(arr) {
+  var newArr = [];
+  for (var i = arr.length - 1; i >= 0; i--) {
+    if (arr[i].nodeType === 'USER_GROUP' || arr[i].nodeType === 'ORG_GROUP' || arr[i].nodeType === 'DOMAIN') {
+      newArr.push(arr.splice(i, 1)[0]);
+    }
+  }
+  getTree(newArr);
+  function getTree(generate_arr) {
+    if (!generate_arr) return
+    if (!generate_arr.length) return
+    for (var k = 0; k < generate_arr.length; k++) {
+      generate_arr[k].childrens = [];
+      for (var i = arr.length - 1; i >= 0; i--) {
+        if (arr[i].pId === generate_arr[k].id) {
+          generate_arr[k].childrens.push(arr.splice(i, 1)[0]);
+        }
+      };
+      getTree(generate_arr[k].childrens)
+    }
+  }
+  console.log(arr)
+  return newArr
+}
+

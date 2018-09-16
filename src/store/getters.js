@@ -23,5 +23,8 @@ const getters = {
   meeting_type_list: state => state.meeting.meeting_type_list,
   message_data: state => state.message.message_data,
   report_data: state => state.message.report_data,
+  part_tree: state => state.part.part_tree,
+  part_user_list: state => state.part.uset_list,
+  manager_tree_list: state => state.part.manager_tree_list
 }
 export default getters

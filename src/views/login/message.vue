@@ -68,9 +68,13 @@ export default {
         return;
       }
       this.loading = true;
-      this.$post("gwt/getPhoneValidateCode", {
-        phone: this.$store.getters.user_info.mobilePhone
-      },'json')
+      this.$post(
+        "gwt/getPhoneValidateCode",
+        {
+          phone: this.$store.getters.user_info.mobilePhone
+        },
+        "json"
+      )
         .then(res => {
           this.loading = false;
           if (res.result !== "0000") {
@@ -160,9 +164,13 @@ export default {
           });
           this.isSend = false;
           this.$router.push({ path: "/message/index" });
+
           clearInterval(this.timer);
           sessionStorage.setItem("login-message", "获取验证码");
           sessionStorage.setItem("login-isSend", "false");
+
+          this.$store.dispatch("get_meeting_type_list");
+          this.$store.dispatch("get_part_tree");
         })
         .catch(res => {
           this.loading = false;

@@ -191,6 +191,54 @@ export const constantRouterMap = [
     ]
   },
   {
+    path: '/field-manager',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        name: '域管理-子账号',
+        component: () => import('@/views/field-manager'),
+        meta: { title: '域管理'}
+      }
+    ]
+  },
+  {
+    path: '/part-manager',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        name: '部门管理-子账号',
+        component: () => import('@/views/part-manager'),
+        meta: { title: '部门管理'}
+      }
+    ]
+  },
+  {
+    path: '/role-manager',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        name: '角色管理-子账号',
+        component: () => import('@/views/role-manager'),
+        meta: { title: '角色管理'}
+      }
+    ]
+  },
+  {
+    path: '/person-manager',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        name: '用户管理-子账号',
+        component: () => import('@/views/user_manager'),
+        meta: { title: '用户管理'}
+      }
+    ]
+  },
+  {
     path: '/system-set',
     component: Layout,
     redirect: '/system-set/app',

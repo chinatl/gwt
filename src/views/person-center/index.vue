@@ -7,10 +7,10 @@
             <div class="page-form" style="width:700px">
                 <el-form label-width="120px">
                     <el-form-item label="标 题：" class="page-form-item">
-                        <span>超级管理员</span>
+                        <span>{{user_info.realName}}</span>
                     </el-form-item>
                     <el-form-item label="性 別：" class="page-form-item">
-                        <span>男</span>
+                        <span>{{user_info.sex === '1' ? '男':'女'}}</span>
                     </el-form-item>
                     <el-form-item label="部 门：" class="page-form-item">
                         <span>系统管理员</span>
@@ -177,6 +177,7 @@ import vueCropper from "vue-cropper";
 import uploadButton from "@/components/Button/uploadButton";
 import formButton from "@/components/Button/formButton";
 import littleButton from "@/components/Button/littleButton";
+import { mapGetters } from "vuex";
 export default {
   components: {
     panThumb,
@@ -236,6 +237,11 @@ export default {
         }
       ]
     };
+  },
+  computed: {
+    ...mapGetters(["user_info"])
+  },
+  created() {
   },
   methods: {
     handleDelete(index) {
@@ -374,7 +380,7 @@ export default {
           overflow: hidden;
           padding-left: 20px;
           .show-preview {
-            border-radius: 100px
+            border-radius: 100px;
           }
         }
       }

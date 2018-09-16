@@ -48,6 +48,15 @@ service.interceptors.response.use(
           path: '/login'
         })
       }
+      if (res.result === '7001') {
+        Message({
+          message: 'token过期，请重新登录！',
+          type: 'error'
+        });
+        router.push({
+          path: '/login'
+        })
+      }
       if (res.code === 7002) {
         Message({
           message: '该账号已在其他设备登陆，您已被登出！',
