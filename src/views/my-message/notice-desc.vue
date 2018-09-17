@@ -190,7 +190,6 @@ export default {
             return;
           }
           this.tree_data = res.data.nodes;
-          console.log(this.tree_data);
         })
         .catch(res => {
           console.log(res);

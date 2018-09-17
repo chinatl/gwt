@@ -422,10 +422,11 @@ export default {
               type: "success",
               message
             });
-            this.group_visible = false;
             this.search_all_group();
+            this.group_visible = false;
           })
           .catch(res => {
+            console.log(res);
             this.group_loading = false;
           });
       });
@@ -472,6 +473,11 @@ export default {
             type: "success",
             message: "添加部门成功"
           });
+          if (this.current === -1) {
+            this.search_group_part(-1);
+          } else {
+            this.search_group_part(this.category[this.current].id);
+          }
           this.part_visible = false;
         })
         .catch(res => {

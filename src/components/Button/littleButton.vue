@@ -159,19 +159,28 @@ export default {
           };
         case "材料征集":
           return {
-            className: "rukediaochan",
+            className: "rukediaochan"
           };
         case "通知":
           return {
-            className: "rukediaochan",
+            className: "rukediaochan"
           };
         case "会议通知":
           return {
-            className: "rukediaochan",
+            className: "rukediaochan"
           };
         case "公告":
           return {
-            className: "rukediaochan",
+            className: "rukediaochan"
+          };
+        case "移除":
+          return {
+            className: "shanchu",
+            iconName: "删除"
+          };
+        case "设为常用":
+          return {
+            className: "biangeng",
           };
         default:
           return {

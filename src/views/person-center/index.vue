@@ -5,8 +5,8 @@
                 <el-button style="float:right" size='small' type="success" v-wave @click="editUserInfo">编辑</el-button>
             </t-title>
             <div class="page-form" style="width:700px">
-                <el-form label-width="120px" :model="currentform" :rules="editrules" ref="currentform">
-                    <el-form-item label="姓 名：" class="page-form-item">
+                <el-form label-width="120px">
+                    <el-form-item label="标 题：" class="page-form-item">
                         <span>{{user_info.realName}}</span>
                     </el-form-item>
                     <el-form-item label="性 別：" class="page-form-item">
@@ -288,6 +288,8 @@ export default {
   },
   computed:{
     ...mapGetters(["user_info"])
+  },
+  created() {
   },
   methods: {
     //获取用户基本信息
