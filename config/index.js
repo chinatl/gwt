@@ -21,6 +21,9 @@ module.exports = {
         //   '^/apis': ''   //需要rewrite重写的,
         // }
       },
+      '/gwt-web-cloudisk':{
+        target: 'http://192.168.31.7:8080'
+      },
       '/uploadfiles': {
         // target: 'http://192.168.31.169:8080',  // 接口域名 -谢震
         // target: 'http://192.168.31.5:8080',  // 接口域名 - 陈普
@@ -43,7 +46,7 @@ module.exports = {
     },
 
     // Various Dev Server settings
-    host: '192.168.31.6', // can be overwritten by process.env.HOST
+    host: '192.168.31.7', // can be overwritten by process.env.HOST
     port: 80, // can be overwritten by process.env.PORT, if port is in use, a free one will be determined
     autoOpenBrowser: true,
     errorOverlay: true,
