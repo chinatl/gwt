@@ -12,8 +12,8 @@
                     <el-form-item label="性 別：" class="page-form-item">
                         <span v-if="isHide">{{user_info.sex == "1" ? "男" : "女"}}</span>
                         <template v-else prop="sex" >
-                          <el-radio v-model="radio" label="男">男</el-radio>
-                          <el-radio v-model="radio" label="女">女</el-radio>
+                          <el-radio v-model="radio" label="0">男</el-radio>
+                          <el-radio v-model="radio" label="1">女</el-radio>
                         </template>                      
                     </el-form-item>
                     <el-form-item label="部 门：" class="page-form-item">
@@ -53,14 +53,14 @@
             <div class="page-form" style="width:700px">
                 <el-form label-width="120px">
                     <el-form-item label="用户名：" class="page-form-item">
-                        <span>G00018201</span>
+                        <span>{{user_info.userName}}</span>
                     </el-form-item>
                     <el-form-item label="手机号：" class="page-form-item">
-                        135****0721
+                        {{user_info.mobilePhone}}
                         <el-button type="success" size="mini" icon="el-icon-edit-outline" @click="password_first_visible = true" v-wave>编辑</el-button>
                     </el-form-item>
                     <el-form-item label="密码：" class="page-form-item">
-                        ************************
+                        {{user_info.password}}
                         <el-button type="success" size="mini" icon="el-icon-edit-outline" @click="role_visible = true" v-wave>编辑</el-button>
                     </el-form-item>
                 </el-form>
@@ -72,10 +72,11 @@
             <el-table
                 :data="tableData"
                 border
-                style="width: 100%;margin-top:20px">
-                <el-table-column  prop="name" align="center" label="设备名称"></el-table-column>
-                <el-table-column  prop="time" align="center" label="授权时间"></el-table-column>
-                <el-table-column  prop="logintime" align="center" label="登录时间"></el-table-column>
+                style="width: 100%;margin-top:20px"
+                v-for="(item,index) in tableData" :key="index">
+                <el-table-column  prop="name" align="center" label="设备名称">{{item.equipmentName}}</el-table-column>
+                <el-table-column  prop="time" align="center" label="授权时间">{{item.createTime}}</el-table-column>
+                <el-table-column  prop="logintime" align="center" label="登录时间">{{item.lastLoginTime}}</el-table-column>
                 <el-table-column
                 prop="name"
                 label="操作"
@@ -261,7 +262,7 @@ export default {
       ],
       orgName: "", //部门
       //性别
-      radio: "男",
+      radio: "0",
       //编辑信息
       currentform: {},
       isShow: false,
@@ -283,6 +284,7 @@ export default {
   },
   created() {
     this.getUserInfo();
+    this.getloginTable();
   },
   computed:{
     ...mapGetters(["user_info"])
@@ -291,8 +293,7 @@ export default {
     //获取用户基本信息
     getUserInfo() {
       this.$post(`gwt/system/sysUserZone/getUserInfo`).then(res => {
-        if (res.result === "0000") {
-          // console.log(res)
+        if (res.result === "0000") {     
           this.orgName = res.data.sysOrg.orgName;
         }
       });
@@ -301,12 +302,12 @@ export default {
     editUserInfo() {
       // this.isHide = !this.isHide
       this.$post(`gwt/getCurrentOrgUser`).then(res => {
-        // console.log(res)
+        console.log(res)
+        
         if (res.result === "0000") {
           this.currentform = res.data.hashMap;
-          this.userId = res.data.hashMap.userId;
-          // console.log(this.userId)
-          // console.log(res.data.hashMap.phone)                 
+          this.userId = res.data.hashMap.userId;  
+          // console.log(this.userId)              
           this.isShow = !this.isShow;
           this.isHide = !this.isHide;
         }
@@ -314,19 +315,36 @@ export default {
     },
     //提交编辑用户信息
     oneditSubmit() {
-      const data = this.$refs.currentform;
       this.$post(`gwt/system/sysUserZone/updateUser`, {
         userId: this.userId,
-        sex: "0",
+        sex: this.radio,
         sysOrgUserX: {
-          id: 3578,
+          id: this.currentform.id,
           phone: this.currentform.phone,
           remark: this.currentform.remark,
-          duty: this.currentform.remark
+          duty: this.currentform.duty
         }
-      }).then(res => {
+      },
+      "json"
+      ).then(res => {
         console.log(res);
+        if(res.result === "0000"){
+          this.isHide = !this.isHide;
+          this.currentform = res.data.hashMap;
+        }
       });
+    },
+    //获取登陆信息表格
+    getloginTable(){
+      this.$post(`gwt/system/sysEquipmentAuth/list`,
+      {
+        userId:this.userId
+      }).then(res=>{
+        console.log(res.data)
+        if(res.result === "0000"){
+            this.tableData = res.data.sysEquipmentAuthList
+        }
+      })
     },
     handleDelete(index) {
       this.$swal({
