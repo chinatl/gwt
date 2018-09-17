@@ -5,25 +5,12 @@
                 <el-button style="float:right" size='small' type="success" v-wave @click="editUserInfo">编辑</el-button>
             </t-title>
             <div class="page-form" style="width:700px">
-<<<<<<< HEAD
                 <el-form label-width="120px">
                     <el-form-item label="标 题：" class="page-form-item">
                         <span>{{user_info.realName}}</span>
                     </el-form-item>
                     <el-form-item label="性 別：" class="page-form-item">
                         <span>{{user_info.sex === '1' ? '男':'女'}}</span>
-=======
-                <el-form label-width="120px" :model="currentform" :rules="editrules" ref="currentform">
-                    <el-form-item label="姓 名：" class="page-form-item">
-                        <span>{{user_info.realName}}</span>
-                    </el-form-item>
-                    <el-form-item label="性 別：" class="page-form-item">
-                        <span v-if="isHide">{{user_info.sex == "1" ? "男" : "女"}}</span>
-                        <template v-else prop="sex" >
-                          <el-radio v-model="radio" label="男">男</el-radio>
-                          <el-radio v-model="radio" label="女">女</el-radio>
-                        </template>                      
->>>>>>> 68cc8b279d1432a22162c75ad35e82219784182d
                     </el-form-item>
                     <el-form-item label="部 门：" class="page-form-item">
                         <span>{{orgName}}</span>
@@ -197,9 +184,6 @@ import vueCropper from "vue-cropper";
 import uploadButton from "@/components/Button/uploadButton";
 import formButton from "@/components/Button/formButton";
 import littleButton from "@/components/Button/littleButton";
-<<<<<<< HEAD
-import { mapGetters } from "vuex";
-=======
 import { validatePhone } from "@/utils/validate";
 import { mapGetters} from 'vuex'
 //定义一个全局的变量
@@ -212,7 +196,6 @@ var validPhone = (rule, value, callback) => {
     callback();
   }
 };
->>>>>>> 68cc8b279d1432a22162c75ad35e82219784182d
 export default {
   components: {
     panThumb,
@@ -294,18 +277,10 @@ export default {
       userId: ""
     };
   },
-<<<<<<< HEAD
   computed: {
     ...mapGetters(["user_info"])
   },
   created() {
-=======
-  created() {
-    this.getUserInfo();
-  },
-  computed:{
-    ...mapGetters(["user_info"])
->>>>>>> 68cc8b279d1432a22162c75ad35e82219784182d
   },
   methods: {
     //获取用户基本信息

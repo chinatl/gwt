@@ -69,6 +69,7 @@
             </div>
             <div class="common-table">
                 <el-table
+                    :key="1"
                     v-if='temp_data.nodeType === "USER_GROUP_CHILD"'
                     :data="tableData"
                     border
@@ -83,9 +84,12 @@
                        </template>
                     </el-table-column>
                     <el-table-column
-                    prop="name"
                     align="center"
                     label="头像">
+                      <template slot-scope="scope">
+                        <img :src="require('@/assets/imgs/a9.jpg')" style="width:40px;height:40px" v-if="scope.row.HEADIMGPATH ==='/'">
+                        <img :src="scope.row.HEADIMGPATH" style="width:40px;height:40px" v-else>
+                      </template>
                     </el-table-column>
                     <el-table-column
                     prop="realName"
@@ -114,6 +118,7 @@
                     </el-table-column>
                 </el-table>
                 <el-table   
+                :key="2"
                 :data="part_tableData"
                 border
                 v-if='temp_data.nodeType === "ORG_GROUP_CHILD"'
@@ -179,7 +184,6 @@ import qs from "qs";
 import AddUser from "@/components/AddUser";
 import SelectPart from "@/components/SelectPart";
 import tree_data from "@/utils/text.json";
-console.log(generate_tree(tree_data));
 export default {
   components: {
     arrowButton,
@@ -218,9 +222,9 @@ export default {
     handleCurrentChange(e) {
       this.pageNo = e;
       if (this.temp_data.nodeType === "USER_GROUP_CHILD") {
-        this.search_message_user(this.pageSize, 1);
+        this.search_message_user(this.pageSize, e);
       } else if (this.nodeType === "ORG_GROUP_CHILD") {
-        this.search_group_part(this.pageSize, 1);
+        this.search_group_part(this.pageSize, e);
       }
     },
     //
@@ -236,11 +240,12 @@ export default {
     //点击常用分组 查下面的组
     search_group_part(pageNo, pageSize) {
       this.$post(
-        "gwt/system/sysAddressBookOrg/getOrgbyGroupId",
-        {
-          groupId: this.temp_data.id.replace(/.*\D/, ""),
+        `gwt/system/sysAddressBookOrg/getOrgbyGroupId?${qs.stringify({
           currentPage: pageNo,
           pageSize: pageSize
+        })}`,
+        {
+          groupId: this.temp_data.id.replace(/.*\D/, "")
         },
         "json"
       )
@@ -322,6 +327,7 @@ export default {
     add_user_usually() {
       this.add_dialog = true;
     },
+
     //确定提交
     submit_part(arr) {
       this.add_part_loading = true;
@@ -360,12 +366,12 @@ export default {
       this.add_part_dialog = true;
     },
     // 移除常用联系人
-    remove_usually_user(userxId) {
+    remove_usually_user(userId) {
       delete_item({
         url: "gwt/system/sysAddressBookUser/delUser",
         data: {
           groupId: 1331,
-          userxId
+          userId
         },
         title: "您确定要移除吗？",
         text: "移除后将无法恢复，请谨慎操作！",
@@ -416,7 +422,7 @@ export default {
         this.expanded_keys[0] = data.id;
         return;
       }
-      console.log(data)
+      console.log(data);
       this.temp_data = data;
       if (data.nodeType === "USER_GROUP_CHILD") {
         this.search_message_user(this.pageSize, this.pageNo);

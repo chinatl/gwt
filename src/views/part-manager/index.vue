@@ -313,7 +313,7 @@ export default {
         areaId,
         currentPage: pageNo,
         pageSize: pageSize
-      })
+      },'json')
         .then(res => {
           this.table_loading = false;
           this.loading = false;

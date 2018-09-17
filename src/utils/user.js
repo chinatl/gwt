@@ -25,7 +25,7 @@ export function delete_item({
         )
             .then(res => {
                 if (res.result !== "0000") {
-                    vue.swal({
+                    Vue.swal({
                         title: "操作失败！",
                         text: res.msg,
                         type: "error",

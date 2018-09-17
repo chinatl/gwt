@@ -14,8 +14,7 @@ const app = {
         get_meeting_type_list({ commit }) {
             post('gwt/system/sysDic/getDicByType', {
                 "type": "NOTICE_TYPE",
-                "token": "0314_caca55d7-ced5-4ab6-87e0-667cc9e5d2b1"
-            }).then(res => {
+            },'json').then(res => {
                 if (res.result !== '0000') {
                     return
                 }

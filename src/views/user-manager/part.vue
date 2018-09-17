@@ -143,6 +143,7 @@
 <script>
 import formButton from "@/components/Button/formButton";
 import arrowButton from "@/components/Button/arrowButton";
+import qs from "qs";
 export default {
   components: {
     formButton,
@@ -257,7 +258,7 @@ export default {
       this.option_value3 = "";
       this.$post("gwt/system/sysOrg/getAreaByParent", {
         parents: e
-      })
+      },'json')
         .then(res => {
           if (res.result !== "0000") {
             return;
@@ -308,12 +309,16 @@ export default {
       } else {
         areaId = "";
       }
-      this.$post("gwt/system/sysOrg/list", {
-        orgParentId,
-        areaId,
-        currentPage: pageNo,
-        pageSize: pageSize
-      })
+      this.$post(
+        "gwt/system/sysOrg/list",
+        {
+          orgParentId,
+          areaId,
+          currentPage: pageNo,
+          pageSize: pageSize
+        },
+        "json"
+      )
         .then(res => {
           this.table_loading = false;
           this.loading = false;

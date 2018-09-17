@@ -12,13 +12,8 @@ module.exports = {
     proxyTable: {
       '/gwt': {
         // target: 'http://192.168.31.169:8080',  // 接口域名 -谢震
-<<<<<<< HEAD
         // target: 'http://192.168.31.5:8080',  // 接口域名 - 陈普
         target: 'http://192.168.31.72:8888',  // 接口域名 - 尚旭光
-=======
-        target: 'http://192.168.31.5:8080',  // 接口域名 - 陈普
-        // target: 'http://192.168.31.72:8888',  // 接口域名 - 尚旭光
->>>>>>> 68cc8b279d1432a22162c75ad35e82219784182d
         // target: 'http://192.168.31.4:8080',  // 接口域名 - 景蒙
         // target: 'http://192.168.31.8:8080',  // 接口域名 - 陈小东
         // changeOrigin: true,  //是否跨域
@@ -48,11 +43,7 @@ module.exports = {
     },
 
     // Various Dev Server settings
-<<<<<<< HEAD
     host: '192.168.31.6', // can be overwritten by process.env.HOST
-=======
-    host: '192.168.32.174', // can be overwritten by process.env.HOST
->>>>>>> 68cc8b279d1432a22162c75ad35e82219784182d
     port: 80, // can be overwritten by process.env.PORT, if port is in use, a free one will be determined
     autoOpenBrowser: true,
     errorOverlay: true,
