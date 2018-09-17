@@ -88,21 +88,32 @@ export default {
       },
       checked: false,
       input: "",
-      user_list: [],
       has_select_user: [],
       all_checked: false,
       user_all_checked: false,
-      has_user_data: []
+      has_user_data: [],
+      user_list: []
     };
   },
   props: {
     show: {
       type: Boolean,
-      default: false,
+      default: false
     },
     loading: {
       type: Boolean,
-      default: false,
+      default: false
+    },
+    userList: {
+      type: Array,
+      default: []
+    }
+  },
+  watch: {
+    show(res) {
+      if (res) {
+        this.has_select_user = this.userList;
+      }
     }
   },
   created() {
@@ -440,7 +451,6 @@ export default {
                 color: #2e88e7;
               }
               .user-name {
-                letter-spacing: 1px;
                 font-size: 14px;
                 color: #2e88e7;
                 white-space: nowrap;

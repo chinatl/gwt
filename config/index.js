@@ -12,9 +12,9 @@ module.exports = {
     proxyTable: {
       '/gwt': {
         // target: 'http://192.168.31.169:8080',  // 接口域名 -谢震
-        // target: 'http://192.168.31.5:8080',  // 接口域名 - 陈普
-        target: 'http://192.168.31.72:8888',  // 接口域名 - 尚旭光
-        // target: 'http://192.168.31.4:8080',  // 接口域名 - 景蒙
+        target: 'http://192.168.31.5:8080',  // 接口域名 - 陈普
+        // target: 'http://192.168.31.72:8888',  // 接口域名 - 尚旭光
+        // target: 'http://192.168.31.4:10000',  // 接口域名 - 景蒙
         // target: 'http://192.168.31.8:8080',  // 接口域名 - 陈小东
         // changeOrigin: true,  //是否跨域
         // pathRewrite: {
@@ -102,7 +102,7 @@ module.exports = {
     // Surge or Netlify already gzip all static assets for you.
     // Before setting to `true`, make sure to:
     // npm install --save-dev compression-webpack-plugin
-    productionGzip: false,
+    productionGzip: true,
     productionGzipExtensions: ['js', 'css'],
 
     // Run the build command with an extra argument to

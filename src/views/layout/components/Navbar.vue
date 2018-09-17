@@ -24,7 +24,7 @@
           </span>
            <el-dropdown  @command='has_command'>
             <span class="el-dropdown-link" style="cursor:pointer">
-                超级管理员<i class="el-icon-arrow-down el-icon--right"></i>
+                {{user_info.realName}}<i class="el-icon-arrow-down el-icon--right"></i>
             </span>
             <el-dropdown-menu slot="dropdown">
                 <el-dropdown-item command="user">个人中心</el-dropdown-item>
@@ -62,7 +62,7 @@ export default {
     };
   },
   computed: {
-    ...mapGetters(["sidebar", "avatar", "visitedViews"])
+    ...mapGetters(["sidebar", "avatar", "visitedViews","user_info"])
   },
   watch: {
     visible(value) {

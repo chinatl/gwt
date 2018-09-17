@@ -1,643 +1,284 @@
+[{
+    path: '/user-message',
+    meta: { title: '我的消息' },
+
+},
 {
-    "data": {
-        "nodes": [
-            {
-                "allName": "",
-                "areaId": "",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "",
-                "id": "USER_GROUP_",
-                "managerFlag": "",
-                "name": "常用联系人",
-                "nodeType": "USER_GROUP",
-                "pId": "",
-                "sn": "",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "",
-                "areaId": "",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "",
-                "id": "USER_GROUP_0",
-                "managerFlag": "",
-                "name": "<默认>",
-                "nodeType": "USER_GROUP_CHILD",
-                "pId": "USER_GROUP_",
-                "sn": "",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "",
-                "areaId": "",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "",
-                "id": "USER_GROUP_1303",
-                "managerFlag": "",
-                "name": "8888",
-                "nodeType": "USER_GROUP_CHILD",
-                "pId": "USER_GROUP_",
-                "sn": "",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "",
-                "areaId": "",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "",
-                "id": "USER_GROUP_1304",
-                "managerFlag": "",
-                "name": "2",
-                "nodeType": "USER_GROUP_CHILD",
-                "pId": "USER_GROUP_",
-                "sn": "",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "",
-                "areaId": "",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "",
-                "id": "USER_GROUP_1315",
-                "managerFlag": "",
-                "name": "2233",
-                "nodeType": "USER_GROUP_CHILD",
-                "pId": "USER_GROUP_",
-                "sn": "",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "",
-                "areaId": "",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "",
-                "id": "USER_GROUP_1323",
-                "managerFlag": "",
-                "name": "111111",
-                "nodeType": "USER_GROUP_CHILD",
-                "pId": "USER_GROUP_",
-                "sn": "",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "",
-                "areaId": "",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "",
-                "id": "ORG_GROUP_",
-                "managerFlag": "",
-                "name": "常用联系部门",
-                "nodeType": "ORG_GROUP",
-                "pId": "",
-                "sn": "",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "",
-                "areaId": "",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "",
-                "id": "ORG_GROUP_0",
-                "managerFlag": "",
-                "name": "<默认>",
-                "nodeType": "ORG_GROUP_CHILD",
-                "pId": "ORG_GROUP_",
-                "sn": "",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "",
-                "areaId": "",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "",
-                "id": "ORG_GROUP_1305",
-                "managerFlag": "",
-                "name": "11",
-                "nodeType": "ORG_GROUP_CHILD",
-                "pId": "ORG_GROUP_",
-                "sn": "",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "",
-                "areaId": "",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "",
-                "id": "ORG_GROUP_1306",
-                "managerFlag": "",
-                "name": "22",
-                "nodeType": "ORG_GROUP_CHILD",
-                "pId": "ORG_GROUP_",
-                "sn": "",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "",
-                "areaId": "",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "",
-                "id": "ORG_GROUP_1322",
-                "managerFlag": "",
-                "name": "研发部",
-                "nodeType": "ORG_GROUP_CHILD",
-                "pId": "ORG_GROUP_",
-                "sn": "",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "",
-                "areaId": "",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "",
-                "id": "ORG_GROUP_1324",
-                "managerFlag": "",
-                "name": "222222",
-                "nodeType": "ORG_GROUP_CHILD",
-                "pId": "ORG_GROUP_",
-                "sn": "",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "2018/9/3",
-                "areaId": "",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "",
-                "id": "DOMAIN_517",
-                "managerFlag": "",
-                "name": "2018/9/3",
-                "nodeType": "DOMAIN",
-                "pId": "",
-                "sn": "",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "渭南扶贫办扶贫办2",
-                "areaId": "10085",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "null",
-                "id": "1113",
-                "managerFlag": "",
-                "name": "扶贫办2",
-                "nodeType": "ORG",
-                "pId": "1111",
-                "sn": "1",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "渭南扶贫办核算部1",
-                "areaId": "10085",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "null",
-                "id": "3810",
-                "managerFlag": "",
-                "name": "1",
-                "nodeType": "ORG",
-                "pId": "3807",
-                "sn": "1",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "渭南扶贫办",
-                "areaId": "10085",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "12",
-                "id": "1111",
-                "managerFlag": "",
-                "name": "渭南扶贫办",
-                "nodeType": "ORG",
-                "pId": "DOMAIN_GROUP_62",
-                "sn": "1",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "渭南扶贫办扶贫办1李平的部门",
-                "areaId": "10085",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "null",
-                "id": "1115",
-                "managerFlag": "",
-                "name": "李平的部门",
-                "nodeType": "ORG",
-                "pId": "1112",
-                "sn": "2",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "渭南扶贫办扶贫办3",
-                "areaId": "10085",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "null",
-                "id": "1114",
-                "managerFlag": "",
-                "name": "扶贫办3",
-                "nodeType": "ORG",
-                "pId": "1111",
-                "sn": "2",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "渭南扶贫办核算部出项",
-                "areaId": "10085",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "null",
-                "id": "3809",
-                "managerFlag": "",
-                "name": "出项",
-                "nodeType": "ORG",
-                "pId": "3807",
-                "sn": "3",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "渭南扶贫办扶贫办1",
-                "areaId": "10085",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "null",
-                "id": "1112",
-                "managerFlag": "",
-                "name": "扶贫办1",
-                "nodeType": "ORG",
-                "pId": "1111",
-                "sn": "3",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "渭南扶贫办核算部",
-                "areaId": "10085",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "null",
-                "id": "3807",
-                "managerFlag": "",
-                "name": "核算部",
-                "nodeType": "ORG",
-                "pId": "1111",
-                "sn": "4",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "渭南扶贫办核算部进项",
-                "areaId": "10085",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "null",
-                "id": "3808",
-                "managerFlag": "",
-                "name": "进项",
-                "nodeType": "ORG",
-                "pId": "3807",
-                "sn": "4",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "渭南扶贫办1111111",
-                "areaId": "10085",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "null",
-                "id": "3811",
-                "managerFlag": "",
-                "name": "1111111",
-                "nodeType": "ORG",
-                "pId": "1111",
-                "sn": "5",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "渭南扶贫办",
-                "areaId": "10085",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "12",
-                "id": "1111",
-                "managerFlag": "",
-                "name": "渭南扶贫办",
-                "nodeType": "ORG",
-                "pId": "DOMAIN_GROUP_63",
-                "sn": "1",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "渭南扶贫办",
-                "areaId": "10085",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "12",
-                "id": "1111",
-                "managerFlag": "",
-                "name": "渭南扶贫办",
-                "nodeType": "ORG",
-                "pId": "DOMAIN_GROUP_64",
-                "sn": "1",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "渭南扶贫办",
-                "areaId": "10085",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "12",
-                "id": "1111",
-                "managerFlag": "",
-                "name": "渭南扶贫办",
-                "nodeType": "ORG",
-                "pId": "DOMAIN_GROUP_65",
-                "sn": "1",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "渭南扶贫办",
-                "areaId": "10085",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "12",
-                "id": "1111",
-                "managerFlag": "",
-                "name": "渭南扶贫办",
-                "nodeType": "ORG",
-                "pId": "DOMAIN_GROUP_66",
-                "sn": "1",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "渭南扶贫办扶贫办2",
-                "areaId": "",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "null",
-                "id": "1113",
-                "managerFlag": "",
-                "name": "扶贫办2",
-                "nodeType": "ORG",
-                "pId": "1111",
-                "sn": "",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "渭南扶贫办",
-                "areaId": "",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "12",
-                "id": "1111",
-                "managerFlag": "",
-                "name": "渭南扶贫办",
-                "nodeType": "ORG",
-                "pId": "DOMAIN_GROUP_517_0",
-                "sn": "",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "渭南扶贫办核算部1",
-                "areaId": "",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "null",
-                "id": "3810",
-                "managerFlag": "",
-                "name": "1",
-                "nodeType": "ORG",
-                "pId": "3807",
-                "sn": "",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "神航2部研发部测试部",
-                "areaId": "",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "null",
-                "id": "3513",
-                "managerFlag": "",
-                "name": "测试部",
-                "nodeType": "ORG",
-                "pId": "3512",
-                "sn": "",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "神航2部研发部测试部222222",
-                "areaId": "",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "null",
-                "id": "3798",
-                "managerFlag": "",
-                "name": "222",
-                "nodeType": "ORG",
-                "pId": "3797",
-                "sn": "",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "222",
-                "areaId": "",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "null",
-                "id": "3797",
-                "managerFlag": "",
-                "name": "222",
-                "nodeType": "ORG",
-                "pId": "3513",
-                "sn": "",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "渭南扶贫办扶贫办3",
-                "areaId": "",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "null",
-                "id": "1114",
-                "managerFlag": "",
-                "name": "扶贫办3",
-                "nodeType": "ORG",
-                "pId": "1111",
-                "sn": "",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "渭南扶贫办扶贫办1李平的部门",
-                "areaId": "",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "null",
-                "id": "1115",
-                "managerFlag": "",
-                "name": "李平的部门",
-                "nodeType": "ORG",
-                "pId": "1112",
-                "sn": "",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "神航2部研发部",
-                "areaId": "",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "null",
-                "id": "3512",
-                "managerFlag": "",
-                "name": "研发部",
-                "nodeType": "ORG",
-                "pId": "3511",
-                "sn": "",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "渭南扶贫办扶贫办1",
-                "areaId": "",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "null",
-                "id": "1112",
-                "managerFlag": "",
-                "name": "扶贫办1",
-                "nodeType": "ORG",
-                "pId": "1111",
-                "sn": "",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "渭南扶贫办核算部出项",
-                "areaId": "",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "null",
-                "id": "3809",
-                "managerFlag": "",
-                "name": "出项",
-                "nodeType": "ORG",
-                "pId": "3807",
-                "sn": "",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "神航2部123",
-                "areaId": "",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "null",
-                "id": "3517",
-                "managerFlag": "",
-                "name": "123",
-                "nodeType": "ORG",
-                "pId": "3511",
-                "sn": "",
-                "updateTime": "",
-                "updateUser": ""
-            },
-            {
-                "allName": "神航2部研发部测试部2",
-                "areaId": "",
-                "childrens": "",
-                "createTime": "",
-                "createUser": "",
-                "deptType": "null",
-                "id": "3571",
-                "managerFlag": "",
-                "name": "测试部2",
-                "nodeType": "ORG",
-                "pId": "3512",
-                "sn": "",
-                "updateTime": "",
-                "updateUser": ""
-            },
+    path: '/field-manager',
+    meta: { title: '域管理' }
+
+},
+{
+    path: '/field-manager-desc',
+    meta: { title: '域详情' }
+
+},
+{
+    path: '/field-manager-auth',
+
+    meta: { title: '授权管理' }
+
+},
+{
+    path: '/part-manager',
+
+
+    meta: { title: '部门管理' }
+
+},
+{
+    path: '/role-manager',
+
+    meta: { title: '角色管理' }
+
+},
+{
+    path: '/user-manager',
+
+
+    meta: { title: '用户管理' }
+},
+{
+    path: '/app-set',
+
+
+    meta: { title: '应用字典' },
+
+},
+{
+    path: '/date-set',
+
+
+
+    meta: { title: '数据字典' },
+
+},
+{
+    path: '/create-meeting',
+
+
+    meta: { title: '创建会议' }
+
+},
+{
+    path: '/create-notice',
+
+
+
+    meta: { title: '创建通知' }
+
+},
+{
+    path: '/stuff',
+
+
+
+    meta: { title: '材料征集' }
+
+},
+{
+    path: '/drafts',
+
+
+
+    meta: { title: '草稿箱' }
+
+},
+{
+    path: '/signin',
+
+
+
+    meta: { title: '通知签收' }
+
+},
+{
+    path: '/active',
+
+
+    meta: { title: '已发通知' }
+
+},
+{
+    path: '/forwarded',
+
+
+
+    meta: { title: '已转发通知' }
+
+},
+{
+    path: '/role',
+
+
+
+    meta: { title: '权限维护' }
+
+},
+{
+    path: '/maintain',
+
+
+
+    meta: { title: '通知维护' }
+
+},
+{
+    path: '/website-create-meeting',
+
+
+
+    meta: { title: '创建会议' }
+
+},
+{
+    path: '/website-create-notice',
+
+
+
+    meta: { title: '创建通知' }
+
+},
+{
+    path: '/website-stuff',
+
+
+
+    meta: { title: '材料征集' }
+
+},
+{
+    path: '/website-drafts',
+
+
+
+    meta: { title: '草稿箱' }
+
+},
+{
+    path: '/website-signin',
+
+
+
+    meta: { title: '通知签收' }
+
+},
+{
+    path: '/website-active',
+
+
+
+    meta: { title: '已发通知' }
+
+},
+{
+    path: '/website-forwarded',
+
+
+    meta: { title: '已转发通知' }
+
+},
+{
+    path: '/website-role',
+
+
+    meta: { title: '权限维护' }
+
+},
+{
+    path: '/website-maintain',
+
+
+
+    meta: { title: '通知维护' }
+
+},
+{
+    path: '/subject-list',
+
+
+
+    meta: { title: '课程列表' }
+
+},
+{
+    path: '/user-subject',
+
+
+    meta: { title: '我的课程' }
+
+},
+{
+    path: '/subject-category',
+
+
+
+    meta: { title: '课程类别' }
+
+},
+{
+    path: '/question-list',
+
+
+
+    meta: { title: '题库列表' }
+
+},
+{
+    path: '/question-list',
+
+
+    meta: { title: '题库列表' }
+
+},
+{
+    path: '/paper-manager',
+
+
+    meta: { title: '试卷管理' }
+
+},
+{
+    path: '/user-test',
+
+
+
+    meta: { title: '我的考试' }
+
+},
+{
+    path: '/history-test',
+
+
+
+    meta: { title: '历史考试' }
+
+},
+{
+    path: '/mail-list',
+
+
+
+    meta: { title: '通讯录' }
+
+},
+{
+    path: '/user-cloud-disk',
+
+
+
+    meta: { title: '个人云盘' }
+
+},
+{
+    path: '/part-cloud-disk',
+
+
+
+    meta: { title: '部门云盘' }
+
+},
+{
+    path: '/person-center',
+    meta: { title: '个人中心' },
+}]

@@ -1,6 +1,6 @@
 import { getItem } from '@/utils/auth'
 import store from '@/store';
-import { SET_CLASS_LIST, SET_QUESTION_DATA, SET_TEST_DESC_DATA, SET_REFRESH_DATA, SET_USER_INFO, SET_USER_SIGN, SET_USER_TOKEN, SET_FIELD_MANAGER_DATA } from '@/store/mutations';
+import { SET_CLASS_LIST, SET_QUESTION_DATA, SET_TEST_DESC_DATA, SET_REFRESH_DATA, SET_USER_INFO, SET_USER_SIGN, SET_USER_TOKEN, SET_FIELD_MANAGER_DATA, SET_IS_ADMIN } from '@/store/mutations';
 const set_store_state = (mutations, key) => {
     if (getItem(key)) {
         store.commit(mutations, getItem(key))
@@ -17,4 +17,5 @@ setTimeout(res => {
     set_store_state(SET_USER_INFO, SET_USER_INFO);
     set_store_state(SET_USER_SIGN, SET_USER_SIGN);
     set_store_state(SET_USER_TOKEN, SET_USER_TOKEN);
+    set_store_state(SET_IS_ADMIN, SET_IS_ADMIN);
 }, 0)

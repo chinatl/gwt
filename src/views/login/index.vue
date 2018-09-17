@@ -58,7 +58,9 @@ import QRCode from "qrcodejs2";
 import {
   SET_USER_INFO,
   SET_USER_SIGN,
-  SET_USER_TOKEN
+  SET_USER_TOKEN,
+  SET_SILDER_LIST,
+  SET_IS_ADMIN
 } from "@/store/mutations";
 import config from "@/config";
 export default {
@@ -133,6 +135,7 @@ export default {
       }
     });
     this.getQRURL();
+    sessionStorage.setItem("gwt-current-silder", '0');
   },
   methods: {
     //获取图片验证码
@@ -234,34 +237,42 @@ export default {
                   showConfirmButton: true
                 });
               } else if (res.data.code === "unauthorized") {
+                this.$store.commit(SET_SILDER_LIST, res.data.resource);
+                this.$store.commit(SET_USER_INFO, res.data.loginInfo.sysUser);
+                this.$store.commit(SET_USER_TOKEN, "Bearer " + res.data.token);
+                this.$store.commit(SET_USER_SIGN, res.data.randomKey);
+                this.$store.commit(SET_IS_ADMIN, res.data.isAdmin);
                 this.$router.push({
                   path: "/login/message"
                 });
-                this.$store.commit(SET_USER_INFO, res.data);
+              } else if (res.data.code === "firstlogin") {
+                this.$store.commit(SET_SILDER_LIST, res.data.resource);
+                this.$store.commit(SET_USER_INFO, res.data.loginInfo.sysUser);
                 this.$store.commit(SET_USER_TOKEN, "Bearer " + res.data.token);
                 this.$store.commit(SET_USER_SIGN, res.data.randomKey);
-              } else if (res.data.code === "firstlogin") {
+                this.$store.commit(SET_IS_ADMIN, res.data.isAdmin);
                 this.$router.push({
                   path: "/firstlogin"
                 });
-                this.$store.commit(SET_USER_INFO, res.data);
-                this.$store.commit(SET_USER_TOKEN, "Bearer " + res.data.token);
-                this.$store.commit(SET_USER_SIGN, res.data.randomKey);
               } else {
-                this.$store.commit(SET_USER_INFO, res.data);
+                this.$store.commit(SET_USER_INFO, res.data.loginInfo.sysUser);
                 this.$store.commit(SET_USER_TOKEN, "Bearer " + res.data.token);
                 this.$store.commit(SET_USER_SIGN, res.data.randomKey);
+                this.$store.commit(SET_SILDER_LIST, res.data.resource);
+                this.$store.commit(SET_IS_ADMIN, res.data.isAdmin);
                 this.$message({
                   type: "success",
                   message: "登录成功！"
                 });
-                this.$router.push({ path: "/message/index" });
+                sessionStorage.setItem("login-info", Math.random());
+                this.$router.push({ path: "/user-message/index" });
                 //这里写一下初始化的数据
                 this.$store.dispatch("get_meeting_type_list");
                 this.$store.dispatch("get_part_tree");
               }
             })
             .catch(res => {
+              console.log(res);
               this.loading = false;
             });
         } else {

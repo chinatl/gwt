@@ -112,7 +112,7 @@ Vue.directive('wave', Wave);
 import { get_color_number } from "@/utils";
 Vue.prototype.$get_color_number = get_color_number;
 
-// import '@/permission' // permission control
+import '@/permission' // permission control
 import '@/session'
 //放到事件队列中 优化
 setTimeout(res => {

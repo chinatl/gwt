@@ -67,8 +67,11 @@ export default {
     },
     addViewTags() {
       const route = this.generateRoute();
+      if(!route.meta){
+        return false
+      }
       if(route.meta.hidden){
-        return
+        return false
       }
       if (!route) {
         return false

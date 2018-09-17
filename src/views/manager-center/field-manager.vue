@@ -7,7 +7,14 @@
                 <el-button type="primary" icon="el-icon-search" size='medium' v-wave @click="condition">搜索</el-button>
             </div>
             <div>
-                <el-button type="success" icon="el-icon-plus" size='medium' @click="add_role" v-wave>新增域</el-button>
+                <el-button type="success" icon="el-icon-plus" size='medium' @click="add_role" v-wave v-if="is_admin">新增域</el-button>
+                <arrow-button 
+                  @setTop='setTop'
+                  @top='goTop'
+                  @bottom='goBottom'
+                  @setBottom='setBottom'
+                  v-else
+                ></arrow-button>
             </div>
         </div>
         <div class="common-table">
@@ -16,6 +23,17 @@
                 border
                 v-loading ='loading'
                 style="width: 100%">
+                <el-table-column
+                  prop="name"
+                  align="center"
+                  width="100"
+                  v-if="!is_admin"
+                  label="选择">
+                      <template slot-scope="scope">
+                        <el-checkbox v-model="scope.row.checked"
+                         @change="change_table_checked($event,scope.$index)"></el-checkbox>
+                      </template>
+                  </el-table-column>
                 <el-table-column
                 prop="name"
                 align="center"
@@ -71,9 +89,12 @@
 import formButton from "@/components/Button/formButton";
 import { delete_item } from "@/utils/user";
 import qs from "qs";
+import { mapGetters } from "vuex";
+import arrowButton from "@/components/Button/arrowButton";
 export default {
   components: {
-    formButton
+    formButton,
+    arrowButton
   },
   data() {
     return {
@@ -93,6 +114,9 @@ export default {
       total: 0
     };
   },
+  computed: {
+    ...mapGetters(["is_admin"])
+  },
   beforeDestroy(e) {
     // sessionStorage.removeItem("user-manager/field/pageNo");
     // sessionStorage.removeItem("user-manager/field/total");
@@ -108,6 +132,72 @@ export default {
     this.init(this.pageSize, this.pageNo);
   },
   methods: {
+    setTop() {
+      this.sort_fn("top");
+    },
+    goTop() {
+      this.sort_fn("previous");
+    },
+    goBottom() {
+      this.sort_fn("next");
+    },
+    setBottom() {
+      this.sort_fn("bottom");
+    },
+    sort_fn(sortType) {
+      var data = {};
+      for (var i = 0; i < this.tableData.length; i++) {
+        if (this.tableData[i].checked) {
+          data = this.tableData[i];
+        }
+      }
+      if (!data.domainId) {
+        this.$message({
+          message: "请选择一条记录进行排序！",
+          type: "warning"
+        });
+        return;
+      }
+      this.$post("gwt/system/sysDomain/sort", {
+        pk: "domainId",
+        sortType,
+        domainId: data.domainId
+      },'json')
+        .then(res => {
+          if (res.result !== "0000") {
+            this.$swal({
+              title: "操作失败！",
+              text: res.msg,
+              type: "error",
+              confirmButtonColor: "#DD6B55",
+              confirmButtonText: "确定",
+              showConfirmButton: true
+            });
+            return;
+          }
+          this.$message({
+            message: "操作成功！",
+            type: "success"
+          });
+          this.init(this.pageSize,this.pageNo)
+        })
+        .catch(res => {});
+    },
+    change_table_checked(event, index) {
+      if (event) {
+        this.tableData = this.tableData.map((res, i) => {
+          if (i === index) {
+            res.checked = true;
+          } else {
+            res.checked = false;
+          }
+          return res;
+        });
+        this.$set(this.tableData, index, this.tableData[index]);
+      } else {
+        this.$set(this.tableData, index, this.tableData[index]);
+      }
+    },
     condition() {
       this.pageNo = 1;
       this.init(this.pageSize, 1);
@@ -125,8 +215,11 @@ export default {
     },
     init(pageSize, pageNo) {
       this.loading = true;
+      var url = this.is_admin
+        ? "gwt/system/sysDomain/list"
+        : "gwt/system/sysDomain/getByOrgId";
       this.$post(
-        `gwt/system/sysDomain/list?${qs.stringify({
+        `${url}?${qs.stringify({
           currentPage: pageNo,
           pageSize: pageSize
         })}`,
@@ -143,7 +236,10 @@ export default {
             this.tableData = [];
             return;
           }
-          this.tableData = res.data.sysDomainPageBean.datas;
+          this.tableData = res.data.sysDomainPageBean.datas.map((res, i) => {
+            res.checked = false;
+            return res;
+          });
           this.total = res.data.sysDomainPageBean.totalCount - 0;
           sessionStorage.setItem(
             "user-manager/field/total",
@@ -208,7 +304,7 @@ export default {
     handleEdit(item) {
       this.$store.commit("SET_FIELD_MANAGER_DATA", item);
       this.$router.push({
-        path: "/user-manager/field-desc"
+        path: "/field-manager-desc/index"
       });
     },
     handleDelete(domainId) {

@@ -31,6 +31,9 @@ export default {
     getBreadcrumb() {
       let matched = this.$route.matched.filter(item => item.name);
       const second = matched[matched.length - 1];
+      if(!second){
+        return
+      }
       if (second.meta.temp) {
         second.meta.title = this.$store.getters.field_manager_data.name;
       }

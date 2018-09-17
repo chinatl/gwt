@@ -180,7 +180,17 @@ export default {
           };
         case "设为常用":
           return {
+            className: "biangeng"
+          };
+        case "添加":
+          return {
             className: "biangeng",
+            iconName: "plus"
+          };
+        case "查看":
+          return {
+            className: "rukediaochan",
+            iconName: "眼睛"
           };
         default:
           return {

@@ -163,7 +163,8 @@ export default {
             message: "登录成功！"
           });
           this.isSend = false;
-          this.$router.push({ path: "/message/index" });
+          sessionStorage.setItem("login-info", Math.random());
+          this.$router.push({ path: "/user-message/index" });
 
           clearInterval(this.timer);
           sessionStorage.setItem("login-message", "获取验证码");

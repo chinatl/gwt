@@ -10,11 +10,11 @@ import part from './modules/part'
 
 import getters from './getters'
 import { setItem, getItem } from '@/utils/auth'
-import { SET_USER_INFO, SET_USER_SIGN, SET_USER_TOKEN, SET_FIELD_MANAGER_DATA, SET_FIELD_APP_LIST, SET_TREE_DATE } from './mutations'
+import { SET_USER_INFO, SET_USER_SIGN, SET_USER_TOKEN, SET_FIELD_MANAGER_DATA, SET_FIELD_APP_LIST, SET_TREE_DATE, SET_SILDER_LIST, SET_IS_ADMIN } from './mutations'
 Vue.use(Vuex);
 import { post } from '@/utils/fetch'
 const store = new Vuex.Store({
-  strict: process.env.NODE_ENV === 'development' ? true : false,
+  // strict: process.env.NODE_ENV === 'development' ? true : false,
   modules: {
     app,
     user,
@@ -39,7 +39,9 @@ const store = new Vuex.Store({
     sign: '',//签名,
     token: '',
     field_app_list: [],
-    tree_data: []
+    tree_data: [],
+    slierbar_list: [],
+    is_admin: false
   },
   mutations: {
     [SET_FIELD_MANAGER_DATA](state, data) {
@@ -63,7 +65,7 @@ const store = new Vuex.Store({
       setItem('levelList', arr);
     },
     [SET_USER_INFO]: (state, data) => {
-      state.user_info = data.loginInfo.sysUser;
+      state.user_info = data;
       sessionStorage.setItem(SET_USER_INFO, JSON.stringify(data));
     },
     [SET_USER_SIGN]: (state, data) => {
@@ -85,6 +87,14 @@ const store = new Vuex.Store({
     set_field_appList: (state, { index, isActive }) => {
       state.field_app_list[index].isActive = isActive;
       sessionStorage.setItem(SET_FIELD_APP_LIST, JSON.stringify(state.field_app_list));
+    },
+    [SET_SILDER_LIST](state, data) {
+      state.slierbar_list = data;
+      sessionStorage.setItem(SET_SILDER_LIST, JSON.stringify(data));
+    },
+    [SET_IS_ADMIN](state, data) {
+      state.is_admin = data;
+      sessionStorage.setItem(SET_IS_ADMIN, JSON.stringify(data));
     }
   },
   actions: {
