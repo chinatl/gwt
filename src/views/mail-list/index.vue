@@ -370,7 +370,7 @@ export default {
       delete_item({
         url: "gwt/system/sysAddressBookUser/delUser",
         data: {
-          groupId: 1331,
+          groupId: this.temp_data.id.replace(/.*\D/, ""),
           userId
         },
         title: "您确定要移除吗？",

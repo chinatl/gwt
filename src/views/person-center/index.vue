@@ -5,33 +5,33 @@
                 <el-button style="float:right" size='small' type="success" v-wave @click="editUserInfo">编辑</el-button>
             </t-title>
             <div class="page-form" style="width:700px">
-                <el-form label-width="120px">
+                <el-form label-width="120px" :model="userform" >
                     <el-form-item label="标 题：" class="page-form-item">
-                        <span>{{user_info.realName}}</span>
+                        <span>{{userform.realName}}</span>
                     </el-form-item>
                     <el-form-item label="性 別：" class="page-form-item">
-                        <span v-if="isHide">{{user_info.sex == "1" ? "男" : "女"}}</span>
+                        <span v-if="isHide">{{userform.radio == "0" ? "男" : "女"}}</span>
                         <template v-else prop="sex" >
-                          <el-radio v-model="radio" label="0">男</el-radio>
-                          <el-radio v-model="radio" label="1">女</el-radio>
+                          <el-radio v-model="userform.radio" label="0">男</el-radio>
+                          <el-radio v-model="userform.radio" label="1">女</el-radio>
                         </template>                      
                     </el-form-item>
                     <el-form-item label="部 门：" class="page-form-item">
-                        <span>{{orgName}}</span>
+                        <span>{{userform.orgName}}</span>
                     </el-form-item>
                     <el-form-item label="人员级别：" class="page-form-item">
-                        <span>{{user_info.sysOrgUserX.userLevelName}}</span>
+                        <span>{{userform.userLevelName}}</span>
                     </el-form-item>
                     <el-form-item label="职 务：" prop='duty' class="page-form-item">
-                        <span v-if="isHide">{{user_info.sysOrgUserX.duty}}</span>
+                        <span v-if="isHide" >{{userform.duty}}</span>
                         <el-input v-model="currentform.duty" size="mini" v-else></el-input>
                     </el-form-item>
                     <el-form-item label="固定电话:" prop='phone' class="page-form-item">
-                        <span v-if="isHide">{{user_info.sysOrgUserX.phone}}</span>
+                        <span v-if="isHide">{{userform.phone}}</span>
                         <el-input v-model="currentform.phone" size="mini" v-else></el-input>
                     </el-form-item>
                     <el-form-item label="备 注:" prop='remark' class="page-form-item">
-                        <span v-if="isHide">{{user_info.sysOrgUserX.remark}}</span>
+                        <span v-if="isHide">{{userform.remark}}</span>
                         <el-input type="textarea" v-model="currentform.remark" :autosize="{ minRows: 4, maxRows: 6}" v-else></el-input>
                     </el-form-item>
                     <el-form-item style="float:right" size='small' class="itemBtn" v-if="!isHide">
@@ -53,14 +53,14 @@
             <div class="page-form" style="width:700px">
                 <el-form label-width="120px">
                     <el-form-item label="用户名：" class="page-form-item">
-                        <span>{{user_info.userName}}</span>
+                        <span>{{userform.userName}}</span>
                     </el-form-item>
                     <el-form-item label="手机号：" class="page-form-item">
-                        {{user_info.mobilePhone}}
+                        {{userform.mobilePhone}}
                         <el-button type="success" size="mini" icon="el-icon-edit-outline" @click="password_first_visible = true" v-wave>编辑</el-button>
                     </el-form-item>
                     <el-form-item label="密码：" class="page-form-item">
-                        {{user_info.password}}
+                        {{userform.password}}
                         <el-button type="success" size="mini" icon="el-icon-edit-outline" @click="role_visible = true" v-wave>编辑</el-button>
                     </el-form-item>
                 </el-form>
@@ -72,11 +72,10 @@
             <el-table
                 :data="tableData"
                 border
-                style="width: 100%;margin-top:20px"
-                v-for="(item,index) in tableData" :key="index">
-                <el-table-column  prop="name" align="center" label="设备名称">{{item.equipmentName}}</el-table-column>
-                <el-table-column  prop="time" align="center" label="授权时间">{{item.createTime}}</el-table-column>
-                <el-table-column  prop="logintime" align="center" label="登录时间">{{item.lastLoginTime}}</el-table-column>
+                style="width: 100%;margin-top:20px">
+                <el-table-column  prop="equipmentName" align="center" label="设备名称"></el-table-column>
+                <el-table-column  prop="createTime" align="center" label="授权时间"></el-table-column>
+                <el-table-column  prop="lastLoginTime" align="center" label="登录时间"></el-table-column>
                 <el-table-column
                 prop="name"
                 label="操作"
@@ -96,9 +95,9 @@
             class="common-dialog"
             center v-drag
             :visible.sync="password_first_visible">
-            <el-form ref="form" :model="form" label-width="80px" :rules="rules">
-                <el-form-item label="密码" prop='name'>
-                    <el-input v-model="form.name" size="small" placeholder="请输入原密码"></el-input>
+            <el-form ref="password_first_visible_form" :model="password_first_visible_form" :rules="password_first_visible_form_rules" label-width="80px" >
+                <el-form-item label="密码" prop='password' >
+                    <el-input v-model="password_first_visible_form.password" placeholder="请输入原密码" type="password"></el-input>
                 </el-form-item>
                 <form-button @cancel='onCancel_first' @submit="onSubmit_first" submit_name='下一步'></form-button>
             </el-form>
@@ -110,14 +109,19 @@
             @close="close_second_visible"
             center
             :visible.sync="password_second_visible">
-            <el-form ref="form" :model="form" label-width="80px" :rules="rules">
-                <el-form-item label="新手机号" prop='name'>
-                    <el-input v-model="form.name" size="small" placeholder="请输入原密码"></el-input>
+            <el-form ref="phone_first_visible_form" :model="phone_first_visible_form" :rules="phone_first_visible_form_rules" label-width="80px" >
+                <el-form-item label="新手机号" prop='phone'>
+                    <el-input v-model="phone_first_visible_form.phone" placeholder="请输入新手机号" class="codeinput"></el-input>
+                    <el-button type="primary" class="getcode" @click="getCode">
+                      <span v-if="sendMsgDisabled">{{time+'秒后获取'}}</span>
+                      <span v-if="!sendMsgDisabled">获取验证码</span>
+                    </el-button>
+                    
                 </el-form-item>
-                <el-form-item label="验证码" prop='name'>
-                    <el-input v-model="form.name" size="small" placeholder="请输入原密码"></el-input>
+                <el-form-item label="验证码" prop='code'>
+                    <el-input v-model="phone_first_visible_form.code" placeholder="请输入验证码"></el-input>
                 </el-form-item>
-                <form-button @cancel='onCancel_second' @submit="onSubmit_second" submit_name='下一步'></form-button>
+                <form-button @cancel='onCancel_second' @submit="onSubmit_second" submit_name='完成'></form-button>
             </el-form>
         </el-dialog>
         <!-- 上传图片弹框 -->
@@ -168,15 +172,15 @@
             title="修改密码"
             class="common-dialog"
             :visible.sync="role_visible" v-drag>
-            <el-form ref="form" :model="form" label-width="80px" :rules="rules">
-                <el-form-item label="原密码" prop='name'>
-                    <el-input v-model="form.name" size="small" placeholder="请输入原密码"></el-input>
+            <el-form ref="form" :model="pwdform" label-width="80px" :rules="pwdformrules">
+                <el-form-item label="原密码" prop='oldpwd'>
+                    <el-input type="password" v-model="pwdform.oldpwd" size="small" placeholder="请输入原密码"></el-input>
                 </el-form-item>
-                <el-form-item label="新密码" prop='name'>
-                    <el-input v-model="form.name" size="small" placeholder="请输入8-20位，字母与数字组合的新密码"></el-input>
+                <el-form-item label="新密码" prop='newpwd'>
+                    <el-input type="password" v-model="pwdform.newpwd" size="small" placeholder="请输入8-20位，字母与数字组合的新密码"></el-input>
                 </el-form-item>
-                <el-form-item label="确认密码" prop='name'>
-                    <el-input v-model="form.name" size="small" placeholder="请再次输入密码"></el-input>
+                <el-form-item label="确认密码" prop='newpwd'>
+                    <el-input type="password" v-model="pwdform.newpwd" size="small" placeholder="请再次输入密码"></el-input>
                 </el-form-item>
                 <form-button @cancel='onCancel' @submit="onSubmit"></form-button>
             </el-form>
@@ -190,7 +194,8 @@ import uploadButton from "@/components/Button/uploadButton";
 import formButton from "@/components/Button/formButton";
 import littleButton from "@/components/Button/littleButton";
 import { validatePhone } from "@/utils/validate";
-import { mapGetters} from 'vuex'
+import { mapGetters } from "vuex";
+import { delete_item } from "@/utils/user";
 //定义一个全局的变量
 var validPhone = (rule, value, callback) => {
   if (!value) {
@@ -211,19 +216,20 @@ export default {
   },
   data() {
     return {
-      form: {},
-      rules: {
-        name: [{ required: true, message: "请输入密码", trigger: "blur" }],
-        name1: [{ required: true, message: "请输入部门全称", trigger: "blur" }],
-        city: [{ required: true, message: "请输入活动名称", trigger: "blur" }]
+      pwdform: {
+        oldpwd:"",
+        newpwd:""
+      },
+      pwdformrules: {
+        oldpwd: [{ required: true, message: "请输入旧密码", trigger: "blur" }],
+        newpwd: [{ required: true, message: "请输入新密码", trigger: "blur" }]
       },
       // loading:true,
       upload_img_dialog: false,
       role_visible: false,
       password_first_visible: false, //修改密码第一步
       password_second_visible: false, //修改密码第一步
-      user_img:
-        "https://wpimg.wallstcn.com/577965b9-bb9e-4e02-9f0c-095b41417191",
+      user_img: "",
       //
       crap: false,
       previews: {},
@@ -238,31 +244,22 @@ export default {
         canMoveBox: true
       },
       downImg: "#",
-      tableData: [
-        {
-          name: "Windows 7",
-          time: "2018-08-24 17:23:51",
-          logintime: "2018-08-24 17:23:51"
-        },
-        {
-          name: "Windows 10",
-          time: "2018-08-24 17:23:51",
-          logintime: "2018-08-24 17:23:51"
-        },
-        {
-          name: "Windows 7",
-          time: "2018-08-24 17:23:51",
-          logintime: "2018-08-24 17:23:51"
-        },
-        {
-          name: "Windows 7",
-          time: "2018-08-24 17:23:51",
-          logintime: "2018-08-24 17:23:51"
-        }
-      ],
-      orgName: "", //部门
-      //性别
-      radio: "0",
+      tableData: [],
+      userform: {
+        userId: "",
+        realName: "",
+        orgName: "", //部门
+        duty: "",
+        //性别
+        radio: "",
+        userLevelName: "",
+        phone: "",
+        remark: "",
+        userName: "",
+        mobilePhone: "",
+        password: ""
+      },
+
       //编辑信息
       currentform: {},
       isShow: false,
@@ -279,24 +276,60 @@ export default {
           { min: 3, max: 8, message: "长度在 3 到 8 个字符", trigger: "blur" }
         ]
       },
-      userId: ""
+      userId: "",
+      password_first_visible_form: {
+        password: ""
+      },
+      password_first_visible_form_rules: {
+        password: [
+          { required: true, message: "请输入原密码", trigger: "blur" },
+          { min: 3, max: 10, message: "长度在 3 到 10 个字符", trigger: "blur" }
+        ]
+      },
+      phone_first_visible_form: {
+        phone: "",
+        code: ""
+      },
+      phone_first_visible_form_rules: {
+        phone: [
+          {
+            required: true,
+            message: "请输入手机号",
+            trigger: "blur",
+            validator: validPhone
+          }
+        ]
+      },
+      //验证码
+      time: 60, // 发送验证码倒计时
+      sendMsgDisabled: false
     };
   },
   created() {
     this.getUserInfo();
     this.getloginTable();
   },
-  computed:{
+  computed: {
     ...mapGetters(["user_info"])
-  },
-  created() {
   },
   methods: {
     //获取用户基本信息
     getUserInfo() {
       this.$post(`gwt/system/sysUserZone/getUserInfo`).then(res => {
-        if (res.result === "0000") {     
-          this.orgName = res.data.sysOrg.orgName;
+        if (res.result === "0000") {
+          this.userform.id = res.data.user.userId;
+          this.userform.realName = res.data.user.realName;
+          this.userform.orgName = res.data.sysOrg.orgName;
+          this.userform.radio = res.data.user.sex;
+          this.userform.duty = res.data.user.sysOrgUserX.duty;
+          this.userform.userLevelName = res.data.user.sysOrgUserX.userLevelName;
+          this.userform.phone = res.data.user.sysOrgUserX.phone;
+          this.userform.remark = res.data.user.sysOrgUserX.remark;
+          this.userform.userName = res.data.user.userName;
+          this.userform.mobilePhone = res.data.user.mobilePhone;
+          this.userform.password = res.data.user.password.replace(/\w/g, "*");
+          this.user_img = res.data.AttrHeadId;
+          return;
         }
       });
     },
@@ -304,12 +337,9 @@ export default {
     editUserInfo() {
       // this.isHide = !this.isHide
       this.$post(`gwt/getCurrentOrgUser`).then(res => {
-        console.log(res)
-        
         if (res.result === "0000") {
           this.currentform = res.data.hashMap;
-          this.userId = res.data.hashMap.userId;  
-          // console.log(this.userId)              
+          this.userId = res.data.hashMap.userId;
           this.isShow = !this.isShow;
           this.isHide = !this.isHide;
         }
@@ -317,36 +347,42 @@ export default {
     },
     //提交编辑用户信息
     oneditSubmit() {
-      this.$post(`gwt/system/sysUserZone/updateUser`, {
-        userId: this.userId,
-        sex: this.radio,
-        sysOrgUserX: {
-          id: this.currentform.id,
-          phone: this.currentform.phone,
-          remark: this.currentform.remark,
-          duty: this.currentform.duty
-        }
-      },
-      "json"
+      this.$post(
+        `gwt/system/sysUserZone/updateUser`,
+        {
+          userId: this.userId,
+          sex: this.userform.radio,
+          sysOrgUserX: {
+            id: this.currentform.id,
+            phone: this.currentform.phone,
+            remark: this.currentform.remark,
+            duty: this.currentform.duty
+          }
+        },
+        "json"
       ).then(res => {
         console.log(res);
-        if(res.result === "0000"){
+        if (res.result === "0000") {
           this.isHide = !this.isHide;
-          this.currentform = res.data.hashMap;
+          this.getUserInfo();
         }
       });
     },
     //获取登陆信息表格
-    getloginTable(){
-      this.$post(`gwt/system/sysEquipmentAuth/list`,
-      {
-        userId:this.userId
-      }).then(res=>{
-        console.log(res.data)
-        if(res.result === "0000"){
-            this.tableData = res.data.sysEquipmentAuthList
+    getloginTable() {
+      // console.log(this.userId)
+      this.$post(
+        `gwt/system/sysEquipmentAuth/list`,
+        {
+          userId: this.userform.id
+        },
+        "json"
+      ).then(res => {
+        if (res.result === "0000") {
+          this.tableData = res.data.sysEquipmentAuthList;
+          console.log(this.tableData);
         }
-      })
+      });
     },
     handleDelete(index) {
       this.$swal({
@@ -358,13 +394,25 @@ export default {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
         confirmButtonClass: "btn btn-success"
-      })
-        .then(function() {
-          Swal("删除！", "你的文件已经被删除。", "success");
-        })
-        .catch(res => {
-          console.log(1);
-        });
+      });
+      delete_item({
+        url: "gwt/system/sysEquipmentAuth/del",
+        data: {
+          id: [index],
+          removeFlag: "Y"
+        },
+        success: res => {
+          console.log(res);
+          this.getloginTable();
+        }
+      });
+      // .then(function() {
+
+      //   Swal("删除！", "你的文件已经被删除。", "success");
+      //   })
+      // .catch(res => {
+      //   console.log(1);
+      // });
     },
     onCancel() {
       this.role_visible = false;
@@ -381,36 +429,104 @@ export default {
     },
     //确定修改密码
     onSubmit_first() {
-      this.password_second_visible = true;
+      this.$refs.password_first_visible_form.validate(res => {
+        if (!res) return;
+        this.$post(
+          `gwt/system/sysUserZone/judgePhone`,
+          {
+            password: this.password_first_visible_form.password,
+            userId: this.userform.id
+          },
+          "json"
+        ).then(res => {
+          console.log(res);
+          if (res.result == "0000") {
+            this.password_second_visible = true;
+          } else {
+            this.$message.error("原密码不能为空");
+          }
+        });
+      });
+      // this.password_second_visible = true;
+    },
+
+    //获取验证码
+    getCode() {
+      let me = this;
+      me.sendMsgDisabled = true;
+      let interval = window.setInterval(function() {
+        if (me.time-- <= 0) {
+          me.time = 60;
+          me.sendMsgDisabled = false;
+          window.clearInterval(interval);
+        }
+      }, 1000);
+      this.$post(
+        `gwt/getPhoneValidateCode`,
+        {
+          phone: this.userform.mobilePhone,
+          newPhoneNum: this.phone_first_visible_form.phone,
+          fromSource: "updatePhone"
+        },
+        "json"
+      ).then(res => {
+        console.log(res);
+      });
     },
     onCancel_second() {
       this.password_second_visible = false;
     },
     onSubmit_second() {
-      this.$swal({
-        title: "您的手机号已变更",
-        text: "手机号已经变更为：*** **** ****，原登录密码不变。",
-        type: "info",
-        showCancelButton: false,
-        confirmButtonColor: "#3ba4f5",
-        confirmButtonText: "确认"
+      this.$post(
+        `gwt/system/sysUserZone/changPhone`,
+        {
+          newPhoneNum: this.phone_first_visible_form.phone,
+          oldPhone: this.userform.mobilePhone
+        },
+        "json"
+      ).then(res => {
+        console.log(res);
+        if (res.result === "0000") {
+          this.getUserInfo();
+          this.$message({
+            message: "电话号码修改成功",
+            type: "success"
+          });
+          this.password_second_visible = false;
+        }
       });
-      this.password_second_visible = false;
     },
     download(type) {
-      if (type === "blob") {
-        this.$refs.cropper.getCropBlob(data => {
-          console.log(data);
-          // var test = window.open('')
-          // test.location.href = window.URL.createObjectURL(data)
-        });
-      } else {
-        this.$refs.cropper.getCropData(data => {
+      // console.log(this.userform.id)
+      this.$refs.cropper.getCropData(data => {
+        console.log(data);
+        this.$post(
+          `gwt-web-cloudisk/uploadFile/uploadHead`,
+          {
+            selectHeadFile: data,
+            ownerSystem: "gwt-platform",
+            ownerModule: "user",
+            ownerAperation: "",
+            userId: this.userform.id
+          },
+          "json"
+        ).then(res => {
+          if (res.result !== "0000") {
+            this.$swal({
+              title: "操作失败！",
+              text: res.msg,
+              type: "error",
+              confirmButtonColor: "#DD6B55",
+              confirmButtonText: "确定",
+              showConfirmButton: true
+            });
+            return;
+          }
           this.user_img = data;
           this.upload_img_dialog = false;
-          // test.location.href = data
         });
-      }
+        // test.location.href = data
+      });
     },
     //放大图片
     zoom_in() {
@@ -503,5 +619,11 @@ export default {
 .el-form-item__content .el-form-item__error {
   position: static;
   margin-bottom: 10px;
+}
+.codeinput {
+  width: 300px;
+}
+.getcode {
+  float: right;
 }
 </style>

@@ -63,7 +63,7 @@ const store = new Vuex.Store({
       setItem('levelList', arr);
     },
     [SET_USER_INFO]: (state, data) => {
-      state.user_info = data.loginInfo.sysUser;
+      state.user_info = data;
       sessionStorage.setItem(SET_USER_INFO, JSON.stringify(data));
     },
     [SET_USER_SIGN]: (state, data) => {

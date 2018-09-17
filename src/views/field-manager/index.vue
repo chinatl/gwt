@@ -22,7 +22,7 @@
                 label="域名城">
                 </el-table-column>
                 <el-table-column
-                prop="name"
+           
                 label="操作"
                 align="center"
                 >
