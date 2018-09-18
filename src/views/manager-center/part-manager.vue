@@ -237,9 +237,13 @@ export default {
       this.form.city = "e";
       this.option_value2 = "";
       this.option_value3 = "";
-      this.$post("gwt/system/sysOrg/getAreaByParent", {
-        parents: e
-      },'json')
+      this.$post(
+        "gwt/system/sysOrg/getAreaByParent",
+        {
+          parents: e
+        },
+        "json"
+      )
         .then(res => {
           if (res.result !== "0000") {
             return;
@@ -256,9 +260,13 @@ export default {
     },
     change_option2(e) {
       this.option_value3 = "";
-      this.$post("gwt/system/sysOrg/getAreaByParent", {
-        parents: e
-      },'json')
+      this.$post(
+        "gwt/system/sysOrg/getAreaByParent",
+        {
+          parents: e
+        },
+        "json"
+      )
         .then(res => {
           if (res.result !== "0000") {
             return;
@@ -275,7 +283,7 @@ export default {
     },
     //获取所有的部门类型
     get_all_part_type() {
-      this.$post("gwt/system/sysOrg/getDeptType",{},'json')
+      this.$post("gwt/system/sysOrg/getDeptType", {}, "json")
         .then(res => {
           if (res.result !== "0000") {
             return;
@@ -288,7 +296,7 @@ export default {
     },
     // 地区选择
     select_region() {
-      this.$post("gwt/system/sysOrg/getAreaByParent",{},'json')
+      this.$post("gwt/system/sysOrg/getAreaByParent", {}, "json")
         .then(res => {
           if (res.result !== "0000") {
             return;
@@ -302,10 +310,13 @@ export default {
     //根据部门id查子部门
     search_child_part(pageSize, pageNo) {
       this.table_loading = true;
-      var orgParentId = this.temp_data.id;
       var areaId = this.temp_data.areaId;
+      var selectOrgId = this.temp_data.id;
+      var orgParentId = this.temp_data.areaId;
+      console.log(orgParentId);
       if (orgParentId.includes("region")) {
         orgParentId = "";
+        selectOrgId = "";
       } else {
         areaId = "";
       }
@@ -316,6 +327,7 @@ export default {
         })}`,
         {
           orgParentId,
+          selectOrgId,
           areaId
         },
         "json"
@@ -325,6 +337,7 @@ export default {
           this.loading = false;
           if (res.result !== "0000") {
             this.tableData = [];
+            this.total = 0;
             return;
           }
           this.tableData = res.data.sysOrgPageBean.datas.map((res, i) => {
@@ -385,6 +398,7 @@ export default {
       });
     },
     handleNodeClick(data) {
+      console.log(JSON.stringify(data, {}, 4));
       if (data.id === this.temp_data.id) {
         return;
       }
@@ -407,9 +421,13 @@ export default {
         this.$refs.form.resetFields();
       });
       if (this.temp_data.nodeType === "REGION") {
-        this.$post("gwt/system/sysOrg/edit", {
-          orgId: data.orgId
-        },'json').then(res => {
+        this.$post(
+          "gwt/system/sysOrg/edit",
+          {
+            orgId: data.orgId
+          },
+          "json"
+        ).then(res => {
           var region = res.data.region;
           if (region[0]) {
             this.option_value1 = region[0].dicId + "";
@@ -576,11 +594,15 @@ export default {
         });
         return;
       }
-      this.$post("gwt/system/sysOrg/sort", {
-        pk: "orgId",
-        sortType,
-        orgId: data.orgId
-      },'json')
+      this.$post(
+        "gwt/system/sysOrg/sort",
+        {
+          pk: "orgId",
+          sortType,
+          orgId: data.orgId
+        },
+        "json"
+      )
         .then(res => {
           if (res.result !== "0000") {
             this.$swal({

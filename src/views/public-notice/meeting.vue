@@ -62,6 +62,7 @@ import addYield from "@/components/AddYield";
 import formButton from "@/components/Button/formButton";
 import { parseTime } from "@/utils";
 import { action_fail } from "@/utils/user";
+import { validateTime } from "@/utils/validate";
 export default {
   components: {
     fileList,
@@ -88,7 +89,7 @@ export default {
           { required: true, message: "请输入会议地点", trigger: "blur" }
         ],
         startTime: [
-          { required: true, message: "请选择开始时间", trigger: "blur" }
+          { required: true, validator: validateTime, trigger: "blur" }
         ]
       },
       file_list: [],
@@ -146,55 +147,79 @@ export default {
         });
     },
     onSubmit() {
-      if (!this.form.startTime) {
-        this.$message({
-          message: "请选择会议开始时间",
-          type: "warning"
-        });
-      }
-      this.$post(
-        "gwt/notice/tbNotice/save",
-        {
-          noticeId: "",
-          noticeTitle: this.form.noticeTitle,
-          noticeType: 1, //会议 2//通知 3//材料
-          noticeAdress: this.form.noticeAdress,
-          noticeProfile: this.form.noticeProfile,
-          startTime: parseTime(this.form.startTime, "{y}-{m}-{d} {h}:{i}:{s}"),
-          endTime: "",
-          selectedUsers: this.has_select_user_list
-            .map(res => res.USER_ID)
-            .join(","),
-          attrArray: this.file_list.map(res => res.id).join(","),
-          orgArray: this.has_select_part_list
-            .map(res => res.id.replace(/\D*/g, ""))
-            .join(",")
-        },
-        "json"
-      )
-        .then(res => {
-          if (res.result !== "0000") {
-            this.$swal({
-              title: "上传失败！",
-              text: res.msg,
-              type: "error",
-              confirmButtonColor: "#DD6B55",
-              confirmButtonText: "确定",
-              showConfirmButton: true
-            });
-            return;
-          }
-          this.$message({
-            message: "会议创建成功！",
-            type: "success"
-          });
-          this.$router.push({
-            path: "/active/index"
-          });
-        })
-        .catch(res => {
-          console.log(res);
-        });
+      this.$refs.form.validate(res => {
+        if (!res) return;
+      });
+      return;
+      this.$swal({
+        confirmButtonText: "确定",
+        showCancelButton: true,
+        cancelButtonText: "取消",
+        title: "请输入密码！",
+        input: "text",
+        showCancelButton: true,
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        inputValidator: value => {
+          return !value && "请输入密码！";
+        }
+      }).then(res => {
+        if (res.value) {
+          this.$post(
+            "gwt/notice/tbNotice/checkPassWord",
+            {
+              groupName: res.value
+            },
+            "json"
+          )
+            .then(res => {
+              if (res.result !== "0000") {
+                vue.swal({
+                  title: "操作失败！",
+                  text: res.msg,
+                  type: "error",
+                  confirmButtonColor: "#DD6B55",
+                  confirmButtonText: "确定",
+                  showConfirmButton: true
+                });
+                return;
+              }
+              this.$post(
+                "gwt/notice/tbNotice/save",
+                {
+                  noticeId: "",
+                  noticeTitle: this.form.noticeTitle,
+                  noticeType: 1, //会议 2//通知 3//材料
+                  noticeAdress: this.form.noticeAdress,
+                  noticeProfile: this.form.noticeProfile,
+                  startTime: parseTime(
+                    this.form.startTime,
+                    "{y}-{m}-{d} {h}:{i}:{s}"
+                  ),
+                  endTime: "",
+                  selectedUsers: this.has_select_user_list
+                    .map(res => res.USER_ID)
+                    .join(","),
+                  attrArray: this.file_list.map(res => res.id).join(","),
+                  orgArray: this.has_select_part_list
+                    .map(res => res.id.replace(/\D*/g, ""))
+                    .join(",")
+                },
+                "json"
+              )
+                .then(res => {
+                  if (action_fail(res, "会议创建成功！")) return;
+                  this.$router.push({
+                    path: "/active/index"
+                  });
+                })
+                .catch(res => {
+                  console.log(res);
+                });
+            })
+            .catch(res => {});
+        }
+      });
     },
     save_message() {
       this.$post(
