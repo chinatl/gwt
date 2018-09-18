@@ -46,7 +46,7 @@
             :page-size="pageSize"
             layout="total, sizes, prev, pager, next, jumper"
             background
-            :total="50">
+            :total="40">
             </el-pagination>
         </div>
         <!-- 新建文件夹弹窗 -->
@@ -203,8 +203,7 @@ export default {
         .then(res => {
           if(res.result === "0000"){
             this.tableData = res.data.userCloudiskPageBean.datas;
-            // console.log(this.tableData)
-            // this.type = res.data.userCloudiskPageBean.datas.type
+            console.log(this.tableData)
           }
         })
        
