@@ -27,8 +27,8 @@
                 <el-table-column type="selection" width="60" align="center"></el-table-column>
                 <el-table-column prop="originalName"  :label="file_name"  align="left"  show-overflow-tooltip> 
                     <template slot-scope="scope">
-                      <div class="disk-icon" @click="file_click(scope.$index)">
-                          <svg-icon :icon-class='get_svg_name(scope.row.originalName)'></svg-icon>
+                      <div class="disk-icon" @click="file_click(scope.row)">
+                          <svg-icon :icon-class='get_svg_name(scope.row.name)'></svg-icon>
                           <span>{{scope.row.originalName}}</span>
                       </div>
                     </template>
@@ -74,7 +74,7 @@ export default {
   data() {
     return {
       pageNo: 1,
-      pageSize: 50,
+      pageSize: 5,
       input: "",
       checked: false,
       pageData: [
@@ -174,12 +174,14 @@ export default {
           { required: true, message: "文件名不能为空", trigger: "blur" }
         ]
       },
-      type:""
+      type:"",
+      dirId: ""
     };
   },
   computed: {
     file_name() {
       if (this.select_list.length) {
+        console.log(this.select_list)
         return `已选中${this.select_list.length}个文件/文件夹`;
       } else {
         return "文件名";
@@ -211,7 +213,7 @@ export default {
           pageSize: pageSize
         })}`,
         {
-          searchFlag: "Y"
+          searchFlag: "N"
         },'json'
       )
         .then(res => {
@@ -240,6 +242,8 @@ export default {
             if(res.result === "0000"){
               this.dialogFolderVisible = false;
               this.init_usercloudisk()
+            }else{
+              this.$message.error(res.msg)
             }
             // console.log(this.tableData.type)
           })
@@ -270,13 +274,15 @@ export default {
       this.file_nav = [];
     },
     file_click(index) {
-      if (this.get_svg_name(this.tableData[index].name) === "文件夹") {
-        this.file_nav.push({
-          index,
-          name: this.tableData[index].name
-        });
-        this.tableData = this.tableData[index].children;
-      }
+      console.log(index.dirId)
+      this.dirId = index.dirId
+      // if (this.get_svg_name(this.tableData[index].name) === "文件夹") {
+      //   this.file_nav.push({
+      //     index,
+      //     name: this.tableData[index].name
+      //   });
+      //   this.tableData = this.tableData[index].children;
+      // }
     },
     //row-click
     get_svg_name(name) {
@@ -303,17 +309,10 @@ export default {
     handleSizeChange() {},
     handleCurrentChange() {},
     upload_img(e) {
-      console.log(e);
-      this.$post(`gwt-web-cloudisk/uploadFile/uploadCloudisk`,
-      {
-          cloudiskType:"org",
-          userId:this.folderform.userId,
-          orgId:this.folderform.orgId,
-          dirId:""
-      },
-      "json").then(res=>{
-        console.log(res)
-      })
+      // console.log(e);
+      
+      
+      
     }
   }
 };
@@ -357,7 +356,7 @@ export default {
   }
 }
 .el-dialog__title {
-  font-size: 30px;
+  font-size: 24px;
   font-weight: bold;
   color: #333;
 }
