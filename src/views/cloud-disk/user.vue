@@ -26,12 +26,12 @@
                 style="width: 100%">
                 <el-table-column type="selection" width="60" align="center"></el-table-column>
                 <el-table-column prop="originalName"  :label="file_name"  align="left"  show-overflow-tooltip> 
-                    <!-- <template slot-scope="scope">
+                    <template slot-scope="scope">
                       <div class="disk-icon" @click="file_click(scope.$index)">
-                          <svg-icon :icon-class='get_svg_name(scope.row.name)'></svg-icon>
-                          <span>{{scope.row.name}}</span>
+                          <svg-icon :icon-class='get_svg_name(scope.row.originalName)'></svg-icon>
+                          <span>{{scope.row.originalName}}</span>
                       </div>
-                    </template> -->
+                    </template>
                 </el-table-column>
                 <el-table-column prop="size"  label="大小" align="center"  width="200"></el-table-column>
                 <el-table-column prop="updateTime"  label="修改日期" align="center" width="200"></el-table-column>
@@ -165,7 +165,9 @@ export default {
       file_nav: [], //文件导航
       dialogFolderVisible: false,
       folderform: {
-        foldername: ""
+        foldername: "",
+        userId:"",
+        orgId:""
       },
       folderrules: {
         foldername: [
@@ -186,9 +188,21 @@ export default {
   },
   created() {
     // this.tableData = this.pageData;
+    this.getUserInfo();
     this.init_usercloudisk(this.pageSize, this.pageNo);
   },
   methods: {
+    //获取用户基本信息
+    getUserInfo() {
+      this.$post(`gwt/system/sysUserZone/getUserInfo`).then(res => {
+        if (res.result === "0000") {
+          this.folderform.userId = res.data.user.userId;
+          this.folderform.orgId = res.data.user.orgId;
+          console.log(res.data.user.userId)
+          return;
+        }
+      });
+    },
     //初始化文件表格
     init_usercloudisk(pageSize,pageNo) {
       this.$post(
@@ -203,7 +217,7 @@ export default {
         .then(res => {
           if(res.result === "0000"){
             this.tableData = res.data.userCloudiskPageBean.datas;
-            console.log(this.tableData)
+            // console.log(this.tableData)
           }
         })
        
@@ -216,13 +230,13 @@ export default {
           this.$post(`gwt/cloudisk/cloudiskAttaDir/addFolder`,
           {
             type:"org",
-            orgId:"",
+            orgId:this.folderform.orgId,
             name:this.folderform.foldername,
             parentId:""
           },
           "json"
           ).then(res=>{
-            console.log(res)
+            // console.log(res)
             if(res.result === "0000"){
               this.dialogFolderVisible = false;
               this.init_usercloudisk()
@@ -290,6 +304,16 @@ export default {
     handleCurrentChange() {},
     upload_img(e) {
       console.log(e);
+      this.$post(`gwt-web-cloudisk/uploadFile/uploadCloudisk`,
+      {
+          cloudiskType:"org",
+          userId:this.folderform.userId,
+          orgId:this.folderform.orgId,
+          dirId:""
+      },
+      "json").then(res=>{
+        console.log(res)
+      })
     }
   }
 };
