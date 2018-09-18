@@ -42,8 +42,8 @@
         <div class="part-bottom">
             <div class="part-action">
                 <div class="part-action-left">
-                    <el-input v-model="searchParam" placeholder="请输入姓名/手机号" style="width:160px" size='medium'></el-input>
-                    <el-button type="primary" icon="el-icon-search" size='medium' style="margin:0 8px" v-wave>搜索</el-button>
+                    <el-input v-model="searchParam" placeholder="请输入姓名/手机号" style="width:160px" size='medium' @keyup.native.enter='condition_search'></el-input>
+                    <el-button type="primary" icon="el-icon-search" size='medium' style="margin:0 8px" v-wave @click="condition_search">搜索</el-button>
                 </div>
                 <div class="part-action-right">
                       <arrow-button 
@@ -352,9 +352,7 @@ export default {
   created() {
     //查询所有人员级别
     this.get_user_level();
-    this.$post("gwt/system/sysOrg/getOrgTreeData", {
-      userExetendId: 3578
-    },'json')
+    this.$post("gwt/system/sysOrg/getOrgTreeData", {}, "json")
       .then(res => {
         this.tree_data = res.data.nodes;
         console.log(res);
@@ -367,6 +365,11 @@ export default {
     this.pageSize = pageSize ? pageSize - 0 : 5;
   },
   methods: {
+    //条件搜索
+    condition_search() {
+      this.pageNo = 1;
+      this.search_user_list(this.pageSize, 1);
+    },
     //查询用户管理部门配置
     get_user_tree() {
       this.$post(
@@ -839,12 +842,16 @@ export default {
         });
         return;
       }
-      this.$post("gwt/system/sysUser/sort", {
-        pk: "userId",
-        orgIdX: data.sysOrgUserX.orgId,
-        sortType,
-        userId: data.sysOrgUserX.userId
-      })
+      this.$post(
+        "gwt/system/sysUser/sort",
+        {
+          pk: "userId",
+          orgIdX: data.sysOrgUserX.orgId,
+          sortType,
+          userId: data.sysOrgUserX.userId
+        },
+        "json"
+      )
         .then(res => {
           if (res.result !== "0000") {
             this.$swal({

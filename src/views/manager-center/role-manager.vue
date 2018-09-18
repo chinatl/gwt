@@ -111,7 +111,7 @@
              <div class="common-action">
                <div>
                   <el-input v-model="Q_roleName_SL" placeholder="请输入姓名/手机号" style="width:160px" size='medium'></el-input>
-                  <el-button type="primary" icon="el-icon-search" size='medium' style="margin:0 8px" v-wave>搜索</el-button>
+                  <el-button type="primary" icon="el-icon-search" size='medium' style="margin:0 8px" v-wave @click="condition_search">搜索</el-button>
                </div>
                <div>
                   <el-button type="success" icon="el-icon-plus" size='medium' style="margin:0 8px" v-wave>新增角色</el-button>
@@ -221,8 +221,8 @@ export default {
     //页数存到localstorage里面
     // var total = sessionStorage.getItem("user-manager/role/total");
     // this.total = total ? total - 0 : 0;
-    var pageNo = sessionStorage.getItem("user-manager/role/pageNo");
-    this.pageNo = pageNo ? pageNo - 0 : 1;
+    // var pageNo = sessionStorage.getItem("user-manager/role/pageNo");
+    // this.pageNo = pageNo ? pageNo - 0 : 1;
     var pageSize = localStorage.getItem("user-manager/role/pageSize");
     this.pageSize = pageSize ? pageSize - 0 : 5;
 
@@ -246,6 +246,11 @@ export default {
     }
   },
   methods: {
+    //
+    condition_search() {
+      this.pageNo = 1;
+      this.search_role_by_part(this.pageSize, 1);
+    },
     open_add_user_dialog(row) {
       this.form_data = row;
       this.user_list = row.sysUserList.map(res => {
@@ -436,6 +441,7 @@ export default {
       }
     },
     handleDelete(roleId) {
+      return
       this.$swal({
         title: "确定要删除该角色吗？",
         text: "删除后将无法恢复，请谨慎操作！",
