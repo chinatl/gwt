@@ -75,7 +75,7 @@ export default {
       type: Boolean,
       default: false,
       required: true
-    },
+    }
   },
   watch: {
     filterText(val) {
@@ -94,6 +94,7 @@ export default {
   },
   created() {
     this.$store.dispatch("get_all_tree_data");
+  
   },
   methods: {
     filterNode(value, data) {

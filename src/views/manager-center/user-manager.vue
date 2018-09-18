@@ -412,7 +412,7 @@ export default {
     get_user_level() {
       this.$post("gwt/system/sysUser/getUserLevel", {
         parents: ""
-      })
+      },'json')
         .then(res => {
           if (res.result !== "0000") {
             return;
@@ -567,7 +567,6 @@ export default {
           if (res.dismiss === "cancel") {
             return;
           }
-          console.log(res);
           _this.$message({
             message: "启用用用户成功！",
             type: "success"
@@ -789,7 +788,7 @@ export default {
           "sysOrgUserX.duty": this.form.duty,
           "sysOrgUserX.phone": this.form.phone,
           "sysOrgUserX.remark": this.form.remark
-        })
+        },'json')
           .then(res => {
             this.dialog_loading = false;
             if (res.result !== "0000") {

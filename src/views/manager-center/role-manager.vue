@@ -441,7 +441,6 @@ export default {
       }
     },
     handleDelete(roleId) {
-      return
       this.$swal({
         title: "确定要删除该角色吗？",
         text: "删除后将无法恢复，请谨慎操作！",

@@ -10,63 +10,31 @@
             <div class="select-part-bottom">
                 <div class="select-part-yield">
                     <ul>
-                        <li class="avtive">常用联系部门</li>
-                        <li>本部门</li>
-                        <li>省人大域</li>
+                        <li v-for="(item,index) in field_list" :key="index"
+                        @click="check_field_part(index)"
+                        :class="current === index ? 'avtive' : ''">{{item.name}}</li>
                     </ul>
                 </div>
-                <div class="select-breadcrumb">
-                    <el-breadcrumb separator-class="el-icon-arrow-right">
-                        <el-breadcrumb-item>全部</el-breadcrumb-item>
-                    </el-breadcrumb>
-                </div>
-                <div class="select-yield">
-                    <el-collapse v-model="activeNames" @change="handleChange" accordion>
-                    <el-collapse-item  name="1">
-                        <template slot="title">
-                        <i class="el-icon-star-off"></i>  常用联系部门1 
-                        </template>
-                        <div class="yield-box"><el-checkbox v-model="checked">部门一</el-checkbox></div>
-                        <div class="yield-box"><el-checkbox v-model="checked">部门二</el-checkbox></div>
-                    </el-collapse-item>
-                    <el-collapse-item  name="2">
-                        <template slot="title">
-                        <i class="el-icon-star-off"></i>  常用联系部门2 
-                        </template>
-                        <div class="yield-box"><el-checkbox v-model="checked">部门一</el-checkbox></div>
-                        <div class="yield-box"><el-checkbox v-model="checked">部门二</el-checkbox></div>
-                    </el-collapse-item>
-                    <el-collapse-item name="3">
-                        <template slot="title">
-                        <i class="el-icon-star-off"></i>  常用联系部门3
-                        </template>
-                        <div class="yield-box"><el-checkbox v-model="checked">部门一</el-checkbox></div>
-                        <div class="yield-box"><el-checkbox v-model="checked">部门二</el-checkbox></div>
-                    </el-collapse-item>
-                    </el-collapse>
+                <div class="common-temp scrollbar" style="height:240px;overflow:auto">
+                  <el-tree 
+                  ref="tree"
+                  :data="data" :props="defaultProps"
+                  :default-expanded-keys="expanded_keys"
+                  @check="handleNodeClick"  show-checkbox  node-key="id"></el-tree>
                 </div>
             </div>
         </div>
         <div class="select-right">
             <div class="has-selected">
-                <span>已选(2)</span>
-                <el-button size="mini"><span class="span">清空</span></el-button>
+                <span>已选({{has_select_arr.length}})</span>
+                <el-button size="mini" @click="clear_all_list"><span class="span">清空</span></el-button>
             </div>
             <div class="has-yield-list">
                 <ul>
-                    <li>
+                    <li v-for="(item,index) in has_select_arr" :key="index">
                         <div>
                             <svg-icon icon-class='tree'></svg-icon>
-                            <span class="user-name">省办公厅</span>
-                        </div>
-                        <div>
-                            <i class="el-icon-close"></i>
-                        </div>
-                    </li>
-                    <li>
-                        <div>
-                            <svg-icon icon-class='tree'></svg-icon>
-                            <span class="user-name">西安神航星云科技有限公司</span>
+                            <span class="user-name">{{item.name}}</span>
                         </div>
                         <div>
                             <i class="el-icon-close"></i>
@@ -83,13 +51,23 @@
 </el-dialog>
 </template>
 <script>
+import { generate_tree } from "@/utils";
 export default {
   data() {
     return {
       part: "1",
       checked: false,
       input: "",
-      activeNames: ""
+      activeNames: "",
+      field_list: [],
+      current: 0,
+      data: [],
+      defaultProps: {
+        children: "childrens",
+        label: "name"
+      },
+      expanded_keys: [],
+      has_select_arr: []
     };
   },
   props: {
@@ -109,17 +87,48 @@ export default {
       }
     }
   },
+  created() {
+    this.$post(
+      "gwt/system/sysOrg/getSelfDoaminOrgTree",
+      {
+        addressBookUserFlag: "",
+        addressBookOrgFlag: "Y"
+      },
+      "json"
+    ).then(res => {
+      if (res.result !== "0000") {
+        return;
+      }
+      this.field_list = generate_tree(res.data.nodes);
+      if (this.field_list.length) {
+        this.data = this.field_list[0].childrens;
+        if (this.data.length) {
+          this.expanded_keys = [this.data[0].id];
+        }
+      }
+    });
+  },
   methods: {
-    handleNodeClick() {},
+    clear_all_list() {
+      this.has_select_arr = [];
+      this.$refs.tree.setCheckedKeys([]);
+    },
+    check_field_part(index) {
+      this.current = index;
+      this.data = this.field_list[index].childrens;
+      if (this.data.length) {
+        this.expanded_keys = [this.data[0].id];
+      }
+    },
+    handleNodeClick(node, { checkedNodes }) {
+      this.has_select_arr = checkedNodes;
+    },
     onSubmit() {
-      this.$emit("ok");
+      this.$emit("submit", this.has_select_arr);
     },
     cancel() {
-        console.log(1)
       this.$emit("close");
-    },
-    save_message() {},
-    handleChange() {}
+    }
   }
 };
 </script>
@@ -253,7 +262,7 @@ export default {
                 white-space: nowrap;
                 text-overflow: ellipsis;
                 overflow: hidden;
-                max-width: 80px;
+                max-width: 180px;
               }
               .part-name {
                 width: 110px;

@@ -115,7 +115,7 @@ export default {
               type: "success"
             });
             this.$router.push({
-              path: "/message/index"
+              path: "/user-message/index"
             });
             this.visible = false;
           })

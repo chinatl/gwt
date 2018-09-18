@@ -46,3 +46,24 @@ export function delete_item({
             });
     });
 }
+
+export function action_fail(
+    data, message = '操作成功', title = '操作失败！'
+) {
+    if (data.result !== "0000") {
+        Vue.swal({
+            title,
+            text: data.msg,
+            type: "error",
+            confirmButtonColor: "#DD6B55",
+            confirmButtonText: "确定",
+            showConfirmButton: true
+        });
+        return true;
+    }
+    Message({
+        message,
+        type: "success"
+    });
+    return false
+}

@@ -5,15 +5,15 @@
             <img :src="item.url" v-if="item.type">
             <svg-icon :icon-class='get_svg_name(item.type)' v-else></svg-icon>
         </div>
-        <div class="file-name">{{item.name}}</div>
+        <div class="file-name">{{item.originalName}}</div>
         <div class="cnclosure-mask">
-            <div class="cnclosure-mask-title">{{item.name}}</div>
+            <div class="cnclosure-mask-title">{{item.originalName}}</div>
             <div class="cnclosure-mask-action">
                 <div class="file-action">
                     <i class="el-icon-delete" @click="delete_file(index)"></i>
                     <svg-icon icon-class='眼睛' @click="download_file(item.url)"
                      v-if="get_svg_name(item.type) === 'pdf' || get_svg_name(item.type) === 'png'"></svg-icon>
-                    <i class="el-icon-download" @click="download_file(item.url)" v-else></i>
+                    <i class="el-icon-download" @click="download_file(item.url)"></i>
                 </div>
                 <div class="file-size">{{item.attaSize | fileSize}}</div>
             </div>
@@ -22,7 +22,8 @@
 </div>
 </template>
 <script>
-import { fileType } from "@/utils";
+import { fileType, download } from "@/utils";
+
 export default {
   data() {
     return {};
@@ -40,10 +41,12 @@ export default {
     },
     //点击下载
     download_file(url) {
-      window.open(url);
+      // download(url);
     },
     //  获取文件类型
     get_svg_name(name) {
+      console.log(name);
+      console.log(fileType(name));
       return fileType(name);
     }
   }

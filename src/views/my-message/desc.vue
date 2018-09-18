@@ -44,7 +44,7 @@ export default {
   methods: {
     retrun_message() {
       this.$router.push({
-        path: "/message/index"
+        path: "/user-message/index"
       });
     },
     report_desc() {
@@ -56,7 +56,7 @@ export default {
         return;
       }
       this.$router.push({
-        path: "/message/report-desc"
+        path: "/report-desc/index"
       });
     }
   }

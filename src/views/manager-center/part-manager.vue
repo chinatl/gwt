@@ -239,7 +239,7 @@ export default {
       this.option_value3 = "";
       this.$post("gwt/system/sysOrg/getAreaByParent", {
         parents: e
-      })
+      },'json')
         .then(res => {
           if (res.result !== "0000") {
             return;
@@ -275,7 +275,7 @@ export default {
     },
     //获取所有的部门类型
     get_all_part_type() {
-      this.$post("gwt/system/sysOrg/getDeptType")
+      this.$post("gwt/system/sysOrg/getDeptType",{},'json')
         .then(res => {
           if (res.result !== "0000") {
             return;
@@ -288,7 +288,7 @@ export default {
     },
     // 地区选择
     select_region() {
-      this.$post("gwt/system/sysOrg/getAreaByParent")
+      this.$post("gwt/system/sysOrg/getAreaByParent",{},'json')
         .then(res => {
           if (res.result !== "0000") {
             return;
@@ -310,12 +310,13 @@ export default {
         areaId = "";
       }
       this.$post(
-        "gwt/system/sysOrg/list",
-        {
-          orgParentId,
-          areaId,
+        `gwt/system/sysOrg/list?${qs.stringify({
           currentPage: pageNo,
           pageSize: pageSize
+        })}`,
+        {
+          orgParentId,
+          areaId
         },
         "json"
       )
@@ -408,7 +409,7 @@ export default {
       if (this.temp_data.nodeType === "REGION") {
         this.$post("gwt/system/sysOrg/edit", {
           orgId: data.orgId
-        }).then(res => {
+        },'json').then(res => {
           var region = res.data.region;
           if (region[0]) {
             this.option_value1 = region[0].dicId + "";
@@ -579,7 +580,7 @@ export default {
         pk: "orgId",
         sortType,
         orgId: data.orgId
-      })
+      },'json')
         .then(res => {
           if (res.result !== "0000") {
             this.$swal({

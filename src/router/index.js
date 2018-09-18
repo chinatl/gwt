@@ -21,7 +21,6 @@ import Layout from '../views/layout/Layout'
     icon: 'svg-name'             the icon show in the sidebar,
   }
 **/
-import store from '@/store'
 export const constantRouterMap = [
   { path: '/login', component: () => import('@/views/login/index'), hidden: true },
   { path: '/login/message', component: () => import('@/views/login/message'), hidden: true },
@@ -93,6 +92,43 @@ export const constantRouterMap = [
         name: '我的消息',
         component: () => import('@/views/my-message'),
         meta: { title: '我的消息' },
+      }
+    ]
+  },
+  {
+    path: '/report',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        name: '举报详情',
+        component: () => import('@/views/my-message/desc'),
+        meta: { title: '举报详情' },
+      }
+    ]
+  },
+  {
+    path: '/report-desc',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        name: '详情',
+        name: '举报详情描述',
+        component: () => import('@/views/my-message/report-desc'),
+        meta: { title: '详情列表', icon: '消息', up: true },
+      }
+    ]
+  },
+  {
+    path: '/notice-desc',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        name: '通知详情',
+        component: () => import('@/views/my-message/notice-desc'),
+        meta: { title: '通知详情' },
       }
     ]
   },
@@ -314,25 +350,13 @@ export const constantRouterMap = [
     ]
   },
   {
-    path: '/website-create-meeting',
-    component: Layout,
-    children: [
-      {
-        path: 'index',
-        name: '网站信息-创建会议',
-        component: () => import('@/views/public-notice/meeting'),
-        meta: { title: '创建会议' }
-      }
-    ]
-  },
-  {
     path: '/website-create-notice',
     component: Layout,
     children: [
       {
         path: 'index',
         name: '网站信息-创建通知',
-        component: () => import('@/views/public-notice/notice'),
+        component: () => import('@/views/website/notice'),
         meta: { title: '创建通知' }
       }
     ]
@@ -380,7 +404,7 @@ export const constantRouterMap = [
       {
         path: 'index',
         name: '网站信息-已发通知',
-        component: () => import('@/views/public-notice/active'),
+        component: () => import('@/views/website/active'),
         meta: { title: '已发通知' }
       }
     ]
@@ -886,7 +910,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '通讯录',
         component: () => import('@/views/mail-list'),
-        meta: { title: '通讯录', icon: '通讯录',requiresAuth: true}
+        meta: { title: '通讯录', icon: '通讯录', requiresAuth: true }
       }
     ]
   },
