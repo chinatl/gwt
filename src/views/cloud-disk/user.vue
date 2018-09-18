@@ -4,7 +4,7 @@
         <div class="common-action">
             <div class="disk-cloud">
                 <upload-button icon="el-icon-upload2" @on-change="upload_img" size='medium' type="success" >上传</upload-button>
-                <el-button type="success" icon="el-icon-plus" size='medium' v-wave>新建文件夹</el-button>
+                <el-button type="success" icon="el-icon-plus" size='medium' v-wave @click="dialogFolderVisible = true">新建文件夹</el-button>
                 <el-button type="primary" icon="el-icon-download" size='medium' v-wave>下载</el-button>
                 <el-button type="danger" icon="el-icon-close" size='medium' v-wave>删除</el-button>
             </div>
@@ -22,20 +22,19 @@
         <div class="common-table">
             <el-table
                 :data="tableData"
-                @selection-change="handleSelectionChange"
-              
+                @selection-change="handleSelectionChange"             
                 style="width: 100%">
                 <el-table-column type="selection" width="60" align="center"></el-table-column>
-                <el-table-column prop="name"  :label="file_name"  align="left"  show-overflow-tooltip> 
-                    <template slot-scope="scope">
+                <el-table-column prop="originalName"  :label="file_name"  align="left"  show-overflow-tooltip> 
+                    <!-- <template slot-scope="scope">
                       <div class="disk-icon" @click="file_click(scope.$index)">
                           <svg-icon :icon-class='get_svg_name(scope.row.name)'></svg-icon>
                           <span>{{scope.row.name}}</span>
                       </div>
-                    </template>
+                    </template> -->
                 </el-table-column>
                 <el-table-column prop="size"  label="大小" align="center"  width="200"></el-table-column>
-                <el-table-column prop="time"  label="修改日期" align="center" width="200"></el-table-column>
+                <el-table-column prop="updateTime"  label="修改日期" align="center" width="200"></el-table-column>
             </el-table>
         </div>
          <div class="common-page">
@@ -47,13 +46,27 @@
             :page-size="pageSize"
             layout="total, sizes, prev, pager, next, jumper"
             background
-            :total="40">
+            :total="50">
             </el-pagination>
         </div>
+        <!-- 新建文件夹弹窗 -->
+        <el-dialog title="请输入新建文件夹名称" :visible.sync="dialogFolderVisible" center class="folder" width="30%">
+          <el-form :model="folderform" :rules="folderrules" ref="folderform">
+            <el-form-item prop="foldername">
+              <el-input v-model="folderform.foldername" autocomplete="off"></el-input>
+            </el-form-item>
+          </el-form>
+          <div slot="footer" class="dialog-footer">
+            <el-button @click="dialogFolderVisible = false">取 消</el-button>
+            <el-button type="primary" @click="add_older('folderform')">确 定</el-button>
+          </div>
+        </el-dialog>
     </div>
+    
 </template>
 <script>
 import uploadButton from "@/components/Button/uploadButton";
+import qs from "qs";
 export default {
   components: {
     uploadButton
@@ -61,7 +74,7 @@ export default {
   data() {
     return {
       pageNo: 1,
-      pageSize: 5,
+      pageSize: 50,
       input: "",
       checked: false,
       pageData: [
@@ -149,7 +162,17 @@ export default {
       pdf_reg: /\.(pdf)$/,
       select_list: [],
       tableData: [],
-      file_nav: [] //文件导航
+      file_nav: [], //文件导航
+      dialogFolderVisible: false,
+      folderform: {
+        foldername: ""
+      },
+      folderrules: {
+        foldername: [
+          { required: true, message: "文件名不能为空", trigger: "blur" }
+        ]
+      },
+      type:""
     };
   },
   computed: {
@@ -162,9 +185,57 @@ export default {
     }
   },
   created() {
-    this.tableData = this.pageData;
+    // this.tableData = this.pageData;
+    this.init_usercloudisk(this.pageSize, this.pageNo);
   },
   methods: {
+    //初始化文件表格
+    init_usercloudisk(pageSize,pageNo) {
+      this.$post(
+        `gwt/cloudisk/cloudiskAttaUserRelation/userCloudiskPage?${qs.stringify({
+          currentPage: pageNo,
+          pageSize: pageSize
+        })}`,
+        {
+          searchFlag: "Y"
+        },'json'
+      )
+        .then(res => {
+          if(res.result === "0000"){
+            this.tableData = res.data.userCloudiskPageBean.datas;
+            // console.log(this.tableData)
+            // this.type = res.data.userCloudiskPageBean.datas.type
+          }
+        })
+       
+    },
+    //新建文件夹
+    add_older(formName) {
+      // alert(this.folderform.foldername)
+      this.$refs[formName].validate(valid => {
+        if (valid) {
+          this.$post(`gwt/cloudisk/cloudiskAttaDir/addFolder`,
+          {
+            type:"org",
+            orgId:"",
+            name:this.folderform.foldername,
+            parentId:""
+          },
+          "json"
+          ).then(res=>{
+            console.log(res)
+            if(res.result === "0000"){
+              this.dialogFolderVisible = false;
+              this.init_usercloudisk()
+            }
+            // console.log(this.tableData.type)
+          })
+        } else {
+          console.log("error submit!!");
+          return false;
+        }
+      });
+    },
     //递归取数
     go_child_file(index) {
       if (index === this.file_nav.length) {
@@ -261,5 +332,10 @@ export default {
     font-size: 20px;
     margin-right: 8px;
   }
+}
+.el-dialog__title {
+  font-size: 30px;
+  font-weight: bold;
+  color: #333;
 }
 </style>
