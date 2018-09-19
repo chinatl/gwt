@@ -79,12 +79,7 @@ export default {
       pageSize: 5,
       input: "",
       checked: false,
-      left_nav_data: [
-        "合计采购员合计采",
-        "合计采购员合计采",
-        "合计采购员合计采",
-        "合计采购员合计采"
-      ],
+      left_nav_data: [],
       pageData: [
         {
           name: "合计采购员合计采购员合计采购员",
@@ -195,9 +190,24 @@ export default {
     }
   },
   created() {
-    this.tableData = this.pageData;
+    // this.tableData = this.pageData;
+    this.init_getManagerOrg();
+    this.init_isCurrentOrgManager()
   },
   methods: {
+    init_isCurrentOrgManager(){
+      this.$post(`gwt/isCurrentOrgManager`)
+      .then(res=>{
+        console.log(res)
+      })
+    },
+    //初始化部门
+    init_getManagerOrg(){
+      this.$post(`gwt/system/sysOrg/getManagerOrgByToken`)
+      .then(res=>{
+        console.log(res)
+      })
+    },
     upload_img(e) {
       console.log(e);
     },

@@ -9,8 +9,8 @@
                 <el-button type="danger" icon="el-icon-close" size='medium' v-wave @click="delete_btn">删除</el-button>
             </div>
             <div>
-                <el-input v-model="input" placeholder="请输入文件名" style="width:240px" size='medium'></el-input>
-                <el-button type="primary" icon="el-icon-search" size='medium' v-wave @click="search_btn">搜索</el-button>
+                <el-input v-model="input" placeholder="请输入文件名" style="width:240px" size='medium' @keyup.native.enter='condition'></el-input>
+                <el-button type="primary" icon="el-icon-search" size='medium' v-wave @click="condition">搜索</el-button>
             </div>
         </div>
         <div class="disk-cloud-router">
@@ -74,87 +74,9 @@ export default {
     return {
       pageNo: 1,
       pageSize: 10,
-      totalCount:0,
+      totalCount: 0,
       input: "",
       checked: false,
-      pageData: [
-        {
-          name: "合计采购员合计采购员合计采购员",
-          size: "",
-          time: "2018-05-18 10:39:47",
-          children: [
-            {
-              name: "合计采购员合计采购员合计采购员",
-              size: "",
-              time: "2018-05-18 10:39:47",
-              children: [
-                {
-                  name: "合计采购员合计采购员合计采购员.doc",
-                  size: "",
-                  time: "2018-05-18 10:39:47"
-                },
-                {
-                  name: "合计采购员合计采购员合计采购员.doc",
-                  size: "",
-                  time: "2018-05-18 10:39:47"
-                },
-                {
-                  name: "合计采购员合计采购员合计采购员.doc",
-                  size: "",
-                  time: "2018-05-18 10:39:47"
-                }
-              ]
-            },
-            {
-              name: "合计采购员合计采购员合计采购员.doc",
-              size: "",
-              time: "2018-05-18 10:39:47"
-            },
-            {
-              name: "合计采购员合计采购员合计采购员.pdf",
-              size: "",
-              time: "2018-05-18 10:39:47"
-            }
-          ]
-        },
-        {
-          name: "快快快我哦啊看了几十次",
-          size: "",
-          time: "2018-05-18 10:39:47",
-          children: [
-            {
-              name: "合计采购员合计采购员合计采购员.jpg",
-              size: "",
-              time: "2018-05-18 10:39:47"
-            },
-            {
-              name: "合计采购员合计采购员合计采购员.doc",
-              size: "",
-              time: "2018-05-18 10:39:47"
-            },
-            {
-              name: "合计采购员合计采购员合计采购员.pdf",
-              size: "",
-              time: "2018-05-18 10:39:47"
-            }
-          ]
-        },
-        {
-          name: "合计采购员合计采购员合计采购员.jpg",
-          size: "",
-          time: "2018-05-18 10:39:47"
-        },
-        {
-          name: "合计采购员合计采购员合计采购员.doc",
-          size: "",
-          time: "2018-05-18 10:39:47"
-        },
-        {
-          name: "合计采购员合计采购员合计采购员.pdf",
-          size: "",
-          time: "2018-05-18 10:39:47"
-        }
-      ],
       doc_reg: /\.(docx?)$/,
       png_reg: /\.(png|jpe?g|gif|svg)(\?.*)?$/,
       ppt_reg: /\.(pptx?)$/,
@@ -166,21 +88,22 @@ export default {
       dialogFolderVisible: false,
       folderform: {
         foldername: "",
-        updateTime:"",
-        userId:"",
-        orgId:"",
-        originalName:""
+        updateTime: "",
+        userId: "",
+        orgId: "",
+        originalName: ""
       },
       folderrules: {
         foldername: [
           { required: true, message: "文件名不能为空", trigger: "blur" }
         ]
       },
-      type:"",
+      type: "",
       dirId: "",
-      fileId:"",
-      dirIds:[],
-      fileIds:[]
+      fileId: "",
+      dirIds: [],
+      fileIds: [],
+      parentId: ""
     };
   },
   computed: {
@@ -194,12 +117,14 @@ export default {
     }
   },
   created() {
-    // this.tableData = this.pageData;
     this.getUserInfo();
     this.init_usercloudisk(this.pageSize, this.pageNo);
-    this.search_btn(this.pageSize, this.pageNo);
   },
   methods: {
+    condition() {
+      this.pageNo = 1;
+      this.init_usercloudisk(this.pageSize, 1);
+    },
     //获取用户基本信息
     getUserInfo() {
       this.$post(`gwt/system/sysUserZone/getUserInfo`).then(res => {
@@ -212,80 +137,64 @@ export default {
       });
     },
     //初始化文件表格
-    init_usercloudisk(pageSize,pageNo) {
+    init_usercloudisk(pageSize, pageNo) {
       this.$post(
         `gwt/cloudisk/cloudiskAttaUserRelation/userCloudiskPage?${qs.stringify({
           currentPage: pageNo,
           pageSize: pageSize
         })}`,
         {
-          searchFlag: "N"
-        },'json'
-      )
-        .then(res => {
-          if(res.result === "0000"){
-            this.tableData = res.data.userCloudiskPageBean.datas;
-            this.totalCount =parseInt(res.data.userCloudiskPageBean.totalCount) 
-            // console.log(this.totalCount)
-          }
-        })
-       
+          originalName: this.input,
+          searchFlag: this.input ? "Y" : "N",
+          parentId: this.parentId
+        },
+        "json"
+      ).then(res => {
+        if (res.result === "0000") {
+          this.tableData = res.data.userCloudiskPageBean.datas;
+          this.totalCount = parseInt(res.data.userCloudiskPageBean.totalCount);
+          // console.log(this.totalCount)
+        }
+      });
     },
     //新建文件夹
     add_older(formName) {
       // alert(this.folderform.foldername)
       this.$refs[formName].validate(valid => {
         if (valid) {
-          this.$post(`gwt/cloudisk/cloudiskAttaDir/addFolder`,
-          {
-            type:"org",
-            orgId:this.folderform.orgId,
-            name:this.folderform.foldername,
-            parentId:""
-          },
-          "json"
-          ).then(res=>{
+          this.$post(
+            `gwt/cloudisk/cloudiskAttaDir/addFolder`,
+            {
+              type: "org",
+              orgId: this.folderform.orgId,
+              name: this.folderform.foldername,
+              parentId: this.dirId
+            },
+            "json"
+          ).then(res => {
             // console.log(res)
-            if(res.result === "0000"){
-
+            if (res.result === "0000") {
               this.dialogFolderVisible = false;
-              this.init_usercloudisk()
+              this.init_usercloudisk();
               this.$message({
                 type: "success",
-                message:"新建成功"
+                message: "新建成功"
               });
-            }else{
-              this.$message.error(res.msg)
+            } else {
+              this.$message.error(res.msg);
             }
             // console.log(this.tableData.type)
-          })
+          });
         } else {
           console.log("error submit!!");
           return false;
         }
       });
     },
-    //搜索
-    search_btn(pageSize,pageNo){
-      this.$post(`gwt/cloudisk/cloudiskAttaUserRelation/userCloudiskPage?${qs.stringify({
-          currentPage: pageNo,
-          pageSize: pageSize
-        })}`,
-      {
-        originalName:this.input,
-        searchFlag: "Y" 
-      },"json").then(res=>{
-        console.log(res)
-        if(res.result === "0000"){
-            this.tableData = res.data.userCloudiskPageBean.datas;
-            this.totalCount =parseInt(res.data.userCloudiskPageBean.totalCount) 
-        }
-        
-      })
-    },
+
     //删除
-    delete_btn(){
-      if(this.fileIds.length == 0 && this.dirIds.length ==0){
+    delete_btn() {
+      if (this.fileIds.length == 0 && this.dirIds.length == 0) {
         this.$swal({
           title: "提示信息！",
           text: "请选择要删除的文件或文件夹",
@@ -294,8 +203,8 @@ export default {
           confirmButtonText: "确定",
           showConfirmButton: true
         });
-        return
-      };
+        return;
+      }
       this.$swal({
         title: "确定要删除吗？",
         text: "删除后将无法恢复，请谨慎操作！",
@@ -305,35 +214,36 @@ export default {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
         confirmButtonClass: "btn btn-success"
-      })
-      .then(res => {
+      }).then(res => {
         if (!res.value) {
           return;
         }
-        this.$post(`gwt/cloudisk/cloudiskAttaUserRelation/userDelete`,
-        {
+        this.$post(
+          `gwt/cloudisk/cloudiskAttaUserRelation/userDelete`,
+          {
             fileIds: this.fileIds,
             dirIds: this.dirIds
-        },
-        "json")
-        .then(res=>{
-          console.log(res)
-          if(res.result === "0000"){
-            this.init_usercloudisk();
-            this.$message({
+          },
+          "json"
+        )
+          .then(res => {
+            console.log(res);
+            if (res.result === "0000") {
+              this.init_usercloudisk();
+              this.$message({
                 type: "success",
-                message:"删除成功"
+                message: "删除成功"
               });
-          }
-        })
-        .catch(res => {
-          console.log(res)
-        });
-      })
+            }
+          })
+          .catch(res => {
+            console.log(res);
+          });
+      });
     },
     //下载
-    download_file(){
-      if(this.fileIds.length == 0 && this.dirIds.length ==0){
+    download_file() {
+      if (this.fileIds.length == 0 && this.dirIds.length == 0) {
         this.$swal({
           title: "提示信息！",
           text: "请选择要下载的文件",
@@ -342,67 +252,81 @@ export default {
           confirmButtonText: "确定",
           showConfirmButton: true
         });
-        return
-      };
-      this.$post(`gwt/cloudisk/cloudiskAttachment/BatchDownload`,
-      {
-        fileIds: this.fileIds.map(res=>res + '').join(","),
-        dirIds: this.dirIds.map(res=>res + '').join(","),
-        orgId: this.folderform.orgId,
-        token: "03353_40c8ec12-c7e5-4926-8919-2d3cc28d2a39"
-      },
-      "json")
-      .then(res=>{
-        console.log(res)
-        this.init_usercloudisk()
-      })
-      .catch(res=>{
-        this.init_usercloudisk()
-      })
+        return;
+      }
+      this.$post(
+        `gwt/cloudisk/cloudiskAttachment/BatchDownload`,
+        {
+          fileIds: this.fileIds.map(res => res + "").join(","),
+          dirIds: this.dirIds.map(res => res + "").join(","),
+          orgId: this.folderform.orgId,
+          token: "03353_40c8ec12-c7e5-4926-8919-2d3cc28d2a39"
+        },
+        "json"
+      )
+        .then(res => {
+          console.log(res);
+          this.init_usercloudisk();
+        })
+        .catch(res => {
+          this.init_usercloudisk();
+        });
     },
     //递归取数
     go_child_file(index) {
       if (index === this.file_nav.length) {
         return;
       }
-      var arr = JSON.parse(JSON.stringify(this.pageData));
-      for (var i = 0; i < this.file_nav.length; i++) {
-        arr = arr[this.file_nav[i].index].children;
-        if (i === index) {
-          break;
+      this.$post(
+        `gwt/cloudisk/cloudiskAttaUserRelation/userCloudiskPage?${qs.stringify({
+          currentPage: pageNo,
+          pageSize: pageSize
+        })}`,
+        {
+          originalName: this.input,
+          searchFlag: this.input ? "Y" : "N",
+          parentId: ""
+        },
+        "json"
+      ).then(res => {
+        if (res.result === "0000") {
+          this.tableData = res.data.userCloudiskPageBean.datas;
+          this.totalCount = parseInt(res.data.userCloudiskPageBean.totalCount);
+          // console.log(this.totalCount)
         }
-      }
-      this.tableData = arr;
-      this.file_nav = this.file_nav.slice(0, index + 1);
+      });
+      // for (var i = 0; i < this.file_nav.length; i++) {
+      //   arr = arr[this.file_nav[i].index].children;
+      //   if (i === index) {
+      //     break;
+      //   }
+      // }
+      // this.tableData = arr;
+      // this.file_nav = this.file_nav.slice(0, index + 1);
     },
     //
     show_all_file() {
       // this.tableData = this.pageData;
       this.file_nav = [];
-      this.init_usercloudisk()
+      this.parentId = "";
+      this.pageNo = 1;
+      this.init_usercloudisk(this.pageSize, 1);
     },
-    file_click(index) {
-      console.log(index)
-      this.dirId = index.dirId
+    file_click(row) {
+      console.log(row);
+      this.dirId = row.dirId;
       // console.log(this.dirId)
-      this.folderform.originalName = index.originalName
+      this.folderform.originalName = row.originalName;
       // console.log(index)
-      if(index.type === "folder"){
+      if (row.type === "folder") {
         this.file_nav.push({
-          index,
-          originalName: index.originalName
+          row,
+          originalName: row.originalName
         });
-        this.tableData = index.children;
-        this.dirId = index.dirId
+        this.parentId = row.dirId;
+        this.pageNo = 1;
+        this.init_usercloudisk(this.pageSize, 1);
       }
-      // console.log(this.dirId)
-      // if (this.get_svg_name(this.tableData[index].name) === "文件夹") {
-      //   this.file_nav.push({
-      //     index,
-      //     name: this.tableData[index].name
-      //   });
-      //   this.tableData = this.tableData[index].children;
-      // }
     },
     //row-click
     get_svg_name(name) {
@@ -424,58 +348,58 @@ export default {
       return "文件夹";
     },
     handleSelectionChange(e) {
-      console.log(e)
+      console.log(e);
       this.select_list = e;
       this.fileIds = [];
       this.dirIds = [];
-      for(var i = 0; i<e.length;i++){
-        if(e[i].type === "file"){
-            this.fileIds.push(e[i].fileId)
-            console.log(e[i].fileId)
-        }else{
-            this.dirIds.push(e[i].dirId)
-            // console.log(e[i].type)
+      for (var i = 0; i < e.length; i++) {
+        if (e[i].type === "file") {
+          this.fileIds.push(e[i].fileId);
+          console.log(e[i].fileId);
+        } else {
+          this.dirIds.push(e[i].dirId);
+          // console.log(e[i].type)
         }
       }
       // console.log(this.fileIds)
-    //  console.log(e[i].fileId)
+      //  console.log(e[i].fileId)
     },
     handleSizeChange(val) {
       this.pageSize = val;
-      this.init_usercloudisk(this.pageSize, this.pageNo)  
+      this.init_usercloudisk(this.pageSize, this.pageNo);
     },
     handleCurrentChange(val) {
       this.pageNo = val;
       //  console.log(val)
-      this.init_usercloudisk(this.pageSize, this.pageNo)
+      this.init_usercloudisk(this.pageSize, this.pageNo);
     },
     //上传
     upload_img(e) {
       console.log(e);
-      var formData = new FormData();     
-      formData.append("ownerSystem","gwt-platform");
-      formData.append("ownerModule","cloudisk");
-      formData.append("userId",this.folderform.userId);
-      formData.append("orgId",this.folderform.orgId);
-      formData.append("uploadOpt","add");
-      formData.append("cloudiskType",1)
-      formData.append("dirId",this.dirId === "" ? "" : this.dirId);
-      formData.append("cloudiskType","user")
+      var formData = new FormData();
+      formData.append("ownerSystem", "gwt-platform");
+      formData.append("ownerModule", "cloudisk");
+      formData.append("userId", this.folderform.userId);
+      formData.append("orgId", this.folderform.orgId);
+      formData.append("uploadOpt", "add");
+      formData.append("cloudiskType", 1);
+      formData.append("dirId", this.dirId === "" ? "" : this.dirId);
+      formData.append("cloudiskType", "user");
       formData.append("file", e.raw);
-      console.log(this.dirId)
+      console.log(this.dirId);
       // console.log(this.folderform.userId)
       this.$post("gwt/uploadFile/uploadCloudisk", formData, "form")
-      .then(res => {
-        console.log(res)
-        if(res.result === "0000"){
-          this.init_usercloudisk()
-          this.$message({
-            type: "success",
-            message: "上传成功"
-          });
-        }
-      })
-      .catch(res => {});
+        .then(res => {
+          console.log(res);
+          if (res.result === "0000") {
+            this.init_usercloudisk();
+            this.$message({
+              type: "success",
+              message: "上传成功"
+            });
+          }
+        })
+        .catch(res => {});
     }
   }
 };
