@@ -224,7 +224,7 @@ export default {
           pageSize: pageSize
         })}`,
         {
-          Q_name_SL: this.Q_name_SL,
+          name: this.Q_name_SL,
           o: 2,
           s: "DOMAIN_ID"
         },

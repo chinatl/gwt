@@ -20,6 +20,7 @@
                   ref="tree"
                   :data="data" :props="defaultProps"
                   :default-expanded-keys="expanded_keys"
+                  :default-checked-keys='checked_keys'
                   @check="handleNodeClick"  show-checkbox  node-key="id"></el-tree>
                 </div>
             </div>
@@ -36,7 +37,7 @@
                             <svg-icon icon-class='tree'></svg-icon>
                             <span class="user-name">{{item.name}}</span>
                         </div>
-                        <div>
+                        <div @click="del_item(item,index)">
                             <i class="el-icon-close"></i>
                         </div>
                     </li>
@@ -75,9 +76,25 @@ export default {
       type: Boolean,
       default: false,
       required: true
+    },
+    userList: {
+      default: [],
+      required: false
+    }
+  },
+  watch: {
+    show(res) {
+      this.has_select_arr = this.userList;
     }
   },
   computed: {
+    checked_keys() {
+      if (this.field_list.length) {
+        return this.field_list[this.current].checkedKeys;
+      } else {
+        return [];
+      }
+    },
     dialog: {
       get() {
         return this.show;
@@ -100,6 +117,10 @@ export default {
         return;
       }
       this.field_list = generate_tree(res.data.nodes);
+      for (var i = 0; i < this.field_list.length; i++) {
+        this.field_list[i].checkedNodes = [];
+        this.field_list[i].checkedKeys = [];
+      }
       if (this.field_list.length) {
         this.data = this.field_list[0].childrens;
         if (this.data.length) {
@@ -109,8 +130,34 @@ export default {
     });
   },
   methods: {
+    //删除一个
+    del_item(item, index) {
+      if (item.childrens && item.childrens.length) {
+        this.$message({
+          message: "所选部门有子部门，不可删除",
+          type: "error"
+        });
+        return;
+      }
+      this.has_select_arr.splice(index, 1);
+      for (
+        var i = 0;
+        i < this.field_list[this.current].checkedKeys.length;
+        i++
+      ) {
+        if (this.field_list[this.current].checkedKeys[i] === item.id) {
+          this.$refs.tree.setChecked(id, false);
+          this.field_list[this.current].checkedNodes.splice(i, 1);
+          this.field_list[this.current].checkedKeys.splice(i, 1);
+        }
+      }
+    },
     clear_all_list() {
       this.has_select_arr = [];
+      for (var i = 0; i < this.field_list.length; i++) {
+        this.field_list[i].checkedNodes = [];
+        this.field_list[i].checkedKeys = [];
+      }
       this.$refs.tree.setCheckedKeys([]);
     },
     check_field_part(index) {
@@ -120,8 +167,14 @@ export default {
         this.expanded_keys = [this.data[0].id];
       }
     },
-    handleNodeClick(node, { checkedNodes }) {
-      this.has_select_arr = checkedNodes;
+    handleNodeClick(node, { checkedNodes, checkedKeys }) {
+      this.field_list[this.current].checkedNodes = checkedNodes;
+      this.field_list[this.current].checkedKeys = checkedKeys;
+      var arr = [];
+      for (var i = 0; i < this.field_list.length; i++) {
+        [].push.apply(arr, this.field_list[i].checkedNodes);
+      }
+      this.has_select_arr = arr;
     },
     onSubmit() {
       this.$emit("submit", this.has_select_arr);

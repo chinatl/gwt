@@ -18,7 +18,7 @@
                     end-placeholder="结束日期"
                     @change="condition_search">
                 </el-date-picker>
-                <el-input v-model="noticeTitle" placeholder="请输入域名称" style="width:200px" size='medium' @keyup.native.enter='condition_search'></el-input>
+                <el-input v-model="noticeTitle" placeholder="请输入标题" style="width:200px" size='medium' @keyup.native.enter='condition_search'></el-input>
                 <el-button type="primary" icon="el-icon-search" size='medium' v-wave @click="condition_search">搜索</el-button>
             </div>
         </div>
@@ -33,14 +33,16 @@
                 width="200"
                 label="通知类型">
                     <template slot-scope="scope">
-                        <span class="href">{{scope.row.noticeTypeName}}</span>
+                        <span class="href" @click="go_drafts(scope.row)">{{scope.row.noticeTypeName}}</span>
                     </template>
                 </el-table-column>
                 <el-table-column
-                prop="noticeTitle"
                 align="center"
                 show-overflow-tooltip
                 label="通知标题">
+                  <template slot-scope='scope'>
+                    <span  class="href"  @click="go_drafts(scope.row)">{{scope.row.noticeTitle}}</span>
+                  </template>
                 </el-table-column>
                 <el-table-column
                 align="center"
@@ -82,7 +84,7 @@
     </div>
 </template>
 <script>
-import { SET_MEETING_TYPE_LIST } from "@/store/mutations";
+import { SET_MEETING_TYPE_LIST, SET_NOTICE_DATA } from "@/store/mutations";
 import { mapGetters } from "vuex";
 import { parseTime } from "@/utils";
 import qs from "qs";
@@ -116,6 +118,12 @@ export default {
     ...mapGetters(["meeting_type_list"])
   },
   methods: {
+    go_drafts(item) {
+      this.$store.commit(SET_NOTICE_DATA, item);
+      this.$router.push({
+        path: "/re-drafts/index"
+      });
+    },
     condition_search() {
       sessionStorage.setItem("public-notice/drafts/pageNo", 1);
       this.pageNo = 1;

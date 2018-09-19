@@ -211,6 +211,9 @@ export default {
   },
   methods: {
     submit() {
+      if (this.disabled) {
+        return;
+      }
       this.$emit("click");
     }
   }
@@ -274,6 +277,7 @@ export default {
   &.disabled {
     color: #333;
     border: solid 1px #ccc;
+    background-color: #ccc;
   }
 }
 </style>

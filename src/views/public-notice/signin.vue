@@ -98,7 +98,7 @@ export default {
           noticeType: this.noticeType,
           begincreateTime: "",
           endcreateTime: "",
-          Q_noticeTitle_SL: this.Q_noticeTitle_SL
+          noticeTitle: this.Q_noticeTitle_SL
         },
         "json"
       )

@@ -1,17 +1,25 @@
 <template>
     <div class="common">
-        <t-title title="会议通知" warning></t-title>
-        <div class="page-form">
+        <t-title :title="notice_data.noticeTypeName" warning></t-title>
+        <div class="page-form" v-loading='loading'>
               <el-form ref="form" :model="form" label-width="80px" :rules="rules">
                     <el-form-item label="标题" prop='noticeTitle'>
                         <el-input v-model="form.noticeTitle" size="small" maxlength="50"></el-input>
                     </el-form-item>
-                    <el-form-item label="会议地点" prop="noticeAdress">
+                    <el-form-item label="会议地点" prop="noticeAdress" v-if="notice_data.noticeType === '1'">
                         <el-input v-model="form.noticeAdress" size="small" maxlength="20"></el-input>
                     </el-form-item>
-                    <el-form-item label="开始时间" prop='startTime'>
+                    <el-form-item label="开始时间" prop='startTime' v-if="notice_data.noticeType === '1'">
                         <el-date-picker
                             v-model="form.startTime"
+                            type="datetime"
+                            size="small"
+                            placeholder="选择日期时间">
+                        </el-date-picker>
+                    </el-form-item>
+                    <el-form-item label="结束时间" prop='endTime' v-if="notice_data.noticeType === '3'">>
+                        <el-date-picker
+                            v-model="form.endTime"
                             type="datetime"
                             size="small"
                             placeholder="选择日期时间">
@@ -46,8 +54,9 @@
         :show="yield_dialog" 
         @submit='submit_yield'
         @cancel='yield_dialog = false'
+        @close='yield_dialog = false'
         :user-list='has_select_part_list'
-        @close='yield_dialog = false'></add-yield>
+        ></add-yield>
         <add-user 
         :show='dialog' @close='dialog = false' 
         :user-list='has_select_user_list'
@@ -63,7 +72,9 @@ import addYield from "@/components/AddYield";
 import formButton from "@/components/Button/formButton";
 import { parseTime } from "@/utils";
 import { action_fail } from "@/utils/user";
-import { validateTime } from "@/utils/validate";
+import { validateTime, validateEndTime } from "@/utils/validate";
+import { mapGetters } from "vuex";
+import { SET_NOTICE_DATA } from "@/store/mutations";
 export default {
   components: {
     fileList,
@@ -77,10 +88,11 @@ export default {
     return {
       loading: false,
       form: {
-        noticeTitle: "",
+        noticeTitle: " ",
         noticeAdress: "",
         noticeProfile: "",
-        date: null
+        startTime: "",
+        endTime: ""
       },
       rules: {
         noticeTitle: [
@@ -90,7 +102,10 @@ export default {
           { required: true, message: "请输入会议地点", trigger: "blur" }
         ],
         startTime: [
-          { required: true, validator: validateTime, trigger: "blur" }
+          { required: true, validator: validateTime, trigger: "change" }
+        ],
+        endTime: [
+          { required: true, validator: validateEndTime, trigger: "change" }
         ]
       },
       file_list: [],
@@ -100,8 +115,58 @@ export default {
       dialog: false
     };
   },
-  created() {},
+  created() {
+    this.$store.dispatch("readSession", SET_NOTICE_DATA);
+    console.log(JSON.stringify(this.notice_data, {}, 4));
+    this.init();
+  },
+  computed: {
+    ...mapGetters(["notice_data"])
+  },
   methods: {
+    init() {
+      this.$post(
+        "gwt/notice/tbNotice/getNoticeDraftDetail",
+        {
+          pk: "noticeId",
+          changeType: "",
+          noticeId: this.notice_data.noticeId
+        },
+        "json"
+      )
+        .then(res => {
+          if (res.result !== "0000") {
+            return;
+          }
+          this.form.noticeTitle = res.data.tbNotice.noticeTitle;
+          this.form.noticeAdress = res.data.tbNotice.noticeAdress;
+          this.form.startTime = res.data.tbNotice.startTime;
+          this.form.endTime = res.data.tbNotice.endTime;
+          this.form.name = res.data.receiveUserNames.join("、");
+          this.form.part = res.data.receiveOrgNames.join("、");
+          this.form.noticeProfile = res.data.tbNotice.noticeProfile;
+
+          var id_arr = res.data.tbNoticeDraft.draftOrgId.split(",");
+          this.has_select_part_list = [];
+          for (var i = 0; i < res.data.receiveOrgNames.length; i++) {
+            this.has_select_part_list.push({
+              name: res.data.receiveOrgNames[i],
+              id: id_arr[i]
+            });
+          }
+          this.has_select_user_list = [];
+          var user_arr_id = res.data.tbNoticeDraft.draftUserId.split(",");
+          for (var i = 0; i < res.data.receiveUserNames.length; i++) {
+            this.has_select_user_list.push({
+              REAL_NAME: res.data.receiveUserNames[i],
+              ID: user_arr_id[i]
+            });
+          }
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
     submit_yield(list) {
       this.yield_dialog = false;
       this.form.part = list.map(res => res.name).join("、");
@@ -148,7 +213,7 @@ export default {
         });
     },
     onSubmit() {
-       if (!this.form.checked) {
+      if (!this.form.checked) {
         this.$message({
           message: "请确认该通知不含涉密信息！",
           type: "warning"
@@ -193,9 +258,9 @@ export default {
                 this.$post(
                   "gwt/notice/tbNotice/save",
                   {
-                    noticeId: "",
+                    noticeId: this.notice_data.noticeId,
                     noticeTitle: this.form.noticeTitle,
-                    noticeType: 1, //会议 2//通知 3//材料
+                    noticeType: this.notice_data.noticeType, //会议 2//通知 3//材料
                     noticeAdress: this.form.noticeAdress,
                     noticeProfile: this.form.noticeProfile,
                     startTime: parseTime(
@@ -238,12 +303,13 @@ export default {
         });
         return;
       }
+      this.loading = true;
       this.$post(
         "gwt/notice/tbNoticeDraft/save",
         {
-          noticeId: "",
+          noticeId:  this.notice_data.noticeId,
           noticeTitle: this.form.noticeTitle,
-          noticeType: 1, //会议 2//通知 3//材料
+          noticeType: this.notice_data.noticeType, //会议 2//通知 3//材料
           noticeAdress: this.form.noticeAdress,
           noticeProfile: this.form.noticeProfile,
           startTime: parseTime(this.form.startTime, "{y}-{m}-{d} {h}:{i}:{s}"),
@@ -259,17 +325,18 @@ export default {
         "json"
       )
         .then(res => {
-          if (action_fail(res, "保存为草稿成功！",)) return;
+          this.loading = false;
+          if (action_fail(res, "保存为草稿成功！")) return;
           this.$router.push({
             path: "/drafts/index"
           });
           console.log(res);
         })
         .catch(res => {
+          this.loading = false;
           console.log(res);
         });
-    },
-    handleNodeClick() {}
+    }
   }
 };
 </script>

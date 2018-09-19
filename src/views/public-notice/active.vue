@@ -16,7 +16,7 @@
                     range-separator="至"
                     start-placeholder="开始日期"
                     end-placeholder="结束日期"
-                    :picker-options="pickerOptions">
+                    @change="condition">
                 </el-date-picker>
                 <el-input v-model="noticeTitle" placeholder="请输入标题名称" style="width:200px" size='medium'></el-input>
                 <el-button type="primary" icon="el-icon-search" size='medium' v-wave @click="condition">搜索</el-button>
@@ -31,8 +31,8 @@
                   <div class="h3">
                     {{item.NOTICE_TITLE}}
                     <div class="message-action">
-                      <little-button name='撤销' @click.native="revoke_item(item)"></little-button>
-                      <little-button name='变更'></little-button>
+                      <little-button name='撤销' @click="revoke_item(item)" :disabled='check_change_status(item)'></little-button>
+                      <little-button name='变更' @click="change_notice(item)" :disabled='check_endTime(item)'></little-button>
                     </div>
                   </div>
                   <div class="caozuo">
@@ -75,7 +75,7 @@
 </template>
 <script>
 import littleButton from "@/components/Button/littleButton";
-import { SET_MEETING_TYPE_LIST } from "@/store/mutations";
+import { SET_MEETING_TYPE_LIST, SET_NOTICE_DATA } from "@/store/mutations";
 import { mapGetters } from "vuex";
 import qs from "qs";
 import { action_fail } from "@/utils/user";
@@ -101,7 +101,6 @@ export default {
   },
   created() {
     this.$store.dispatch("readSession", SET_MEETING_TYPE_LIST);
-
     var total = sessionStorage.getItem("public-notice/active/total");
     this.total = total ? total - 0 : 0;
     var pageNo = sessionStorage.getItem("public-notice/active/pageNo");
@@ -116,8 +115,46 @@ export default {
     ...mapGetters(["meeting_type_list"])
   },
   methods: {
+    //通知变更
+    change_notice(item) {
+      this.$store.commit(SET_NOTICE_DATA, item);
+      this.$router.push({
+        path: "/notice-change/index"
+      });
+    },
+    check_endTime(item) {
+      if (item.NOTICE_TYPE === 1) {
+        return +new Date(item.START_TIME) < Date.now();
+      } else if (item.NOTICE_TYPE === 3) {
+        return +new Date(item.END_TIME) < Date.now();
+      } else {
+        return false;
+      }
+    },
+    check_change_status(item) {
+      if (item.NOTICE_TYPE === 1) {
+        return (
+          +new Date(item.START_TIME) < Date.now() ||
+          +new Date(item.CREATE_TIME) < Date.now() - 1000 * 60 * 2
+        );
+      } else if (item.NOTICE_TYPE === 3) {
+        return (
+          +new Date(item.END_TIME) < Date.now() ||
+          +new Date(item.CREATE_TIME) < Date.now() - 1000 * 60 * 2
+        );
+      } else {
+        return +new Date(item.CREATE_TIME) < Date.now() - 1000 * 60 * 2;
+      }
+    },
     //撤销
     revoke_item(item) {
+      if (+new Date(item.CREATE_TIME) < Date.now() - 1000 * 60 * 2) {
+        this.$message({
+          message: "通知超过2分钟，不能撤销，请使用变更功能",
+          type: "warning"
+        });
+        return;
+      }
       this.$post(
         "gwt/notice/tbNoticeSendTemp/validateChange",
         {

@@ -155,7 +155,10 @@ export default {
           }
           this.$post("gwt/system/sysEquipmentAuth/save", {}, "json").then(
             res => {
-              Cookies.set("equipmentUuid1", res.data.equipmentUuid1);
+              for (var k in res.data) {
+                localStorage.setItem("equipmentUuid", res.data[k]);
+                localStorage.setItem("equipmentUuidKey", k);
+              }
             }
           );
           this.$message({
