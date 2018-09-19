@@ -6,11 +6,11 @@
                 <upload-button icon="el-icon-upload2" @on-change="upload_img" size='medium' type="success" >上传</upload-button>
                 <el-button type="success" icon="el-icon-plus" size='medium' v-wave @click="dialogFolderVisible = true">新建文件夹</el-button>
                 <el-button type="primary" icon="el-icon-download" size='medium' v-wave>下载</el-button>
-                <el-button type="danger" icon="el-icon-close" size='medium' v-wave>删除</el-button>
+                <el-button type="danger" icon="el-icon-close" size='medium' v-wave @click="delete_btn">删除</el-button>
             </div>
             <div>
                 <el-input v-model="input" placeholder="请输入文件名" style="width:240px" size='medium'></el-input>
-                <el-button type="primary" icon="el-icon-search" size='medium' v-wave>搜索</el-button>
+                <el-button type="primary" icon="el-icon-search" size='medium' v-wave @click="search_btn">搜索</el-button>
             </div>
         </div>
         <div class="disk-cloud-router">
@@ -45,7 +45,7 @@
             :page-size="pageSize"
             layout="total, sizes, prev, pager, next, jumper"
             background
-            :total="40">
+            :total="totalCount">
             </el-pagination>
         </div>
         <!-- 新建文件夹弹窗 -->
@@ -73,7 +73,8 @@ export default {
   data() {
     return {
       pageNo: 1,
-      pageSize: 5,
+      pageSize: 10,
+      totalCount:0,
       input: "",
       checked: false,
       pageData: [
@@ -166,7 +167,8 @@ export default {
       folderform: {
         foldername: "",
         userId:"",
-        orgId:""
+        orgId:"",
+        originalName:""
       },
       folderrules: {
         foldername: [
@@ -174,13 +176,16 @@ export default {
         ]
       },
       type:"",
-      dirId: ""
+      dirId: "",
+      fileId:"",
+      dirIds:[],
+      fileIds:[]
     };
   },
   computed: {
     file_name() {
       if (this.select_list.length) {
-        console.log(this.select_list)
+        // console.log(this.select_list)
         return `已选中${this.select_list.length}个文件/文件夹`;
       } else {
         return "文件名";
@@ -191,6 +196,7 @@ export default {
     // this.tableData = this.pageData;
     this.getUserInfo();
     this.init_usercloudisk(this.pageSize, this.pageNo);
+    this.search_btn(this.pageSize, this.pageNo);
   },
   methods: {
     //获取用户基本信息
@@ -199,7 +205,7 @@ export default {
         if (res.result === "0000") {
           this.folderform.userId = res.data.user.userId;
           this.folderform.orgId = res.data.user.orgId;
-          console.log(res.data.user.userId)
+          // console.log(res.data.user.userId)
           return;
         }
       });
@@ -218,7 +224,8 @@ export default {
         .then(res => {
           if(res.result === "0000"){
             this.tableData = res.data.userCloudiskPageBean.datas;
-            // console.log(this.tableData)
+            this.totalCount =parseInt(res.data.userCloudiskPageBean.totalCount) 
+            // console.log(this.totalCount)
           }
         })
        
@@ -252,6 +259,39 @@ export default {
         }
       });
     },
+    //搜索
+    search_btn(pageSize,pageNo){
+      this.$post(`gwt/cloudisk/cloudiskAttaUserRelation/userCloudiskPage?${qs.stringify({
+          currentPage: pageNo,
+          pageSize: pageSize
+        })}`,
+      {
+        originalName:this.input,
+        searchFlag: "Y" 
+      },"json").then(res=>{
+        console.log(res)
+        if(res.result === "0000"){
+            this.tableData = res.data.userCloudiskPageBean.datas;
+            this.totalCount =parseInt(res.data.userCloudiskPageBean.totalCount) 
+        }
+        
+      })
+    },
+    //删除
+    delete_btn(){
+      this.$post(`gwt/cloudisk/cloudiskAttaUserRelation/userDelete`,
+      {
+          fileIds: this.fileIds,
+          dirIds: this.dirIds
+      },
+      "json")
+      .then(res=>{
+        console.log(res)
+        // if(res.result === "0000"){
+        //   // this.init_usercloudisk(this.pageNo,this.pageSize)
+        // }
+      })
+    },
     //递归取数
     go_child_file(index) {
       if (index === this.file_nav.length) {
@@ -273,8 +313,10 @@ export default {
       this.file_nav = [];
     },
     file_click(index) {
-      console.log(index.dirId)
+      console.log(index)
       this.dirId = index.dirId
+      console.log(this.dirId)
+      this.folderform.originalName = index.originalName
       // if (this.get_svg_name(this.tableData[index].name) === "文件夹") {
       //   this.file_nav.push({
       //     index,
@@ -304,14 +346,42 @@ export default {
     },
     handleSelectionChange(e) {
       this.select_list = e;
+      console.log(e)
     },
-    handleSizeChange() {},
-    handleCurrentChange() {},
+    handleSizeChange(val) {
+      this.pageSize = val;
+      this.init_usercloudisk(this.pageSize, this.pageNo)  
+    },
+    handleCurrentChange(val) {
+      this.pageNo = val;
+      //  console.log(val)
+      this.init_usercloudisk(this.pageSize, this.pageNo)
+    },
     upload_img(e) {
-      // console.log(e);
-      
-      
-      
+      console.log(e);
+      var formData = new FormData();     
+      formData.append("ownerSystem","gwt-platform");
+      formData.append("ownerModule","cloudisk");
+      formData.append("userId",this.folderform.userId);
+      formData.append("orgId",this.folderform.orgId);
+      formData.append("uploadOpt","add");
+      formData.append("cloudiskType",1)
+      formData.append("dirId",this.dirId);
+      formData.append("cloudiskType","user")
+      formData.append("file", e.raw);
+      // console.log(this.folderform.userId)
+      this.$post("gwt/uploadFile/uploadCloudisk", formData, "form")
+      .then(res => {
+        console.log(res)
+        if(res.result === "0000"){
+          this.tableData.unshift(res.data.attachmentList[0].attaPath);
+          console.log(this.tableData)
+          this.$message({
+            type: "success",
+            message: "上传成功"
+          });
+        }
+      })
     }
   }
 };
