@@ -5,7 +5,7 @@
             <div class="disk-cloud">
                 <upload-button icon="el-icon-upload2" @on-change="upload_img" size='medium' type="success" >上传</upload-button>
                 <el-button type="success" icon="el-icon-plus" size='medium' v-wave @click="dialogFolderVisible = true">新建文件夹</el-button>
-                <el-button type="primary" icon="el-icon-download" size='medium' v-wave>下载</el-button>
+                <el-button type="primary" icon="el-icon-download" size='medium' v-wave @click="download_file">下载</el-button>
                 <el-button type="danger" icon="el-icon-close" size='medium' v-wave @click="delete_btn">删除</el-button>
             </div>
             <div>
@@ -16,7 +16,7 @@
         <div class="disk-cloud-router">
           <el-breadcrumb separator-class="el-icon-arrow-right">
             <el-breadcrumb-item @click.native="show_all_file">全部文件</el-breadcrumb-item>
-            <el-breadcrumb-item v-for="(item,index) in file_nav" :key="index" @click.native="go_child_file(index)">{{item.name}}</el-breadcrumb-item>
+            <el-breadcrumb-item v-for="(item,index) in file_nav" :key="index" @click.native="go_child_file(index)">{{item.originalName}}</el-breadcrumb-item>
           </el-breadcrumb>
         </div>
         <div class="common-table">
@@ -166,9 +166,10 @@ export default {
       dialogFolderVisible: false,
       folderform: {
         foldername: "",
-        userId: "",
-        orgId: "",
-        originalName: ""
+        updateTime:"",
+        userId:"",
+        orgId:"",
+        originalName:""
       },
       folderrules: {
         foldername: [
@@ -234,29 +235,29 @@ export default {
       // alert(this.folderform.foldername)
       this.$refs[formName].validate(valid => {
         if (valid) {
-          this.$post(
-            `gwt/cloudisk/cloudiskAttaDir/addFolder`,
-            {
-              type: "org",
-              orgId: this.folderform.orgId,
-              name: this.folderform.foldername,
-              parentId: ""
-            },
-            "json"
-          )
-            .then(res => {
-              // console.log(res)
-              if (res.result === "0000") {
-                this.dialogFolderVisible = false;
-                this.init_usercloudisk();
-              } else {
-                this.$message.error(res.msg);
-              }
-              // console.log(this.tableData.type)
-            })
-            .catch(error => {
-              console.log(error);
-            });
+          this.$post(`gwt/cloudisk/cloudiskAttaDir/addFolder`,
+          {
+            type:"org",
+            orgId:this.folderform.orgId,
+            name:this.folderform.foldername,
+            parentId:""
+          },
+          "json"
+          ).then(res=>{
+            // console.log(res)
+            if(res.result === "0000"){
+
+              this.dialogFolderVisible = false;
+              this.init_usercloudisk()
+              this.$message({
+                type: "success",
+                message:"新建成功"
+              });
+            }else{
+              this.$message.error(res.msg)
+            }
+            // console.log(this.tableData.type)
+          })
         } else {
           console.log("error submit!!");
           return false;
@@ -284,20 +285,81 @@ export default {
       });
     },
     //删除
-    delete_btn() {
-      this.$post(
-        `gwt/cloudisk/cloudiskAttaUserRelation/userDelete`,
+    delete_btn(){
+      if(this.fileIds.length == 0 && this.dirIds.length ==0){
+        this.$swal({
+          title: "提示信息！",
+          text: "请选择要删除的文件或文件夹",
+          type: "warning",
+          confirmButtonColor: "#DD6B55",
+          confirmButtonText: "确定",
+          showConfirmButton: true
+        });
+        return
+      };
+      this.$swal({
+        title: "确定要删除吗？",
+        text: "删除后将无法恢复，请谨慎操作！",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#DD6B55",
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        confirmButtonClass: "btn btn-success"
+      })
+      .then(res => {
+        if (!res.value) {
+          return;
+        }
+        this.$post(`gwt/cloudisk/cloudiskAttaUserRelation/userDelete`,
         {
-          fileIds: this.fileIds,
-          dirIds: this.dirIds
+            fileIds: this.fileIds,
+            dirIds: this.dirIds
         },
-        "json"
-      ).then(res => {
-        console.log(res);
-        // if(res.result === "0000"){
-        //   // this.init_usercloudisk(this.pageNo,this.pageSize)
-        // }
-      });
+        "json")
+        .then(res=>{
+          console.log(res)
+          if(res.result === "0000"){
+            this.init_usercloudisk();
+            this.$message({
+                type: "success",
+                message:"删除成功"
+              });
+          }
+        })
+        .catch(res => {
+          console.log(res)
+        });
+      })
+    },
+    //下载
+    download_file(){
+      if(this.fileIds.length == 0 && this.dirIds.length ==0){
+        this.$swal({
+          title: "提示信息！",
+          text: "请选择要下载的文件",
+          type: "warning",
+          confirmButtonColor: "#DD6B55",
+          confirmButtonText: "确定",
+          showConfirmButton: true
+        });
+        return
+      };
+      this.$post(`gwt/cloudisk/cloudiskAttachment/BatchDownload`,
+      {
+        fileIds: this.fileIds.map(res=>res + '').join(","),
+        dirIds: this.dirIds.map(res=>res + '').join(","),
+        orgId: this.folderform.orgId,
+        token: "03353_40c8ec12-c7e5-4926-8919-2d3cc28d2a39"
+      },
+      "json")
+      .then(res=>{
+        console.log(res)
+        this.init_usercloudisk()
+      })
+      .catch(res=>{
+        this.init_usercloudisk()
+      })
     },
     //递归取数
     go_child_file(index) {
@@ -316,14 +378,25 @@ export default {
     },
     //
     show_all_file() {
-      this.tableData = this.pageData;
+      // this.tableData = this.pageData;
       this.file_nav = [];
+      this.init_usercloudisk()
     },
     file_click(index) {
-      console.log(index);
-      this.dirId = index.dirId;
-      console.log(this.dirId);
-      this.folderform.originalName = index.originalName;
+      console.log(index)
+      this.dirId = index.dirId
+      // console.log(this.dirId)
+      this.folderform.originalName = index.originalName
+      // console.log(index)
+      if(index.type === "folder"){
+        this.file_nav.push({
+          index,
+          originalName: index.originalName
+        });
+        this.tableData = index.children;
+        this.dirId = index.dirId
+      }
+      // console.log(this.dirId)
       // if (this.get_svg_name(this.tableData[index].name) === "文件夹") {
       //   this.file_nav.push({
       //     index,
@@ -352,8 +425,21 @@ export default {
       return "文件夹";
     },
     handleSelectionChange(e) {
+      console.log(e)
       this.select_list = e;
-      console.log(e);
+      this.fileIds = [];
+      this.dirIds = [];
+      for(var i = 0; i<e.length;i++){
+        if(e[i].type === "file"){
+            this.fileIds.push(e[i].fileId)
+            console.log(e[i].fileId)
+        }else{
+            this.dirIds.push(e[i].dirId)
+            // console.log(e[i].type)
+        }
+      }
+      // console.log(this.fileIds)
+    //  console.log(e[i].fileId)
     },
     handleSizeChange(val) {
       this.pageSize = val;
@@ -364,32 +450,33 @@ export default {
       //  console.log(val)
       this.init_usercloudisk(this.pageSize, this.pageNo);
     },
+    //上传
     upload_img(e) {
       console.log(e);
-      var formData = new FormData();
-      formData.append("ownerSystem", "gwt-platform");
-      formData.append("ownerModule", "cloudisk");
-      formData.append("userId", this.folderform.userId);
-      formData.append("orgId", this.folderform.orgId);
-      formData.append("uploadOpt", "add");
-      formData.append("cloudiskType", 1);
-      formData.append("dirId", this.dirId);
-      formData.append("cloudiskType", "user");
+      var formData = new FormData();     
+      formData.append("ownerSystem","gwt-platform");
+      formData.append("ownerModule","cloudisk");
+      formData.append("userId",this.folderform.userId);
+      formData.append("orgId",this.folderform.orgId);
+      formData.append("uploadOpt","add");
+      formData.append("cloudiskType",1)
+      formData.append("dirId",this.dirId === "" ? "" : this.dirId);
+      formData.append("cloudiskType","user")
       formData.append("file", e.raw);
+      console.log(this.dirId)
       // console.log(this.folderform.userId)
-      this.$post("gwt/uploadFile/uploadCloudisk", formData, "form").then(
-        res => {
-          console.log(res);
-          if (res.result === "0000") {
-            this.tableData.unshift(res.data.attachmentList[0].attaPath);
-            console.log(this.tableData);
-            this.$message({
-              type: "success",
-              message: "上传成功"
-            });
-          }
+      this.$post("gwt/uploadFile/uploadCloudisk", formData, "form")
+      .then(res => {
+        console.log(res)
+        if(res.result === "0000"){
+          this.init_usercloudisk()
+          this.$message({
+            type: "success",
+            message: "上传成功"
+          });
         }
-      );
+      })
+      .catch(res => {});
     }
   }
 };
