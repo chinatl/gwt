@@ -5,15 +5,15 @@
             <img :src="item.url" v-if="item.type">
             <svg-icon :icon-class='get_svg_name(item.type)' v-else></svg-icon>
         </div>
-        <div class="file-name">{{item.name}}</div>
+        <div class="file-name">{{item.originalName}}</div>
         <div class="cnclosure-mask">
-            <div class="cnclosure-mask-title">{{item.name}}</div>
+            <div class="cnclosure-mask-title">{{item.originalName}}</div>
             <div class="cnclosure-mask-action">
                 <div class="file-action">
                     <i class="el-icon-delete" @click="delete_file(index)"></i>
-                    <svg-icon icon-class='眼睛' @click="download_file(item.url)"
+                    <svg-icon icon-class='眼睛' @click.native="preview(item)"
                      v-if="get_svg_name(item.type) === 'pdf' || get_svg_name(item.type) === 'png'"></svg-icon>
-                    <i class="el-icon-download" @click="download_file(item.url)" v-else></i>
+                    <i class="el-icon-download" @click="download_file(item)"></i>
                 </div>
                 <div class="file-size">{{item.attaSize | fileSize}}</div>
             </div>
@@ -22,7 +22,8 @@
 </div>
 </template>
 <script>
-import { fileType } from "@/utils";
+import { fileType, download } from "@/utils";
+import config from "@/config";
 export default {
   data() {
     return {};
@@ -34,16 +35,58 @@ export default {
     }
   },
   methods: {
+    preview(item) {
+      var url = config + item.attaPath + "/" + item.storeName;
+      this.$axios({
+        url,
+        headers: {
+          Authorization: this.$store.getters.token
+        },
+        responseType: "blob"
+      })
+        .then(res => {
+          window.open(window.URL.createObjectURL(res.data));
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
     //删除文件
     delete_file(index) {
       this.$emit("delete", index);
     },
     //点击下载
-    download_file(url) {
-      window.open(url);
+    download_file(item) {
+      var url = config + item.attaPath + "/" + item.storeName;
+      this.$axios({
+        url,
+        headers: {
+          Authorization: this.$store.getters.token
+        },
+        responseType: "blob"
+      })
+        .then(res => {
+          // 创建隐藏的可下载链接
+          var eleLink = document.createElement("a");
+          eleLink.download = item.originalName;
+          eleLink.style.display = "none";
+          // 字符内容转变成blob地址
+          var blob = new Blob([res.data]);
+          eleLink.href = URL.createObjectURL(blob);
+          // 触发点击
+          document.body.appendChild(eleLink);
+          eleLink.click();
+          // 然后移除
+          document.body.removeChild(eleLink);
+        })
+        .catch(res => {
+          console.log(res);
+        });
     },
     //  获取文件类型
     get_svg_name(name) {
+      console.log(name);
+      console.log(fileType(name));
       return fileType(name);
     }
   }

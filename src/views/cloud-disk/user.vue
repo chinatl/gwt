@@ -33,7 +33,6 @@
                       </div>
                     </template>
                 </el-table-column>
-                <el-table-column prop="size"  label="大小" align="center"  width="200"></el-table-column>
                 <el-table-column prop="updateTime"  label="修改日期" align="center" width="200"></el-table-column>
             </el-table>
         </div>

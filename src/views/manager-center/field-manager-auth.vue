@@ -72,7 +72,7 @@ export default {
     this.$store.dispatch("readSession", SET_FIELD_APP_LIST);
     this.tableData = JSON.parse(JSON.stringify(this.field_app_list)).map(
       res => {
-        res.checked = res.isActive === "1";
+        res.checked = res.isShow === "1";
         return res;
       }
     );
@@ -89,7 +89,7 @@ export default {
           })
         )
       ).map(res => {
-        res.checked = res.isActive === "1";
+        res.checked = res.isShow === "1";
         return res;
       });
     },
@@ -100,7 +100,7 @@ export default {
         ? "取消授权应用，请谨慎操作！"
         : "添加授权应用，请谨慎操作！";
       var message = !e ? "取消授权成功" : "添加授权成功";
-      var isActive = e ? "1" : "2";
+      var isShow = e ? "1" : "2";
       var url = e
         ? "gwt/system/sysDomain/addAuthority"
         : "gwt/system/sysDomain/delAuthority";
@@ -147,7 +147,7 @@ export default {
               }
               this.$store.commit("set_field_appList", {
                 index: app_index,
-                isActive
+                isShow
               });
               this.$message({
                 message,

@@ -12,7 +12,7 @@
                     <i slot="suffix" class="el-input__icon el-icon-search"></i>
                 </el-input>
             </div>
-            <div class="select-part-bottom">
+            <div class="select-part-bottom scrollbar">
                 <div v-if="part">
                     <div class="select-part-tree common-temp">
                         <el-tree :data="part_tree" :props="defaultProps" @node-click="handleNodeClick"></el-tree>
@@ -105,7 +105,7 @@ export default {
       default: false
     },
     userList: {
-      type: Array,
+      // type: Array,
       default: []
     }
   },

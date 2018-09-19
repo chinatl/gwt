@@ -95,11 +95,12 @@ export default {
       newArr[j].children = [];
       newArr[j].isShow = false;
       for (var i = 0; i < this.slierbar_list.length; i++) {
-        if (this.slierbar_list[i].appId === newArr[j].resId) {
+        if (this.slierbar_list[i].appId === newArr[j].resId && this.slierbar_list[i].resId !== newArr[j].resId) {
           newArr[j].children.push(this.slierbar_list[i]);
         }
       }
     }
+    
     this.silder_list = [
       {
         resName: "我的消息",

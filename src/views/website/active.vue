@@ -3,8 +3,8 @@
         <t-title title="已发通知"></t-title>
         <div class="common-action">
             <div>
-                <el-select v-model="noticeType" size="medium" style="margin-right:8px;" @change="condition">
-                    <el-option v-for="(item,index) in meeting_type_list" :key='index' :label="item.itemName" :value="item.sn"></el-option>
+                <el-select v-model="type" size="medium" style="margin-right:8px;">
+                    <el-option v-for="(item,index) in meeting_type_list" :key='index' :label="item.itemName" :value="item.itemKey"></el-option>
                 </el-select>
                 <el-date-picker
                     v-model="date"
@@ -12,14 +12,14 @@
                     align="right"
                     size="medium"
                     unlink-panels
-                     style="margin-right:8px;"
+                    style="margin-right:8px;"
                     range-separator="至"
                     start-placeholder="开始日期"
                     end-placeholder="结束日期"
                     :picker-options="pickerOptions">
                 </el-date-picker>
-                <el-input v-model="noticeTitle" placeholder="请输入标题名称" style="width:200px" size='medium'></el-input>
-                <el-button type="primary" icon="el-icon-search" size='medium' v-wave @click="condition">搜索</el-button>
+                <el-input v-model="noticeTitle" placeholder="请输入域名称" style="width:200px" size='medium' @keyup.native.enter="condition_search"></el-input>
+                <el-button type="primary" icon="el-icon-search" size='medium' v-wave @click="condition_search">搜索</el-button>
             </div>
         </div>
         <ul class="message-list" v-loading ='loading'>
@@ -31,12 +31,12 @@
                   <div class="h3">
                     {{item.NOTICE_TITLE}}
                     <div class="message-action">
-                      <little-button name='撤销' @click.native="revoke_item(item)"></little-button>
+                      <little-button name='撤销'></little-button>
                       <little-button name='变更'></little-button>
                     </div>
                   </div>
                   <div class="caozuo">
-                      <span class="reportColor">{{item.ITEM_NAME}}</span>
+                      <span class="reportColor">会议通知</span>
                       <span class="info-detail">{{item.REAL_NAME}}</span>
                       <span class="info-detail">{{item.ORG_ALL_NAME}}</span>
                       <span class="info-time">{{item.CREATE_TIME}}</span>
@@ -56,21 +56,6 @@
             :total="total">
             </el-pagination>
         </div>
-        <!-- 删除弹窗 -->
-        <el-dialog :close-on-click-modal='false'
-        :visible.sync="del_dialog"
-        width="40%"
-        v-drag
-        :before-close="handleClose">
-            <div class="dialog-content">
-                <h3>您确定要删除的信息吗?</h3>
-                <p>删除后将无法恢复，请谨慎操作！</p>
-                <div class="foot-dialog">
-                    <el-button type="danger" @click="agree">确定</el-button>
-                    <el-button type="info" @click="cancel">取消</el-button>
-                </div>
-            </div>
-        </el-dialog>
     </div>
 </template>
 <script>
@@ -78,8 +63,6 @@ import littleButton from "@/components/Button/littleButton";
 import { SET_MEETING_TYPE_LIST } from "@/store/mutations";
 import { mapGetters } from "vuex";
 import qs from "qs";
-import { action_fail } from "@/utils/user";
-import { parseTime } from "@/utils";
 export default {
   components: {
     littleButton
@@ -89,25 +72,23 @@ export default {
       pageNo: 1,
       pageSize: 5,
       total: 0,
+      noticeTitle:'',
       loading: false,
-      del_dialog: false,
+      type: "",
       daterange: "",
-      input: "",
-      date: null,
+      date: "",
       message_list: [],
-      noticeType: undefined,
-      noticeTitle: ""
     };
   },
   created() {
     this.$store.dispatch("readSession", SET_MEETING_TYPE_LIST);
 
-    var total = sessionStorage.getItem("public-notice/active/total");
+    var total = sessionStorage.getItem("website-notice/active/total");
     this.total = total ? total - 0 : 0;
-    var pageNo = sessionStorage.getItem("public-notice/active/pageNo");
+    var pageNo = sessionStorage.getItem("website-notice/active/pageNo");
     this.pageNo = pageNo ? pageNo - 0 : 1;
     //页数存到localstorage里面
-    var pageSize = localStorage.getItem("public-notice/active/pageSize");
+    var pageSize = localStorage.getItem("website-notice/active/pageSize");
     this.pageSize = pageSize ? pageSize - 0 : 5;
 
     this.init(this.pageSize, this.pageNo);
@@ -116,57 +97,32 @@ export default {
     ...mapGetters(["meeting_type_list"])
   },
   methods: {
-    //撤销
-    revoke_item(item) {
-      this.$post(
-        "gwt/notice/tbNoticeSendTemp/validateChange",
-        {
-          noticeId: item.NOTICE_ID,
-          changeType: "cancel"
-        },
-        "json"
-      )
-        .then(res => {
-          if (action_fail(res, "撤销成功")) return;
-          this.init(this.pageSize, this.pageNo);
-        })
-        .catch(res => {
-          console.log(res);
-        });
-    },
-    condition() {
-      this.pageNo = 1;
-      sessionStorage.setItem("public-notice/active/pageNo", 1);
+    condition_search() {
+      console.log(1)
+      sessionStorage.setItem("website-notice/active/pageNo", 1);
       this.init(this.pageSize, 1);
     },
     handleSizeChange(e) {
-      localStorage.setItem("public-notice/active/pageSize", e);
+      localStorage.setItem("website-notice/active/pageSize", e);
       this.pageNo = 1;
       this.pageSize = e;
       this.init(e, 1);
     },
     handleCurrentChange(e) {
-      sessionStorage.setItem("public-notice/active/pageNo", e);
+      sessionStorage.setItem("website-notice/active/pageNo", e);
       this.pageNo = e;
       this.init(this.pageSize, e);
     },
     init(pageSize, pageNo) {
-      console.log(this.date);
-      var startTime = "";
-      var endTime = "";
-      if (this.date) {
-        startTime = parseTime(this.date[0], "{y}-{m}-{d} {h}:{i}:{s}");
-        endTime = parseTime(this.date[1], "{y}-{m}-{d} {h}:{i}:{s}");
-      }
       this.$post(
-        `gwt/notice/tbNotice/sendedList?${qs.stringify({
+        `gwt/website/tbWebsite/sendedList?${qs.stringify({
           currentPage: pageNo,
           pageSize: pageSize
         })}`,
         {
-          noticeType: this.noticeType,
-          startTime,
-          endTime,
+          noticeType: "",
+          startTime: "",
+          endTime: "",
           noticeTitle: this.noticeTitle
         },
         "json"
@@ -178,33 +134,13 @@ export default {
           this.message_list = res.data.noticePageBean.datas;
           this.total = res.data.noticePageBean.totalCount - 0;
           sessionStorage.setItem(
-            "public-notice/active/total",
+            "website-notice/active/total",
             res.data.noticePageBean.totalCount
           );
         })
         .catch(res => {
           console.log(res);
         });
-    },
-    del_one_list(index) {
-      this.del_dialog = true;
-    },
-    handleClose(e) {
-      console.log(e);
-    },
-    agree() {
-      this.del_dialog = false;
-      this.$message({
-        message: "删除成功",
-        type: "success"
-      });
-    },
-    cancel() {
-      this.$message({
-        message: "已取消删除",
-        type: "info"
-      });
-      this.del_dialog = false;
     },
     pickerOptions() {}
   }
@@ -334,4 +270,3 @@ export default {
   }
 }
 </style>
-

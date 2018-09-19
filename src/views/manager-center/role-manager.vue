@@ -173,6 +173,8 @@ import littleButton from "@/components/Button/littleButton";
 import qs from "qs";
 import { mapGetters } from "vuex";
 import AddUser from "@/components/AddUser";
+import { generate_tree } from "@/utils";
+
 export default {
   components: {
     formButton,
@@ -347,7 +349,7 @@ export default {
           if (res.result !== "0000") {
             return;
           }
-          this.tree_data = res.data.nodes;
+          this.tree_data = generate_tree(res.data.nodes);
         })
         .catch(res => {
           console.log(res);
@@ -441,7 +443,6 @@ export default {
       }
     },
     handleDelete(roleId) {
-      return
       this.$swal({
         title: "确定要删除该角色吗？",
         text: "删除后将无法恢复，请谨慎操作！",

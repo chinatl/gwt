@@ -23,16 +23,18 @@
                    <el-button size="mini" type="primary" icon="el-icon-search">搜索</el-button>
                </div>
            </t-title>
-           <div class="desc-group" v-if='temp_data.nodeType !== "nodeType"'>
+           <div class="desc-group" v-if='temp_data.nodeType === "USER_GROUP_CHILD" || temp_data.nodeType === "ORG_GROUP_CHILD"  '>
               <i class="el-icon-caret-right"></i>
               <el-breadcrumb separator-class="el-icon-arrow-right">
-                <el-breadcrumb-item>常用联系人</el-breadcrumb-item>
-                <el-breadcrumb-item v-if="temp_data.pId === 'USER_GROUP_'">{{temp_data.name}}</el-breadcrumb-item>
+                <el-breadcrumb-item v-if="temp_data.nodeType === 'USER_GROUP_CHILD'">常用联系人</el-breadcrumb-item>
+                <el-breadcrumb-item v-if="temp_data.nodeType === 'ORG_GROUP_CHILD'">常用联系部门</el-breadcrumb-item>
+                <el-breadcrumb-item v-if="temp_data.nodeType === 'USER_GROUP_CHILD'">{{temp_data.name}}</el-breadcrumb-item>
+                <el-breadcrumb-item v-if="temp_data.nodeType === 'ORG_GROUP_CHILD'">{{temp_data.name}}</el-breadcrumb-item>
               </el-breadcrumb>
               <span class="rename" @click="rename"
               v-if="(temp_data.nodeType === 'USER_GROUP_CHILD' ||
               temp_data.nodeType === 'ORG_GROUP_CHILD') &&
-              temp_data.id !== 'USER_GROUP_0'
+              temp_data.name !== '<默认>'
               ">
                 <i class="el-icon-edit-outline"></i>重命名 
               </span>
@@ -40,23 +42,24 @@
               @click='del_group'
               v-if="(temp_data.nodeType === 'USER_GROUP_CHILD' ||
               temp_data.nodeType === 'ORG_GROUP_CHILD') &&
-              temp_data.id !== 'USER_GROUP_0'
+              temp_data.name !== '<默认>'
               ">
                 <i class="el-icon-close"></i>删除
               </span>
             </div>
-            <div class="action-part-info" v-else>
+            <div class="action-part-info" v-if="temp_data.nodeType === 'ORG'">
               <div class="h3">
                 运城扶贫办
                 <span class="set-us">
-                  <little-button name='设为常用'></little-button>
+                  <little-button name='设为常用' @click="set_usually_part"></little-button>
                 </span>
               </div>
               <p>部门类型：<span>地市政府</span></p>
               <p>部门类型：<span>研祥</span></p>
             </div>
-            <div class="common-action">
-                <arrow-button></arrow-button>
+            <div class="common-action" v-if="temp_data.nodeType === 'USER_GROUP_CHILD' ||
+              temp_data.nodeType === 'ORG_GROUP_CHILD'">
+                <arrow-button ></arrow-button>
                 <div>
                   <el-button type="success" size="small" 
                   v-if='temp_data.nodeType === "USER_GROUP_CHILD"'
@@ -70,7 +73,7 @@
             <div class="common-table">
                 <el-table
                     :key="1"
-                    v-if='temp_data.nodeType === "USER_GROUP_CHILD"'
+                    v-if='temp_data.nodeType === "USER_GROUP_CHILD" || temp_data.nodeType === "ORG"'
                     :data="tableData"
                     border
                     style="width: 100%">
@@ -85,6 +88,7 @@
                     </el-table-column>
                     <el-table-column
                     align="center"
+                    width="100"
                     label="头像">
                       <template slot-scope="scope">
                         <img :src="require('@/assets/imgs/a9.jpg')" style="width:40px;height:40px" v-if="scope.row.HEADIMGPATH ==='/'">
@@ -113,7 +117,8 @@
                     width="120"
                     >
                     <template slot-scope="scope">
-                      <little-button name='移除' @click="remove_usually_user(scope.row.userxId)"></little-button>
+                      <little-button name='设为常用' v-if="temp_data.nodeType === 'ORG'" @click="set_usually_person"></little-button>
+                      <little-button name='移除' @click="remove_usually_user(scope.row.userxId)" v-else></little-button>
                     </template>
                     </el-table-column>
                 </el-table>
@@ -135,7 +140,11 @@
                     <el-table-column
                     prop="name"
                     align="center"
+                    width="100"
                     label="图标">
+                     <template slot-scope="scope">
+                        <img :src="require('@/assets/imgs/part.png')" style="width:40px;height:40px">
+                      </template>
                     </el-table-column>
                     <el-table-column
                     prop="orgAllName"
@@ -148,7 +157,7 @@
                     width="120"
                     >
                     <template slot-scope="scope">
-                      <little-button name='移除'></little-button>
+                      <little-button name='移除' @click="remove_usually_part(scope.row)"></little-button>
                     </template>
                     </el-table-column>
                 </el-table>
@@ -167,7 +176,13 @@
             </div>
         </div>
         <template slot="else">
-          <add-user :show='add_dialog' @close='add_dialog = false' :loading='dialog_loading' @submit="submit_add_user"></add-user>
+          <add-user 
+          :show='add_dialog' 
+          @close='add_dialog = false' 
+          :loading='dialog_loading' 
+          @submit="submit_add_user"
+          :user-list='table_user_list'
+          ></add-user>
           <select-part :show="add_part_dialog"
            :loading='add_part_loading'
            @submit='submit_part'
@@ -208,23 +223,108 @@ export default {
       expanded_keys: [],
       temp_data: {
         nodeType: "USER_GROUP_CHILD",
-        name: "默认"
+        name: "<默认>"
       },
       pageSize: 5,
       pageNo: 1,
-      total: 0
+      total: 0,
+      table_user_list: []
     };
   },
   created() {
     this.get_group_tree();
   },
   methods: {
+    //移除常用部门
+    remove_usually_part(data) {
+      delete_item({
+        title: "您确定要移除吗？",
+        text: "移除后将无法恢复，请谨慎操作！",
+        url: "gwt/system/sysAddressBookOrg/aloneDelBookOrgGroup",
+        data: {
+          orgId: data.orgId,
+          groupId: this.temp_data.id.replace(/.*\D/, "")
+        },
+        success: res => {
+          if (res.result !== 0) {
+            return;
+          }
+          this.search_group_part(this.pageSize, this.pageNo);
+        }
+      });
+    },
+    //设为常用部门
+    set_usually_part() {
+      this.$post(
+        "gwt/system/sysAddressBookGroup/getSysAddressBookGroup",
+        {
+          groupType: 2
+        },
+        "json"
+      ).then(res => {
+        if (res.result !== "0000") {
+          return;
+        }
+        this.$swal({
+          title: "选择常用联系人组",
+          input: "select",
+          inputOptions: {
+            SRB: "塞尔维亚",
+            UKR: "乌克兰",
+            HRV: "克罗地亚"
+          },
+          inputPlaceholder: "默认分组",
+          showCancelButton: true,
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          inputValidator: function(value) {
+            return !value && "組名不能為空！";
+          }
+        }).then(function(result) {
+          console.log(result);
+        });
+      });
+    },
+    // 设为常用联系人
+    set_usually_person() {
+      this.$post(
+        "gwt/system/sysAddressBookGroup/getSysAddressBookGroup",
+        {
+          groupType: 1
+        },
+        "json"
+      ).then(res => {
+        if (res.result !== "0000") {
+          return;
+        }
+        this.$swal({
+          title: "选择常用联系人组",
+          input: "select",
+          inputOptions: {
+            SRB: "塞尔维亚",
+            UKR: "乌克兰",
+            HRV: "克罗地亚"
+          },
+          inputPlaceholder: "默认分组",
+          showCancelButton: true,
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          inputValidator: function(value) {
+            return !value && "組名不能為空！";
+          }
+        }).then(function(result) {
+          console.log(result);
+        });
+      });
+    },
     handleCurrentChange(e) {
       this.pageNo = e;
       if (this.temp_data.nodeType === "USER_GROUP_CHILD") {
         this.search_message_user(this.pageSize, e);
-      } else if (this.nodeType === "ORG_GROUP_CHILD") {
+      } else if (this.temp_data.nodeType === "ORG_GROUP_CHILD") {
         this.search_group_part(this.pageSize, e);
+      } else if (this.temp_data.nodeType === "ORG") {
+        this.search_user_by_part(this.pageSize, e);
       }
     },
     //
@@ -233,12 +333,53 @@ export default {
       this.pageSize = e;
       if (this.temp_data.nodeType === "USER_GROUP_CHILD") {
         this.search_message_user(e, 1);
-      } else if (this.nodeType === "ORG_GROUP_CHILD") {
+      } else if (this.temp_data.nodeType === "ORG_GROUP_CHILD") {
         this.search_group_part(e, 1);
+      } else if (this.temp_data.nodeType === "ORG") {
+        this.search_user_by_part(e, 1);
       }
     },
+    //
+    search_user_by_part(pageSize, pageNo) {
+      this.$post(
+        "gwt/system/sysOrg/get",
+        {
+          orgId: this.temp_data.id
+        },
+        "json"
+      )
+        .then(res => {
+          console.log(res);
+        })
+        .catch(res => {
+          console.log(res);
+        });
+      this.$post(
+        `gwt/system/sysAddressBookUser/getUserByOrgId?${qs.stringify({
+          currentPage: pageNo,
+          pageSize: pageSize
+        })}`,
+        {
+          groupId: this.temp_data.id.replace(/.*\D/, ""),
+          orgId: "",
+          realName: "",
+          orgArray: ""
+        },
+        "json"
+      )
+        .then(res => {
+          if (res.result !== "0000") {
+            return;
+          }
+          this.tableData = res.data.userListPageBean.datas;
+          this.total = res.data.userListPageBean.totalCount - 0;
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
     //点击常用分组 查下面的组
-    search_group_part(pageNo, pageSize) {
+    search_group_part(pageSize, pageNo) {
       this.$post(
         `gwt/system/sysAddressBookOrg/getOrgbyGroupId?${qs.stringify({
           currentPage: pageNo,
@@ -265,7 +406,7 @@ export default {
       this.$post(
         `gwt/system/sysAddressBookUser/getPersoByGroupId?${qs.stringify({
           pageSize: pageSize,
-          pageNo: pageNo
+          currentPage: pageNo
         })}`,
         {
           groupId: this.temp_data.id.replace("USER_GROUP_", "")
@@ -318,6 +459,7 @@ export default {
             message: "人员操作成功",
             type: "success"
           });
+          this.search_message_user(this.pageSize, e);
         })
         .catch(res => {
           this.dialog_loading = false;
@@ -357,6 +499,7 @@ export default {
             message: "部门操作成功",
             type: "success"
           });
+          this.search_group_part(this.pageSize, this.pageNo);
         })
         .catch(res => {
           this.add_part_loading = false;
@@ -400,13 +543,7 @@ export default {
       }).then(function(result) {});
     },
     get_group_tree() {
-      this.$post(
-        "gwt/system/sysAddressBookGroup/getGroupTree",
-        {
-          userxId: "75"
-        },
-        "json"
-      )
+      this.$post("gwt/system/sysAddressBookGroup/getGroupTree", {}, "json")
         .then(res => {
           if (res.result !== "0000") {
             return;
@@ -417,18 +554,30 @@ export default {
           console.log(res);
         });
     },
+
     handleNodeClick(data) {
+      console.log(data);
+      this.pageNo = 1;
       if (data.nodeType === "USER_GROUP" || data.nodeType === "ORG_GROUP") {
         this.expanded_keys[0] = data.id;
         return;
       }
-      console.log(data);
+      if (
+        data.nodeType !== "USER_GROUP_CHILD" &&
+        data.nodeType !== "ORG" &&
+        data.nodeType !== "ORG_GROUP_CHILD"
+      ) {
+        return;
+      }
       this.temp_data = data;
       if (data.nodeType === "USER_GROUP_CHILD") {
-        this.search_message_user(this.pageSize, this.pageNo);
+        this.search_message_user(this.pageSize, 1);
       }
       if (data.nodeType === "ORG_GROUP_CHILD") {
-        this.search_group_part(this.pageSize, this.pageNo);
+        this.search_group_part(this.pageSize, 1);
+      }
+      if (data.nodeType === "ORG") {
+        this.search_user_by_part(this.pageSize, 1);
       }
     },
     add_user() {
@@ -543,12 +692,12 @@ export default {
         inputValidator: value => {
           return !value && "組名不能為空！";
         }
-      }).then(res => {
-        if (res.value) {
+      }).then(Response => {
+        if (Response.value) {
           this.$post(
             "gwt/system/sysAddressBookGroup/addGroup",
             {
-              groupName: res.value,
+              groupName: Response.value,
               groupType,
               groupId: this.temp_data.id.replace(/.*\D/, "")
             },
@@ -571,6 +720,7 @@ export default {
                 message: "新增部门分組成功！",
                 type: "success"
               });
+              this.temp_data.name = Response.value;
             })
             .catch(res => {
               console.log(res);

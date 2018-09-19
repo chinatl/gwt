@@ -174,11 +174,11 @@ export default {
       if (item.TYPE_ID === 5) {
         this.$store.dispatch("get_report_desc", item.MSG_ID);
         this.$router.push({
-          path: "/message/desc"
+          path: "/report/index"
         });
       } else {
         this.$router.push({
-          path: "/message/notice-desc"
+          path: "/notice-desc/index"
         });
       }
     },
