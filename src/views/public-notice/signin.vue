@@ -45,7 +45,7 @@
     </div>
 </template>
 <script>
-import { SET_MEETING_TYPE_LIST } from "@/store/mutations";
+import { SET_MEETING_TYPE_LIST, SET_MESSAGE_DATA } from "@/store/mutations";
 import { mapGetters } from "vuex";
 import NoticeItem from "@/components/NoticeItem";
 import qs from "qs";
@@ -85,7 +85,17 @@ export default {
       this.init(this.pageSize, 1);
     },
     go_desc(item) {
-      return;
+      this.$store.commit(SET_MESSAGE_DATA, item);
+      if (item.NOTICE_TYPE === 2) {
+        this.$router.push({
+          path: "/notice-desc/index"
+        });
+        //通知
+      } else if (item.NOTICE_TYPE === 3) {
+        //材料征集
+      } else if (item.NOTICE_TYPE === 1) {
+        //会议通知
+      }
     },
     init(pageSize, pageNo) {
       this.loading = true;

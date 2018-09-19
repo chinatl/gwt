@@ -139,7 +139,6 @@ export default {
                 responseType: "blob"
               })
                 .then(res => {
-                  console.log(res)
                   this.file_list[index].url = res.data;
                 })
                 .catch(res => {

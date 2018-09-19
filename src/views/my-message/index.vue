@@ -70,24 +70,6 @@ export default {
     };
   },
   created() {
-    // http://192.168.31.72:8888/uploadfiles/gwt-platform/Anno/ownerAperation/201809/20180913110635_1052e9a2-153a-4a87-a3d4-a57ec8566864.jpg
-    // this.$axios({
-    //   url:
-    //     "uploadfiles/gwt-platform/Anno/ownerAperation/201809/20180913110635_1052e9a2-153a-4a87-a3d4-a57ec8566864.jpg",
-    //   headers: {
-    //     Authorization:
-    //       "Bearer eyJhbGciOiJIUzUxMiJ9.eyJyYW5kb21LZXkiOiJvdnp4NjIiLCJzdWIiOiIwMzY1MV80NzIxY2ZlMS05ZjliLTRhMmYtYmE3NS1iZDY3N2M5ODFhNTYiLCJleHAiOjE1MzY2NjM2MDMsImlhdCI6MTUzNjA1ODgwM30.K4SzgVFE28vZCmdXYOIZkoKM6uZLjUYoJdtSAkFWtyiwEalte72mtYRftmsKFbAft7IZrn-IC_16kc-CA3nwJw"
-    //   },
-    //   responseType: "blob"
-    // })
-    //   .then(res => {
-    //     console.log(res);
-    //     this.img_src = window.URL.createObjectURL(res.data);
-    //     console.log(this.img_src);
-    //   })
-    //   .catch(res => {
-    //     console.log(res);
-    //   });
     var total = sessionStorage.getItem("message/index/total");
     this.total = total ? total - 0 : 0;
     var pageNo = sessionStorage.getItem("message/index/pageNo");
