@@ -438,7 +438,6 @@ export default {
         },
         success: res => {
           if(res.result === "0000"){
-            rows.splice(index, 1);
             // this.getloginTable();
           }
           
