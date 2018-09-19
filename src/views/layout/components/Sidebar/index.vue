@@ -13,7 +13,9 @@
         </div>
         <collapse-transition>
           <ul class="gwt-child" v-show="item.isShow">
-            <li v-for="(li_item,li_index) in item.children" :key="li_index" @click="push_page(li_item)">{{li_item.resName}}</li>
+            <li v-for="(li_item,li_index) in item.children"
+              :class="child_current === li_index ? 'current' : '' "
+             :key="li_index" @click="push_page(li_item,li_index)">{{li_item.resName}}</li>
           </ul>
       </collapse-transition>
       </div>
@@ -33,6 +35,7 @@ export default {
   data() {
     return {
       current: 0,
+      child_current: -1,
       silder_list: []
     };
   },
@@ -40,11 +43,15 @@ export default {
     ...mapGetters(["sidebar", "slierbar_list", "is_admin"])
   },
   methods: {
-    push_page(item) {
+    push_page(item, index) {
+      this.child_current = index;
+      sessionStorage.setItem("gwt-current-silder-child", index);
       this.$router.push(item.resUrl);
     },
     go_route(item, index) {
       this.current = index;
+      this.child_current = -1;
+      sessionStorage.setItem("gwt-current-silder-child", -1);
       sessionStorage.setItem("gwt-current-silder", index);
       if (item.children && item.children.length) {
         for (var i = 0; i < this.silder_list.length; i++) {
@@ -61,7 +68,9 @@ export default {
   },
   created() {
     var current = sessionStorage.getItem("gwt-current-silder");
+    var child_current = sessionStorage.getItem("gwt-current-silder-child");
     this.current = current ? current - 0 : 0;
+    this.child_current = child_current ? child_current - 0 : -1;
     this.$store.dispatch("readSession", SET_SILDER_LIST);
     this.$store.dispatch("readSession", SET_SILDER_LIST);
 
@@ -95,12 +104,14 @@ export default {
       newArr[j].children = [];
       newArr[j].isShow = false;
       for (var i = 0; i < this.slierbar_list.length; i++) {
-        if (this.slierbar_list[i].appId === newArr[j].resId && this.slierbar_list[i].resId !== newArr[j].resId) {
+        if (
+          this.slierbar_list[i].appId === newArr[j].resId &&
+          this.slierbar_list[i].resId !== newArr[j].resId
+        ) {
           newArr[j].children.push(this.slierbar_list[i]);
         }
       }
     }
-    
     this.silder_list = [
       {
         resName: "我的消息",
@@ -126,6 +137,9 @@ export default {
         ]
       }
     ];
+    if (this.child_current !== -1) {
+      this.silder_list[this.current].isShow = true;
+    }
   }
 };
 </script>
@@ -152,7 +166,7 @@ export default {
     transition: backgroundColor 0.5s;
     &.current {
       color: #fff;
-      background-color: #202E3E;
+      background-color: #202e3e;
     }
     cursor: pointer;
     i {
@@ -161,7 +175,7 @@ export default {
     }
     &:hover {
       color: #fff;
-      background-color: #202E3E;
+      background-color: #202e3e;
     }
   }
   .gwt-child {
@@ -169,12 +183,17 @@ export default {
     overflow: hidden;
     line-height: 56px;
     li {
-      padding-left:45px;
+      padding-left: 45px;
       height: 56px;
       cursor: pointer;
-      &:hover {
+
+      &.current {
         color: #fff;
-        background-color: #202E3E;
+        background-color: #202e3e;
+      }
+      &:hover {
+        color: #efefef;
+        background-color: #202e3e;
       }
     }
   }

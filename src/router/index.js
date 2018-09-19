@@ -27,7 +27,7 @@ export const constantRouterMap = [
   { path: '/404', component: () => import('@/views/404'), hidden: true },
   {
     path: '/dashboard',
-    redirect: '/message/index',
+    redirect: '/user-message/index',
   },
   {
     path: '/',
@@ -290,6 +290,18 @@ export const constantRouterMap = [
     ]
   },
   {
+    path: '/re-drafts',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        name: '编辑',
+        component: () => import('@/views/public-notice/re-drafts'),
+        meta: { title: '编辑' }
+      }
+    ]
+  },
+  {
     path: '/signin',
     component: Layout,
     children: [
@@ -310,6 +322,18 @@ export const constantRouterMap = [
         name: '已发通知',
         component: () => import('@/views/public-notice/active'),
         meta: { title: '已发通知' }
+      }
+    ]
+  },
+  {
+    path: '/notice-change',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        name: '通知变更',
+        component: () => import('@/views/public-notice/change'),
+        meta: { title: '通知变更' }
       }
     ]
   },
@@ -951,12 +975,12 @@ export const constantRouterMap = [
       },
     ]
   },
-  // { path: '*', redirect: '/404', hidden: true }
+  { path: '*', redirect: '/404', hidden: true }
 ]
 
 export default new Router({
   // mode: 'history', //后端支持可开
-  mode: process.env.NODE_ENV === 'development' ? 'hash' : 'history',
+  // mode: process.env.NODE_ENV === 'development' ? 'hash' : 'history',
   scrollBehavior: () => ({ y: 0 }),
   routes: constantRouterMap
 })

@@ -99,7 +99,7 @@ export default {
           if (latestView) {
             this.$router.push(latestView)
           } else {
-            this.$router.push('/message/index')
+            this.$router.push('/user-message/index')
           }
         }
       })

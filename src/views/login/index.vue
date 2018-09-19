@@ -55,6 +55,7 @@
 <script>
 import { isvalidUsername } from "@/utils/validate";
 import QRCode from "qrcodejs2";
+import Cookies from "js-cookie";
 import {
   SET_USER_INFO,
   SET_USER_SIGN,
@@ -116,6 +117,9 @@ export default {
     };
   },
   created() {
+    var equipmentUuid = localStorage.getItem("equipmentUuid");
+    var equipmentUuidKey = localStorage.getItem("equipmentUuidKey");
+    Cookies.set(equipmentUuidKey, equipmentUuid);
     this.$nextTick(res => {
       this.android_qrcode = new QRCode("and_qrcode", {
         width: 100, // 设置宽度
@@ -135,7 +139,8 @@ export default {
       }
     });
     this.getQRURL();
-    sessionStorage.setItem("gwt-current-silder", '0');
+    sessionStorage.setItem("gwt-current-silder", "0");
+    sessionStorage.setItem("gwt-current-silder-child", "-1");
   },
   methods: {
     //获取图片验证码
