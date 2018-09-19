@@ -3,8 +3,8 @@
         <t-title title="已发通知"></t-title>
         <div class="common-action">
             <div>
-                <el-select v-model="type" size="medium" style="margin-right:8px;">
-                    <el-option v-for="(item,index) in meeting_type_list" :key='index' :label="item.itemName" :value="item.itemKey"></el-option>
+                <el-select v-model="noticeType" size="medium" style="margin-right:8px;" @change="condition">
+                    <el-option v-for="(item,index) in meeting_type_list" :key='index' :label="item.itemName" :value="item.sn"></el-option>
                 </el-select>
                 <el-date-picker
                     v-model="date"
@@ -18,8 +18,8 @@
                     end-placeholder="结束日期"
                     :picker-options="pickerOptions">
                 </el-date-picker>
-                <el-input v-model="input" placeholder="请输入域名称" style="width:200px" size='medium'></el-input>
-                <el-button type="primary" icon="el-icon-search" size='medium' v-wave>搜索</el-button>
+                <el-input v-model="noticeTitle" placeholder="请输入标题名称" style="width:200px" size='medium'></el-input>
+                <el-button type="primary" icon="el-icon-search" size='medium' v-wave @click="condition">搜索</el-button>
             </div>
         </div>
         <ul class="message-list" v-loading ='loading'>
@@ -31,12 +31,12 @@
                   <div class="h3">
                     {{item.NOTICE_TITLE}}
                     <div class="message-action">
-                      <little-button name='撤销'></little-button>
+                      <little-button name='撤销' @click.native="revoke_item(item)"></little-button>
                       <little-button name='变更'></little-button>
                     </div>
                   </div>
                   <div class="caozuo">
-                      <span class="reportColor">会议通知</span>
+                      <span class="reportColor">{{item.ITEM_NAME}}</span>
                       <span class="info-detail">{{item.REAL_NAME}}</span>
                       <span class="info-detail">{{item.ORG_ALL_NAME}}</span>
                       <span class="info-time">{{item.CREATE_TIME}}</span>
@@ -78,6 +78,8 @@ import littleButton from "@/components/Button/littleButton";
 import { SET_MEETING_TYPE_LIST } from "@/store/mutations";
 import { mapGetters } from "vuex";
 import qs from "qs";
+import { action_fail } from "@/utils/user";
+import { parseTime } from "@/utils";
 export default {
   components: {
     littleButton
@@ -89,11 +91,12 @@ export default {
       total: 0,
       loading: false,
       del_dialog: false,
-      type: "",
       daterange: "",
       input: "",
-      date: "",
-      message_list: []
+      date: null,
+      message_list: [],
+      noticeType: undefined,
+      noticeTitle: ""
     };
   },
   created() {
@@ -113,6 +116,29 @@ export default {
     ...mapGetters(["meeting_type_list"])
   },
   methods: {
+    //撤销
+    revoke_item(item) {
+      this.$post(
+        "gwt/notice/tbNoticeSendTemp/validateChange",
+        {
+          noticeId: item.NOTICE_ID,
+          changeType: "cancel"
+        },
+        "json"
+      )
+        .then(res => {
+          if (action_fail(res, "撤销成功")) return;
+          this.init(this.pageSize, this.pageNo);
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
+    condition() {
+      this.pageNo = 1;
+      sessionStorage.setItem("public-notice/active/pageNo", 1);
+      this.init(this.pageSize, 1);
+    },
     handleSizeChange(e) {
       localStorage.setItem("public-notice/active/pageSize", e);
       this.pageNo = 1;
@@ -125,17 +151,23 @@ export default {
       this.init(this.pageSize, e);
     },
     init(pageSize, pageNo) {
+      console.log(this.date);
+      var startTime = "";
+      var endTime = "";
+      if (this.date) {
+        startTime = parseTime(this.date[0], "{y}-{m}-{d} {h}:{i}:{s}");
+        endTime = parseTime(this.date[1], "{y}-{m}-{d} {h}:{i}:{s}");
+      }
       this.$post(
         `gwt/notice/tbNotice/sendedList?${qs.stringify({
           currentPage: pageNo,
           pageSize: pageSize
         })}`,
         {
-          token: " 01_f5d80ef6-4118-4586-9837-eb3b8b17ea9f",
-          noticeType: "",
-          startTime: "",
-          endTime: "",
-          Q_noticeTitle_SL: ""
+          noticeType: this.noticeType,
+          startTime,
+          endTime,
+          noticeTitle: this.noticeTitle
         },
         "json"
       )

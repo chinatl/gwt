@@ -113,6 +113,7 @@ const store = new Vuex.Store({
         if (res.result !== '0000') {
           return
         };
+        console.log(res.data.appList.map(res=>res.isActive))
         commit(SET_FIELD_APP_LIST, res.data.appList)
       }).catch(res => {
         console.log(res)

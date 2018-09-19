@@ -270,6 +270,7 @@ import littleButton from "@/components/Button/littleButton";
 import arrowButton from "@/components/Button/arrowButton";
 import qs from "qs";
 import { validatePhone } from "@/utils/validate";
+import { generate_tree } from "@/utils";
 export default {
   components: {
     littleButton,
@@ -354,8 +355,7 @@ export default {
     this.get_user_level();
     this.$post("gwt/system/sysOrg/getOrgTreeData", {}, "json")
       .then(res => {
-        this.tree_data = res.data.nodes;
-        console.log(res);
+        this.tree_data = generate_tree(res.data.nodes);
       })
       .catch(res => {
         console.log(res);
@@ -410,9 +410,13 @@ export default {
     },
     //查询所有人员级别
     get_user_level() {
-      this.$post("gwt/system/sysUser/getUserLevel", {
-        parents: ""
-      },'json')
+      this.$post(
+        "gwt/system/sysUser/getUserLevel",
+        {
+          parents: ""
+        },
+        "json"
+      )
         .then(res => {
           if (res.result !== "0000") {
             return;
@@ -774,21 +778,25 @@ export default {
           message = "更新用户成功!";
         }
         this.dialog_loading = true;
-        this.$post("gwt/system/sysUser/save", {
-          orgUserxId,
-          addFlag,
-          userId,
-          mobilePhone: this.form.mobilePhone,
-          realName: this.form.realName,
-          sex: this.form.sex,
-          "sysOrgUserX.orgId": this.form.orgId,
-          "sysOrgUserX.id": id,
-          "sysOrgUserX.userLevel": this.form.userLevel,
-          roleIds: this.form.roleIds.join(","),
-          "sysOrgUserX.duty": this.form.duty,
-          "sysOrgUserX.phone": this.form.phone,
-          "sysOrgUserX.remark": this.form.remark
-        },'json')
+        this.$post(
+          "gwt/system/sysUser/save",
+          {
+            orgUserxId,
+            addFlag,
+            userId,
+            mobilePhone: this.form.mobilePhone,
+            realName: this.form.realName,
+            sex: this.form.sex,
+            "sysOrgUserX.orgId": this.form.orgId,
+            "sysOrgUserX.id": id,
+            "sysOrgUserX.userLevel": this.form.userLevel,
+            roleIds: this.form.roleIds.join(","),
+            "sysOrgUserX.duty": this.form.duty,
+            "sysOrgUserX.phone": this.form.phone,
+            "sysOrgUserX.remark": this.form.remark
+          },
+          "json"
+        )
           .then(res => {
             this.dialog_loading = false;
             if (res.result !== "0000") {

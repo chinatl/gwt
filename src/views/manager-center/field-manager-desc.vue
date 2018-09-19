@@ -184,7 +184,7 @@ export default {
     ...mapGetters(["field_manager_data", "field_app_list"]),
     app_list() {
       return this.field_app_list.filter(res => {
-        return res.isActive === "1";
+        return res.isShow === "1";
       });
     },
     select_name() {
@@ -443,8 +443,15 @@ export default {
     //提交 添加部门
     submit_part(checkedKeys) {
       this.loading = true;
+      var url = "gwt/system/sysDomain/addOrg";
+      var groupId = "";
+      if (this.current === -1) {
+      } else {
+        url = "gwt/system/sysDomain/sysgroup/addDomain";
+        groupId = this.category[this.current].id;
+      }
       this.$post(
-        "gwt/system/sysDomain/addOrg",
+        url,
         {
           ids: checkedKeys
             .filter(res => {
@@ -452,7 +459,7 @@ export default {
             })
             .join(","),
           domainId: this.field_manager_data.domainId,
-          groupId: -1
+          groupId
         },
         "json"
       )

@@ -311,12 +311,9 @@ export default {
     search_child_part(pageSize, pageNo) {
       this.table_loading = true;
       var areaId = this.temp_data.areaId;
-      var selectOrgId = this.temp_data.id;
-      var orgParentId = this.temp_data.areaId;
-      console.log(orgParentId);
-      if (orgParentId.includes("region")) {
+      var orgParentId = this.temp_data.id;
+      if (this.temp_data.nodeType === "REGION") {
         orgParentId = "";
-        selectOrgId = "";
       } else {
         areaId = "";
       }
@@ -326,9 +323,8 @@ export default {
           pageSize: pageSize
         })}`,
         {
-          orgParentId,
-          selectOrgId,
-          areaId
+          orgParentId: orgParentId.replace(/\D/g, ""),
+          areaId: areaId.replace(/\D/g, "")
         },
         "json"
       )
@@ -398,7 +394,7 @@ export default {
       });
     },
     handleNodeClick(data) {
-      console.log(JSON.stringify(data, {}, 4));
+      console.log(data)
       if (data.id === this.temp_data.id) {
         return;
       }

@@ -4,7 +4,7 @@
         <div class="page-form">
               <el-form ref="form" :model="form" label-width="80px" :rules="rules">
                     <el-form-item label="标题" prop='noticeTitle'>
-                        <el-input v-model="form.noticeTitle" size="small"></el-input>
+                        <el-input v-model="form.noticeTitle" size="small" maxlength="50"></el-input>
                     </el-form-item>
                     <el-form-item label="会议地点" prop="noticeAdress">
                         <el-input v-model="form.noticeAdress" size="small" maxlength="20"></el-input>
@@ -19,13 +19,13 @@
                     </el-form-item>
                     <el-form-item label="接收部门">
                         <div class="flex">
-                            <el-input v-model="form.part" size="small" placeholder="请选择接受部门"></el-input>
+                            <el-input v-model="form.part" size="small" placeholder="请选择接收部门" readonly></el-input>
                             <add-user-button @click="yield_dialog= true">选择部门</add-user-button>
                         </div>
                     </el-form-item>
                     <el-form-item label="接收人">
                         <div class="flex">
-                            <el-input v-model="form.name" size="small"></el-input>
+                            <el-input v-model="form.name" size="small" placeholder="请选择接收人" readonly></el-input>
                             <add-user-button @click="dialog= true">选择接收人</add-user-button>
                         </div>
                     </el-form-item>
@@ -39,7 +39,7 @@
                     <el-form-item align='left'>
                         <el-checkbox v-model="form.checked"><span>我已确认本通知不含涉密信息</span></el-checkbox>
                     </el-form-item>
-                    <form-button cancel_name='保持草稿' submit_name='发送' @submit="onSubmit" @cancel='save_message'></form-button>
+                    <form-button cancel_name='保存草稿' submit_name='发送' @submit="onSubmit" @cancel='save_message'></form-button>
             </el-form>
         </div>
         <add-yield 
@@ -149,102 +149,112 @@ export default {
     onSubmit() {
       this.$refs.form.validate(res => {
         if (!res) return;
-      });
-      return;
-      this.$swal({
-        confirmButtonText: "确定",
-        showCancelButton: true,
-        cancelButtonText: "取消",
-        title: "请输入密码！",
-        input: "text",
-        showCancelButton: true,
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        inputValidator: value => {
-          return !value && "请输入密码！";
-        }
-      }).then(res => {
-        if (res.value) {
-          this.$post(
-            "gwt/notice/tbNotice/checkPassWord",
-            {
-              groupName: res.value
-            },
-            "json"
-          )
-            .then(res => {
-              if (res.result !== "0000") {
-                vue.swal({
-                  title: "操作失败！",
-                  text: res.msg,
-                  type: "error",
-                  confirmButtonColor: "#DD6B55",
-                  confirmButtonText: "确定",
-                  showConfirmButton: true
-                });
-                return;
-              }
-              this.$post(
-                "gwt/notice/tbNotice/save",
-                {
-                  noticeId: "",
-                  noticeTitle: this.form.noticeTitle,
-                  noticeType: 1, //会议 2//通知 3//材料
-                  noticeAdress: this.form.noticeAdress,
-                  noticeProfile: this.form.noticeProfile,
-                  startTime: parseTime(
-                    this.form.startTime,
-                    "{y}-{m}-{d} {h}:{i}:{s}"
-                  ),
-                  endTime: "",
-                  selectedUsers: this.has_select_user_list
-                    .map(res => res.USER_ID)
-                    .join(","),
-                  attrArray: this.file_list.map(res => res.id).join(","),
-                  orgArray: this.has_select_part_list
-                    .map(res => res.id.replace(/\D*/g, ""))
-                    .join(",")
-                },
-                "json"
-              )
-                .then(res => {
-                  if (action_fail(res, "会议创建成功！")) return;
-                  this.$router.push({
-                    path: "/active/index"
+        this.$swal({
+          confirmButtonText: "确定",
+          showCancelButton: true,
+          cancelButtonText: "取消",
+          title: "请输入密码！",
+          input: "text",
+          showCancelButton: true,
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          inputValidator: value => {
+            return !value && "请输入密码！";
+          }
+        }).then(res => {
+          if (res.value) {
+            this.$post(
+              "gwt/system/sysUserZone/judgePhone",
+              {
+                password: res.value
+              },
+              "json"
+            )
+              .then(res => {
+                if (res.result !== "0000") {
+                  this.$swal({
+                    title: "操作失败！",
+                    text: res.msg,
+                    type: "error",
+                    confirmButtonColor: "#DD6B55",
+                    confirmButtonText: "确定",
+                    showConfirmButton: true
                   });
-                })
-                .catch(res => {
-                  console.log(res);
-                });
-            })
-            .catch(res => {});
-        }
+                  return;
+                }
+                this.$post(
+                  "gwt/notice/tbNotice/save",
+                  {
+                    noticeId: "",
+                    noticeTitle: this.form.noticeTitle,
+                    noticeType: 1, //会议 2//通知 3//材料
+                    noticeAdress: this.form.noticeAdress,
+                    noticeProfile: this.form.noticeProfile,
+                    startTime: parseTime(
+                      this.form.startTime,
+                      "{y}-{m}-{d} {h}:{i}:{s}"
+                    ),
+                    endTime: "",
+                    selectedUsers: this.has_select_user_list
+                      .map(res => res.USER_ID)
+                      .join(","),
+                    attrArray: this.file_list.map(res => res.id).join(","),
+                    orgArray: this.has_select_part_list
+                      .map(res => res.id.replace(/\D*/g, ""))
+                      .join(",")
+                  },
+                  "json"
+                )
+                  .then(res => {
+                    if (action_fail(res, "会议创建成功！")) return;
+                    this.$router.push({
+                      path: "/active/index"
+                    });
+                  })
+                  .catch(res => {
+                    console.log(res);
+                  });
+              })
+              .catch(res => {
+                console.log(res);
+              });
+          }
+        });
       });
     },
     save_message() {
+      if (!this.form.noticeTitle) {
+        this.$message({
+          message: "请输入标题后保存到草稿箱",
+          type: "warning"
+        });
+        return;
+      }
       this.$post(
         "gwt/notice/tbNoticeDraft/save",
         {
-          token: "01_033facf6-1700-49f8-ba55-3688cbf4a12c",
-          draftUserId: "3585,3586",
-          draftUserName: "test15,test16",
-          draftOrgId: "",
-          draftOrgName: "",
           noticeId: "",
-          noticeTitle: "网站暂存01",
-          noticeType: "1",
-          noticeAdress: "测试会议地点",
-          noticeStatus: "1001",
-          noticeProfile: "eccccccccccccccccccccc",
-          createUser: "1",
-          createOrg: 1,
-          startTime: "2018/09/11 20:50:00",
+          noticeTitle: this.form.noticeTitle,
+          noticeType: 1, //会议 2//通知 3//材料
+          noticeAdress: this.form.noticeAdress,
+          noticeProfile: this.form.noticeProfile,
+          startTime: parseTime(this.form.startTime, "{y}-{m}-{d} {h}:{i}:{s}"),
           endTime: "",
-          attrArray: 7287
+          selectedUsers: this.has_select_user_list
+            .map(res => res.USER_ID)
+            .join(","),
+          attrArray: this.file_list.map(res => res.id).join(","),
+          orgArray: this.has_select_part_list
+            .map(res => res.id.replace(/\D*/g, ""))
+            .join(",")
         },
         "json"
       )
         .then(res => {
+          if (action_fail(res, "保存为草稿成功！",)) return;
+          this.$router.push({
+            path: "/drafts/index"
+          });
           console.log(res);
         })
         .catch(res => {

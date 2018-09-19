@@ -37,7 +37,7 @@ export function validateTime(rule, value, callback) {
     callback(new Error('请输入开始时间'));
   } else {
     var _now_date = Date.now();
-    if (+value - _now_date < 1000 * 60 * 10) {
+    if (+value - _now_date > 1000 * 60 * 10) {
       callback();
     } else {
       callback('距离开始时间不得小于10分钟');

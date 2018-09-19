@@ -25,17 +25,12 @@
                 @selection-change="handleSelectionChange"             
                 style="width: 100%">
                 <el-table-column type="selection" width="60" align="center"></el-table-column>
-                <el-table-column  :label="file_name"  align="left"  show-overflow-tooltip> 
+                <el-table-column prop="originalName"  :label="file_name"  align="left"  show-overflow-tooltip> 
                     <template slot-scope="scope">
-                      <div class="disk-icon" @click="file_click(scope.$index)">
-                          <svg-icon :icon-class='get_svg_name(scope.row.originalName)'></svg-icon>
+                      <div class="disk-icon" @click="file_click(scope.row)">
+                          <svg-icon :icon-class='get_svg_name(scope.row.name)'></svg-icon>
                           <span>{{scope.row.originalName}}</span>
                       </div>
-                    </template>
-                </el-table-column>
-                <el-table-column prop="size"  label="大小" align="center"  width="200">
-                  <template slot-scope="scope">
-                          {{scope.row.attaSize | fileSize}}
                     </template>
                 </el-table-column>
                 <el-table-column prop="updateTime"  label="修改日期" align="center" width="200"></el-table-column>
@@ -50,7 +45,7 @@
             :page-size="pageSize"
             layout="total, sizes, prev, pager, next, jumper"
             background
-            :total="50">
+            :total="40">
             </el-pagination>
         </div>
         <!-- 新建文件夹弹窗 -->
@@ -78,7 +73,7 @@ export default {
   data() {
     return {
       pageNo: 1,
-      pageSize: 50,
+      pageSize: 5,
       input: "",
       checked: false,
       pageData: [
@@ -169,19 +164,23 @@ export default {
       file_nav: [], //文件导航
       dialogFolderVisible: false,
       folderform: {
-        foldername: ""
+        foldername: "",
+        userId:"",
+        orgId:""
       },
       folderrules: {
         foldername: [
           { required: true, message: "文件名不能为空", trigger: "blur" }
         ]
       },
-      type:""
+      type:"",
+      dirId: ""
     };
   },
   computed: {
     file_name() {
       if (this.select_list.length) {
+        console.log(this.select_list)
         return `已选中${this.select_list.length}个文件/文件夹`;
       } else {
         return "文件名";
@@ -190,9 +189,21 @@ export default {
   },
   created() {
     // this.tableData = this.pageData;
+    this.getUserInfo();
     this.init_usercloudisk(this.pageSize, this.pageNo);
   },
   methods: {
+    //获取用户基本信息
+    getUserInfo() {
+      this.$post(`gwt/system/sysUserZone/getUserInfo`).then(res => {
+        if (res.result === "0000") {
+          this.folderform.userId = res.data.user.userId;
+          this.folderform.orgId = res.data.user.orgId;
+          console.log(res.data.user.userId)
+          return;
+        }
+      });
+    },
     //初始化文件表格
     init_usercloudisk(pageSize,pageNo) {
       this.$post(
@@ -201,14 +212,13 @@ export default {
           pageSize: pageSize
         })}`,
         {
-          searchFlag: "Y"
+          searchFlag: "N"
         },'json'
       )
         .then(res => {
           if(res.result === "0000"){
             this.tableData = res.data.userCloudiskPageBean.datas;
             // console.log(this.tableData)
-            // this.type = res.data.userCloudiskPageBean.datas.type
           }
         })
        
@@ -221,16 +231,18 @@ export default {
           this.$post(`gwt/cloudisk/cloudiskAttaDir/addFolder`,
           {
             type:"org",
-            orgId:"",
+            orgId:this.folderform.orgId,
             name:this.folderform.foldername,
             parentId:""
           },
           "json"
           ).then(res=>{
-            console.log(res)
+            // console.log(res)
             if(res.result === "0000"){
               this.dialogFolderVisible = false;
               this.init_usercloudisk()
+            }else{
+              this.$message.error(res.msg)
             }
             // console.log(this.tableData.type)
           })
@@ -261,13 +273,15 @@ export default {
       this.file_nav = [];
     },
     file_click(index) {
-      if (this.get_svg_name(this.tableData[index].name) === "文件夹") {
-        this.file_nav.push({
-          index,
-          name: this.tableData[index].name
-        });
-        this.tableData = this.tableData[index].children;
-      }
+      console.log(index.dirId)
+      this.dirId = index.dirId
+      // if (this.get_svg_name(this.tableData[index].name) === "文件夹") {
+      //   this.file_nav.push({
+      //     index,
+      //     name: this.tableData[index].name
+      //   });
+      //   this.tableData = this.tableData[index].children;
+      // }
     },
     //row-click
     get_svg_name(name) {
@@ -294,7 +308,10 @@ export default {
     handleSizeChange() {},
     handleCurrentChange() {},
     upload_img(e) {
-      console.log(e);
+      // console.log(e);
+      
+      
+      
     }
   }
 };
@@ -338,7 +355,7 @@ export default {
   }
 }
 .el-dialog__title {
-  font-size: 30px;
+  font-size: 24px;
   font-weight: bold;
   color: #333;
 }

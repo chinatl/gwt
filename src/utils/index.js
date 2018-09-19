@@ -3,6 +3,9 @@
  */
 
 export function parseTime(time, cFormat) {
+  if (!time) {
+    return ''
+  }
   if (arguments.length === 0) {
     return null
   }
@@ -416,7 +419,7 @@ export function resolve_tree(arr) {
 export function generate_tree(arr) {
   var newArr = [];
   for (var i = arr.length - 1; i >= 0; i--) {
-    if (arr[i].nodeType === 'USER_GROUP' || arr[i].nodeType === 'ORG_GROUP' || arr[i].nodeType === 'DOMAIN') {
+    if (arr[i].nodeType === 'USER_GROUP' || arr[i].nodeType === 'ORG_GROUP' || arr[i].nodeType === 'DOMAIN' || arr[i].pId.includes('region_')) {
       newArr.push(arr.splice(i, 1)[0]);
     }
   }
