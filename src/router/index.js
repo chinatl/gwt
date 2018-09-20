@@ -83,6 +83,19 @@ export const constantRouterMap = [
       },
     ]
   },
+  //--------------------------------------------------------
+  {
+    path: '/notice-desc',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        name: '通知详情',
+        component: () => import('@/views/desc/notice'),
+        meta: { title: '通知详情' },
+      }
+    ]
+  },
   {
     path: '/user-message',
     component: Layout,
@@ -117,18 +130,6 @@ export const constantRouterMap = [
         name: '举报详情描述',
         component: () => import('@/views/my-message/report-desc'),
         meta: { title: '详情列表', icon: '消息', up: true },
-      }
-    ]
-  },
-  {
-    path: '/notice-desc',
-    component: Layout,
-    children: [
-      {
-        path: 'index',
-        name: '通知详情',
-        component: () => import('@/views/my-message/notice-desc'),
-        meta: { title: '通知详情' },
       }
     ]
   },

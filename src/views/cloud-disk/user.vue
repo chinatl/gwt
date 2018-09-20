@@ -128,12 +128,12 @@ export default {
     //获取用户基本信息
     getUserInfo() {
       this.$post(`gwt/system/sysUserZone/getUserInfo`).then(res => {
-        if (res.result === "0000") {
-          this.folderform.userId = res.data.user.userId;
-          this.folderform.orgId = res.data.user.orgId;
+        if (res.result !== "0000") {
           // console.log(res.data.user.userId)
           return;
         }
+        this.folderform.userId = res.data.user.userId;
+        this.folderform.orgId = res.data.user.orgId;
       });
     },
     //初始化文件表格
@@ -191,7 +191,6 @@ export default {
         }
       });
     },
-
     //删除
     delete_btn() {
       if (this.fileIds.length == 0 && this.dirIds.length == 0) {

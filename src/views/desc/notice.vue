@@ -61,53 +61,6 @@
             </el-form>
         </el-dialog>  
     </div>
-    <div class="sign-up">
-        <t-title>人员报名</t-title>
-         <div class="common-action">
-            <div class="common-table-bar">
-                <span v-for="(item,index) in select_arr" :key='index' 
-                @click='select_nav(index)'
-                :class="current == index ? 'current':''">{{item.name}}</span>
-            </div>
-            <div>
-                <el-button type="success" icon="el-icon-plus" size='medium' @click="import_part">部门导入</el-button>
-            </div>
-        </div>
-          <div class="common-table">
-            <el-table
-                :data="tableData"
-                border
-                v-loading ='table_loading'
-                style="width: 100%">
-                <el-table-column
-                prop="title"
-                align="center"
-                label="姓名">
-                </el-table-column>
-                <el-table-column
-                prop="appName"
-                align="center"
-                label="职务">
-                </el-table-column>
-                <el-table-column
-                prop="appName"
-                align="center"
-                label="联系方式">
-                </el-table-column>
-                <el-table-column
-                prop="name"
-                label="操作"
-                align="center"
-                width="240"
-                >
-                 <template slot-scope="scope">
-                    <little-button name='删除'></little-button>
-                </template>
-                </el-table-column>
-            </el-table>
-        </div>
-    </div>
-    <add-user :show='dialog' @close='dialog = false' :tree_data='tree_data'></add-user>
 </div>
 </template>
 <script>
@@ -143,7 +96,6 @@ export default {
       tbNoticeReceive: {},
       file_length: 0,
       file_size: 0,
-      receId: "",
       status: "",
       form: {
         arrayContentType: [],
@@ -163,38 +115,18 @@ export default {
             type: "array"
           }
         ]
-      },
-      tree_data: [
-        
-      ] //树的数据
+      }
     };
   },
   created() {
     this.$store.dispatch("readSession", SET_MESSAGE_DATA);
-    // this.get_rece_id();
-    this.get_tree_part();
+    this.get_meeting_data();
   },
   computed: {
     ...mapGetters(["message_data"])
   },
   methods: {
     //导入部门
-    import_part() {
-      this.dialog = true;
-    },
-    //查询当前用户对应的部门
-    get_tree_part() {
-      this.$post("gwt/system/sysOrg/getOrgTreeData", {}, "json")
-        .then(res => {
-          if (res.result !== "0000") {
-            return;
-          }
-          this.tree_data = res.data.nodes;
-        })
-        .catch(res => {
-          console.log(res);
-        });
-    },
     select_nav(index) {
       this.current = index;
     },
@@ -224,7 +156,7 @@ export default {
       this.$post(
         "gwt/notice/tbNoticeSign/signNotice",
         {
-          receId: this.receId,
+          receId: this.message_data.RECEIVE_ID,
           noticeType: 7
         },
         "json"
@@ -245,7 +177,7 @@ export default {
             message: "签收成功",
             type: "success"
           });
-          this.get_rece_id();
+          this.get_meeting_data();
         })
         .catch(res => {
           console.log(res);
@@ -276,7 +208,7 @@ export default {
           this.$post(
             "gwt/notice/tbNoticeRefuse/refuseNotice",
             {
-              receId: this.receId,
+              receId: this.message_data.RECEIVE_ID,
               refuseReason: res.value
             },
             "json"
@@ -296,7 +228,7 @@ export default {
               message: "已拒签成功",
               type: "success"
             });
-            this.get_rece_id();
+            this.get_meeting_data();
           });
         } else {
           this.$message({
@@ -306,38 +238,12 @@ export default {
         }
       });
     },
-    get_rece_id() {
-      // getMsgStateByMsgId
-      this.loading = true;
-      this.$post(
-        "gwt/notice/tbNoticeMsgBizInfo/getMessageBizInfo ",
-        {
-          messageId: this.message_data.MSG_ID,
-          recvUser: this.message_data.RECV_USER,
-          receiveOrgId: this.message_data.ORG_ID
-        },
-        "json"
-      )
-        .then(res => {
-          if (res.result !== "0000") {
-            return;
-          }
-          this.receId = res.data.receId;
-          this.status = res.data.status;
-          this.get_meeting_data(res.data.receId);
-        })
-        .catch(res => {
-          this.loading = false;
-          console.log(res);
-        });
-    },
     //获取 init 数据
-    get_meeting_data(receId) {
+    get_meeting_data() {
       this.$post(
         "gwt/notice/tbNotice/getNoticeTotalInfo",
-        //  "gwt/notice/tbNotice/getNoticeInfoByMessageId",
         {
-          receId
+          receId: this.message_data.RECEIVE_ID
         },
         "json"
       )
@@ -348,17 +254,16 @@ export default {
           }
           this.data = res.data.tbNotice;
           this.tbNoticeReceive = res.data.tbNoticeReceive;
+          this.status = res.data.tbNotice.noticeStatus;
           this.init_file(res.data.tbNotice.noticeId);
-          this.get_user_sign_table();
         })
         .catch(res => {
           this.loading = false;
-          console.log(res);
         });
     },
     init_file(noticeId) {
       this.$post(
-        "gwt/system/tbNoticeAttachment/list",
+        "gwt/system/tbNoticeAttachment/attachmentList",
         {
           noticeId,
           attaUploadNode: 1
@@ -369,11 +274,11 @@ export default {
           if (res.result !== "0000") {
             return;
           }
-          this.get_file_by_id(
-            res.data.tbNoticeAttachmentPageBean.datas
-              .map(res => res.noticeId)
-              .join(",")
-          );
+          // this.get_file_by_id(
+          //   res.data.tbNoticeAttachmentPageBean.datas
+          //     .map(res => res.noticeId)
+          //     .join(",")
+          // );
         })
         .catch(res => {
           console.log(res);
