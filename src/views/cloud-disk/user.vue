@@ -276,21 +276,29 @@ export default {
       if (index === this.file_nav.length) {
         return;
       }
+      var arr = [];
+      console.log(index)
+      for (var i = 0; i < this.file_nav.length; i++) {
+        arr.push(this.file_nav[i].id)        
+      }
+      // console.log(arr.indexof(this.dirId,index-1))
+      this.file_nav = this.file_nav.slice(0, index + 1);
       this.$post(
         `gwt/cloudisk/cloudiskAttaUserRelation/userCloudiskPage?${qs.stringify({
-          currentPage: pageNo,
-          pageSize: pageSize
+          currentPage: this.pageNo,
+          pageSize: this.pageSize
         })}`,
         {
           originalName: this.input,
           searchFlag: this.input ? "Y" : "N",
-          parentId: ""
+          parentId: arr.slice((index-1),index)[0]
         },
         "json"
       ).then(res => {
+        console.log(res)
         if (res.result === "0000") {
           this.tableData = res.data.userCloudiskPageBean.datas;
-          this.totalCount = parseInt(res.data.userCloudiskPageBean.totalCount);
+          // this.totalCount = parseInt(res.data.userCloudiskPageBean.totalCount);
           // console.log(this.totalCount)
         }
       });
@@ -320,7 +328,8 @@ export default {
       if (row.type === "folder") {
         this.file_nav.push({
           row,
-          originalName: row.originalName
+          originalName: row.originalName,
+          id:row.dirId
         });
         this.parentId = row.dirId;
         this.pageNo = 1;
