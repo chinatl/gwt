@@ -16,13 +16,13 @@
               <div class="disk-cloud">
                   <upload-button icon="el-icon-upload2" @on-change="upload_img" size='medium' type="success" v-wave>上传</upload-button>
                   <el-button type="success" icon="el-icon-plus" size='medium' v-wave @click="dialogFolderVisible = true">新建文件夹</el-button>
-                  <el-button type="primary" icon="el-icon-download" size='medium' v-wave>下载</el-button>
-                  <el-button type="danger" icon="el-icon-close" size='medium' v-wave>删除</el-button>
-                  <el-button type="warning" icon="el-icon-close" size='medium' v-wave>举报</el-button>
+                  <el-button type="primary" icon="el-icon-download" size='medium' v-wave @click="download_file">下载</el-button>
+                  <el-button type="danger" icon="el-icon-close" size='medium' v-wave @click="delete_btn">删除</el-button>
+                  <el-button type="warning" icon="el-icon-close" size='medium' v-wave @click="report">举报</el-button>
               </div>
               <div>
-                  <el-input v-model="input" placeholder="请输入文件名" style="width:120px" size='medium'></el-input>
-                  <el-button type="primary" icon="el-icon-search" size='medium' v-wave>搜索</el-button>
+                  <el-input v-model="input" placeholder="请输入文件名" style="width:120px" size='medium' @keyup.native.enter='condition'></el-input>
+                  <el-button type="primary" icon="el-icon-search" size='medium' v-wave @click="condition">搜索</el-button>
               </div>
           </div>
           <div class="disk-cloud-router">
@@ -35,6 +35,7 @@
               <el-table
                   :data="tableData"
                   @selection-change="handleSelectionChange"
+                  v-loading='loading'
                   style="width: 100%">
                   <el-table-column type="selection" width="60" align="center"></el-table-column>
                   <el-table-column prop="originalName"  :label="file_name"  align="left"  show-overflow-tooltip> 
@@ -55,7 +56,7 @@
               @size-change="handleSizeChange"
               @current-change="handleCurrentChange"
               :current-page="pageNo"
-              :page-sizes="[10, 20, 30, 40]"
+              :page-sizes="[5, 10, 15, 20]"
               :page-size="pageSize"
               layout="total, sizes, prev, pager, next, jumper"
               background
@@ -64,7 +65,7 @@
           </div>
           <!-- 新建文件夹弹窗 -->
           <el-dialog title="请输入新建文件夹名称" :visible.sync="dialogFolderVisible" center class="folder" width="30%">
-            <el-form :model="folderform" :rules="folderrules" ref="folderform">
+            <el-form :model="folderform" :rules="folderrules" ref="folderform" @submit.native.prevent>
               <el-form-item prop="foldername">
                 <el-input v-model="folderform.foldername" autocomplete="off"></el-input>
               </el-form-item>
@@ -73,6 +74,37 @@
               <el-button @click="dialogFolderVisible = false">取 消</el-button>
               <el-button type="primary" @click="add_older('folderform')">确 定</el-button>
             </div>
+          </el-dialog>
+          <!-- 举报弹框 -->
+          <el-dialog
+            title="举报信息"
+            :visible.sync="reportDialogVisible"
+            class="common-dialog edu"
+            width="40%">
+            <el-form ref="reportform" :model="reportform" :rules="reportrules">
+              <el-form-item prop="type">
+                <el-checkbox-group v-model="reportform.type">
+                  <el-checkbox label="信息涉密" name="type"></el-checkbox>
+                  <el-checkbox label="非法内容" name="type"></el-checkbox>
+                  <el-checkbox label="其它" name="type"></el-checkbox>
+                </el-checkbox-group>
+              </el-form-item>
+              <el-form-item prop="desc">
+                <el-input
+                  type="textarea"
+                  :rows="10"
+                  class="textarea"
+                  placeholder="请输入内容"
+                  v-model="reportform.desc">
+                </el-input>
+              </el-form-item>
+              <!-- <form-button  @submit="submit_report('reportform')"></form-button> -->
+              <el-form-item class="footer_btn">
+                <el-button @click="reportDialogVisible = false">取 消</el-button>
+                <el-button type="primary" @click="submit_report('reportform')">确 定</el-button>
+              </el-form-item>
+            </el-form>
+
           </el-dialog>
       </div>              
     </div>
@@ -87,9 +119,26 @@ export default {
   },
   data() {
     return {
+      loading: false,
+      checkList: [],
+      reportform: {
+        desc: "",
+        type: []
+      },
+      reportrules: {
+        type: [
+          {
+            type: "array",
+            required: true,
+            message: "请选择举报类型",
+            trigger: "change"
+          }
+        ],
+        desc: [{ required: true, message: "请输入举报原因", trigger: "blur" }]
+      },
       left_nav_data_current: 0,
       pageNo: 1,
-      pageSize: 10,
+      pageSize: 5,
       totalCount: 0,
       input: "",
       checked: false,
@@ -103,7 +152,7 @@ export default {
       tableData: [],
       file_nav: [], //文件导航,
       dialogFolderVisible: false,
-      
+
       current_user: {
         userId: "",
         orgId: "",
@@ -129,7 +178,10 @@ export default {
       fileIds: [],
       parentId: "",
       manage_org: [], //部门
-      temp_data: {}
+      temp_data: {},
+      reportDialogVisible: false,
+      originalName: "",
+      input: ""
     };
   },
   computed: {
@@ -147,6 +199,10 @@ export default {
     this.init_getManagerOrg();
   },
   methods: {
+    condition() {
+      this.pageNo = 1;
+      this.get_deptCloudisk(this.pageSize, 1);
+    },
     //获取当前登陆用户
     get_CurrentOrgUser() {
       this.$post(`gwt/getCurrentOrgUser`, {}, "json").then(res => {
@@ -161,35 +217,43 @@ export default {
     },
     //部门
     init_getManagerOrg() {
-      this.$post(`gwt/system/sysOrg/getManagerOrgByToken`, {
-        
-      }, "json")
+      this.$post(`gwt/system/sysOrg/getManagerOrgByToken`, {}, "json")
         .then(res => {
           this.left_nav_data = res.data.sysOrgs;
+          if (!this.left_nav_data.length) return;
+          this.temp_data = this.left_nav_data[0];
+          this.get_deptCloudisk(this.pageSize, this.pageNo);
         })
         .catch(res => {});
     },
     //获取部门云盘
     get_deptCloudisk(pageSize, pageNo) {
       // console.log(this.temp_data[0].orgId)
+      this.loading = true;
       this.$post(
         `gwt/cloudisk/cloudiskAttaOrgRelation/deptCloudiskPage?${qs.stringify({
-          currentPage: 1,
-          pageSize: 5
+          currentPage: pageNo,
+          pageSize: pageSize
         })}`,
         {
+          originalName: this.input,
           orgId: this.temp_data.orgId,
-          searchFlag: "N",
+          searchFlag: this.input ? "Y" : "N",
           parentId: this.parentId
         },
         "json"
       ).then(res => {
+        this.loading = false;
         console.log(res);
-        if (res.result === "0000") {
-          this.tableData = res.data.deptCloudiskPageBean.datas;
-          this.totalCount = parseInt(res.data.deptCloudiskPageBean.totalCount);
+        if (res.result !== "0000") {
+          return;
         }
-      });
+        this.tableData = res.data.deptCloudiskPageBean.datas;
+        this.totalCount = parseInt(res.data.deptCloudiskPageBean.totalCount);
+      })
+      .catch(res => {
+          this.loading = false;
+        });
     },
     //上传
     upload_img(e) {
@@ -200,28 +264,28 @@ export default {
       formData.append("userId", this.current_user.userId);
       formData.append("orgId", this.temp_data.orgId);
       formData.append("uploadOpt", "add");
-      // formData.append("cloudiskType", 2);
-      formData.append("dirId", "");
+      formData.append("cloudiskType", 2);
+      formData.append("dirId", this.parentId === "" ? "" : this.parentId);
       formData.append("cloudiskType", "org");
       formData.append("file", e.raw);
-      console.log(this.temp_data.orgId)
+      console.log(this.temp_data.orgId);
       this.$post("gwt/uploadFile/uploadCloudisk", formData, "form")
-      .then(res => {
-        console.log(res);
-        // if (res.result === "0000") {
-        //   this.get_deptCloudisk(this.pageNo,this.pageSize);
-        //   this.$message({
-        //     type: "success",
-        //     message: "上传成功"
-        //   });
-        // }
-      })
-      .catch(res => {});
+        .then(res => {
+          console.log(res);
+          if (res.result === "0000") {
+            this.get_deptCloudisk();
+            this.$message({
+              type: "success",
+              message: "上传成功"
+            });
+          }
+        })
+        .catch(res => {});
     },
     //新建文件夹
     add_older(formName) {
       // alert(this.folderform.foldername)
-      console.log(this.folderform)
+      console.log(this.folderform);
       this.$refs[formName].validate(valid => {
         if (valid) {
           this.$post(
@@ -230,11 +294,11 @@ export default {
               type: "org",
               orgId: this.temp_data.orgId,
               name: this.folderform.foldername,
-              parentId: ""
+              parentId: this.parentId
             },
             "json"
           ).then(res => {
-            console.log(res)
+            console.log(res);
             if (res.result === "0000") {
               this.dialogFolderVisible = false;
               this.get_deptCloudisk();
@@ -253,14 +317,143 @@ export default {
         }
       });
     },
+    //下载
+    download_file() {
+      if (this.fileIds.length == 0 && this.dirIds.length == 0) {
+        this.$swal({
+          title: "提示信息！",
+          text: "请选择要下载的文件",
+          type: "warning",
+          confirmButtonColor: "#DD6B55",
+          confirmButtonText: "确定",
+          showConfirmButton: true
+        });
+        return;
+      }
+      this.$post(
+        `gwt/cloudisk/cloudiskAttachment/sigleFileDownload`,
+        {
+          fileIds: this.fileIds.map(res => res + "").join(",")
+          // dirIds: this.dirIds.map(res => res + "").join(","),
+          // orgId: this.folderform.orgId,
+          // token: "03353_40c8ec12-c7e5-4926-8919-2d3cc28d2a39"
+        },
+        "json"
+      )
+        .then(res => {
+          console.log(res);
+          this.get_deptCloudisk();
+        })
+        .catch(res => {
+          this.get_deptCloudisk();
+        });
+    },
+    //删除
+    delete_btn() {
+      if (this.fileIds.length == 0 && this.dirIds.length == 0) {
+        this.$swal({
+          title: "提示信息！",
+          text: "请选择要删除的文件或文件夹",
+          type: "warning",
+          confirmButtonColor: "#DD6B55",
+          confirmButtonText: "确定",
+          showConfirmButton: true
+        });
+        return;
+      }
+      this.$swal({
+        title: "确定要删除吗？",
+        text: "删除后将无法恢复，请谨慎操作！",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#DD6B55",
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        confirmButtonClass: "btn btn-success"
+      }).then(res => {
+        if (!res.value) {
+          return;
+        }
+        this.$post(
+          `gwt/cloudisk/cloudiskAttaOrgRelation/orgDelete`,
+          {
+            fileIds: this.fileIds.map(res => res - 0),
+            dirIds: this.dirIds.map(res => res - 0),
+            orgId: this.temp_data.orgId,
+            creatUserIds:[1,2,3],
+          },
+          "json"
+        )
+          .then(res => {
+            console.log(res);
+            // if (res.result === "0000") {
+            //   this.init_usercloudisk();
+            //   this.$message({
+            //     type: "success",
+            //     message: "删除成功"
+            //   });
+            // }
+          })
+          .catch(res => {
+            console.log(res);
+          });
+      });
+    },
+    //举报
+    report() {
+      if (this.fileIds.length == 0 && this.dirIds.length == 0) {
+        this.$swal({
+          title: "提示信息！",
+          text: "请选择要举报的文件或文件夹",
+          type: "warning",
+          confirmButtonColor: "#DD6B55",
+          confirmButtonText: "确定",
+          showConfirmButton: true
+        });
+        return;
+      }
+      this.reportDialogVisible = true
+    },
+    //举报信息提交
+    submit_report(formName) {
+      console.log(this.reportform.type);
+      console.log(this.reportform);
+      this.$refs[formName].validate(valid => {
+        if (valid) {
+          this.$post(
+            `gwt/cloudisk/cloudiskAttaOrgRelation/reportCloudiskInfo`,
+            {
+              orgId: this.temp_data.orgId,
+              dirIds: this.dirIds.map(res => res + "").join(","),
+              fileIds: this.fileIds.map(res => res + "").join(",")
+            },
+            "json"
+          ).then(res => {
+            // console.log(res);
+            if(res.result !== "0000"){
+              return;
+            }
+            this.reportDialogVisible = false;
+            this.get_deptCloudisk();
+            this.$message({
+              type: "success",
+              message: "举报成功"
+            });
+          });
+        } else {
+          console.log("error submit!!");
+          return false;
+        }
+      });
+    },
     change_left_nav(item, index) {
       this.left_nav_data_current = index;
       // if(this.left_nav_data_current){
       //     this.get_deptCloudisk()
       // }
       this.temp_data = item;
-      console.log(item)
-      this.get_deptCloudisk()
+      console.log(item);
+      this.get_deptCloudisk();
     },
     //递归取数
     go_child_file(index) {
@@ -268,53 +461,52 @@ export default {
         return;
       }
       var arr = [];
-      console.log(index)
+      console.log(this.file_nav);
       for (var i = 0; i < this.file_nav.length; i++) {
-        arr.push(this.file_nav[i].id)        
+        arr.push(this.file_nav[i].id);
       }
-      // console.log(arr.indexof(this.dirId,index-1))
+      console.log(arr);
       this.file_nav = this.file_nav.slice(0, index + 1);
       this.$post(
-        `gwt/cloudisk/cloudiskAttaUserRelation/userCloudiskPage?${qs.stringify({
+        `gwt/cloudisk/cloudiskAttaOrgRelation/deptCloudiskPage?${qs.stringify({
           currentPage: this.pageNo,
           pageSize: this.pageSize
         })}`,
         {
+          originalName: this.input,
           orgId: this.temp_data.orgId,
-          searchFlag: "N",
-          
-          parentId: arr.slice((index-1),index)[0]
+          searchFlag: this.input ? "Y" : "N",
+          parentId: arr.slice(index)[0]
         },
         "json"
       ).then(res => {
-        console.log(res)
+        console.log(res);
         if (res.result === "0000") {
-          this.tableData = res.data.userCloudiskPageBean.datas;
-          // this.totalCount = parseInt(res.data.userCloudiskPageBean.totalCount);
-          // console.log(this.totalCount)
+          this.tableData = res.data.deptCloudiskPageBean.datas;
+          // this.totalCount = parseInt(res.data.deptCloudiskPageBean.totalCount);
         }
       });
     },
     //
     show_all_file() {
-      this.tableData = this.pageData;
       this.file_nav = [];
+      this.parentId = "";
+      this.pageNo = 1;
+      this.get_deptCloudisk(this.pageSize, 1);
     },
     file_click(index) {
-      console.log(index)
+      console.log(index);
       this.parentId = index.dirId;
       if (index.type === "folder") {
         this.file_nav.push({
           index,
           originalName: index.originalName,
-          id:index.dirId
+          id: index.dirId
         });
         this.parentId = index.dirId;
         this.pageNo = 1;
         this.get_deptCloudisk(this.pageSize, 1);
       }
-      
-
     },
     //row-click
     get_svg_name(name) {
@@ -337,6 +529,17 @@ export default {
     },
     handleSelectionChange(e) {
       this.select_list = e;
+      this.fileIds = [];
+      this.dirIds = [];
+      for (var i = 0; i < e.length; i++) {
+        if (e[i].type === "file") {
+          this.fileIds.push(e[i].fileId);
+          console.log(e[i].fileId);
+          this.originalName = e[i].originalName;
+        } else {
+          this.dirIds.push(e[i].dirId);
+        }
+      }
     },
     handleSizeChange(val) {
       this.pageSize = val;
@@ -440,4 +643,11 @@ export default {
     margin-right: 8px;
   }
 }
+.el-checkbox {
+  width: 25%;
+}
+.textarea {
+  margin-top: 20px;
+}
+
 </style>

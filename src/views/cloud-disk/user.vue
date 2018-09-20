@@ -22,7 +22,8 @@
         <div class="common-table">
             <el-table
                 :data="tableData"
-                @selection-change="handleSelectionChange"             
+                @selection-change="handleSelectionChange"   
+                v-loading='loading'          
                 style="width: 100%">
                 <el-table-column type="selection" width="60" align="center"></el-table-column>
                 <el-table-column prop="originalName"  :label="file_name"  align="left"  show-overflow-tooltip> 
@@ -33,6 +34,7 @@
                       </div>
                     </template>
                 </el-table-column>
+                <el-table-column prop="attaSize"  label="大小" align="center"  width="100"></el-table-column>
                 <el-table-column prop="updateTime"  label="修改日期" align="center" width="200"></el-table-column>
             </el-table>
         </div>
@@ -49,7 +51,7 @@
             </el-pagination>
         </div>
         <!-- 新建文件夹弹窗 -->
-        <el-dialog title="请输入新建文件夹名称" :visible.sync="dialogFolderVisible" center class="folder" width="30%">
+        <el-dialog title="请输入新建文件夹名称" :visible.sync="dialogFolderVisible" center class="folder" width="30%" @submit.native.prevent>
           <el-form :model="folderform" :rules="folderrules" ref="folderform">
             <el-form-item prop="foldername">
               <el-input v-model="folderform.foldername" autocomplete="off"></el-input>
@@ -103,7 +105,8 @@ export default {
       fileId: "",
       dirIds: [],
       fileIds: [],
-      parentId: ""
+      parentId: "",
+      loading: false
     };
   },
   computed: {
@@ -138,6 +141,7 @@ export default {
     },
     //初始化文件表格
     init_usercloudisk(pageSize, pageNo) {
+      this.loading = true;
       this.$post(
         `gwt/cloudisk/cloudiskAttaUserRelation/userCloudiskPage?${qs.stringify({
           currentPage: pageNo,
@@ -149,17 +153,22 @@ export default {
           parentId: this.parentId
         },
         "json"
-      ).then(res => {
-        if (res.result === "0000") {
+      )
+        .then(res => {
+          this.loading = false;
+          if (res.result !== "0000") {
+            return;
+          }
           this.tableData = res.data.userCloudiskPageBean.datas;
-          this.totalCount = parseInt(res.data.userCloudiskPageBean.totalCount);
+          this.totalCount = res.data.userCloudiskPageBean.totalCount - 0;
           // console.log(this.totalCount)
-        }
-      });
+        })
+        .catch(res => {
+          this.loading = false;
+        });
     },
     //新建文件夹
     add_older(formName) {
-      // alert(this.folderform.foldername)
       this.$refs[formName].validate(valid => {
         if (valid) {
           this.$post(
@@ -277,11 +286,11 @@ export default {
         return;
       }
       var arr = [];
-      console.log(index)
+      console.log(index);
       for (var i = 0; i < this.file_nav.length; i++) {
-        arr.push(this.file_nav[i].id)        
+        arr.push(this.file_nav[i].id);
       }
-      // console.log(arr.indexof(this.dirId,index-1))
+      console.log(arr);
       this.file_nav = this.file_nav.slice(0, index + 1);
       this.$post(
         `gwt/cloudisk/cloudiskAttaUserRelation/userCloudiskPage?${qs.stringify({
@@ -291,11 +300,11 @@ export default {
         {
           originalName: this.input,
           searchFlag: this.input ? "Y" : "N",
-          parentId: arr.slice((index-1),index)[0]
+          parentId: arr.slice(index - 1, index)[0]
         },
         "json"
       ).then(res => {
-        console.log(res)
+        console.log(res);
         if (res.result === "0000") {
           this.tableData = res.data.userCloudiskPageBean.datas;
           // this.totalCount = parseInt(res.data.userCloudiskPageBean.totalCount);
@@ -329,7 +338,7 @@ export default {
         this.file_nav.push({
           row,
           originalName: row.originalName,
-          id:row.dirId
+          id: row.dirId
         });
         this.parentId = row.dirId;
         this.pageNo = 1;
