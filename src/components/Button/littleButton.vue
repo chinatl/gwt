@@ -1,5 +1,5 @@
 <template>
-    <span  :class="'little-button ' + classTitle" @click="submit"><svg-icon :icon-class='className.iconName' v-if="className.iconName"></svg-icon>{{name}}</span>
+    <span  :class="'little-button ' + classTitle" @click.stop="submit"><svg-icon :icon-class='className.iconName' v-if="className.iconName"></svg-icon>{{name}}</span>
 </template>
 <script>
 export default {

@@ -27,7 +27,7 @@ const app = {
                 if (res.result !== '0000') {
                     return
                 };
-                commit(SET_PART_TREE, res.data.nodes);
+
                 post("gwt/system/sysUser/loadOrgUser",
                     {
                         orgId: "",
@@ -41,7 +41,10 @@ const app = {
                             return
                         };
                         commit(SET_USER_LIST, res.data.userOrgs)
+                    }).catch(res => {
+                        console.log(res)
                     })
+                commit(SET_PART_TREE, generate_tree(res.data.nodes));
             })
         },
         get_manager_tree({ commit }) {

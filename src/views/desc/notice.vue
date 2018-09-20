@@ -14,8 +14,9 @@
                   <img :src="require('@/assets/imgs/已拒签.png')" v-if='status === "1002"'>
                   <img :src="require('@/assets/imgs/已签收.png')" v-if='status === "1001"'>
               </div>
-              <p class="tips">{{$store.getters.realName}}</p>
-              <p class="tips">{{tbNoticeReceive.createTime}}
+              <p class="tips">{{ status === '1002' ? tbNoticeRefuse.REAL_NAME :tbNoticeSign.REAL_NAME}}</p>
+              <p class="tips">
+                {{ status === '1002' ? tbNoticeRefuse.SIGN_TIME :tbNoticeSign.SIGN_TIME}}
                 {{status === '1001' ? "签收": null}}
                 {{status === '1002' ? "拒签": null}}
               </p>
@@ -33,7 +34,7 @@
             <div class="file-info" v-if="file_length">
                 附件： <span>{{file_length}} 个附件，共 {{file_size | fileSize}}</span>
             </div>
-            <file-list :list='file_list' @delete='delete_file'></file-list>
+            <file-list :list='file_list' @delete='delete_file' :remove='true'></file-list>
         </div>
         <p style="text-align:right" class="notice-desc-button">
           <el-button type="warning" size="medium" @click="report_notice" ><svg-icon icon-class='警察'></svg-icon>举报</el-button>
@@ -115,12 +116,17 @@ export default {
             type: "array"
           }
         ]
-      }
+      },
+      tbNoticeSign: {}, //签收详情
+      tbNoticeRefuse: {} //签收详情
     };
   },
   created() {
     this.$store.dispatch("readSession", SET_MESSAGE_DATA);
+    console.log(JSON.stringify(this.message_data, {}, 4));
     this.get_meeting_data();
+    this.init_file(this.message_data.NOTICE_ID);
+    
   },
   computed: {
     ...mapGetters(["message_data"])
@@ -131,26 +137,13 @@ export default {
       this.current = index;
     },
     // 查看人员报名表数据
-    get_user_sign_table() {
-      this.$post(
-        "gwt/notice/tbNoticeRegister/getRegiseterList",
-        {
-          dataType: 1,
-          noticeId: this.data.noticeId,
-          currentPage: 1,
-          pageSize: 10
-        },
-        "json"
-      )
-        .then(res => {
-          console.log(res);
-        })
-        .catch(res => {
-          console.log(res);
-        });
-    },
+ 
     //转发
-    forward_report() {},
+    forward_report() {
+      this.$router.push({
+        path: "/forward-notice/index"
+      });
+    },
     //签收
     reveive_report() {
       this.$post(
@@ -254,8 +247,9 @@ export default {
           }
           this.data = res.data.tbNotice;
           this.tbNoticeReceive = res.data.tbNoticeReceive;
+          this.tbNoticeSign = res.data.tbNoticeSign;
+          this.tbNoticeRefuse = res.data.tbNoticeRefuse;
           this.status = res.data.tbNoticeReceive.recStatus;
-          this.init_file(res.data.tbNotice.noticeId);
         })
         .catch(res => {
           this.loading = false;
@@ -274,48 +268,26 @@ export default {
           if (res.result !== "0000") {
             return;
           }
-          // this.get_file_by_id(
-          //   res.data.tbNoticeAttachmentPageBean.datas
-          //     .map(res => res.noticeId)
-          //     .join(",")
-          // );
+          if (!res.data.tbNoticeAttachmentPageBean.length) {
+            return;
+          }
+          this.file_length =
+            res.data.tbNoticeAttachmentPageBean[0].ATTA_INFOS.length;
+          var num = 0;
+          var file_list = res.data.tbNoticeAttachmentPageBean[0].ATTA_INFOS;
+          for (var i = 0; i < file_list.length; i++) {
+            num += file_list[i].attaSize;
+            file_list[i].url =
+              "/" + file_list[i].attaPath + "/" + file_list[i].smallImgName;
+          }
+          this.file_size = num;
+          this.file_list = file_list;
         })
         .catch(res => {
           console.log(res);
         });
     },
-    //根据id 査附件地址
-    get_file_by_id(inIdAry) {
-      if (!inIdAry) {
-        return;
-      }
-      this.$post(
-        "gwt/cloudisk/attachment/list",
-        {
-          inIdAry
-        },
-        "json"
-      )
-        .then(res => {
-          if (res.result !== "0000") {
-            return;
-          }
-          this.file_length = res.data.attachmentList.length;
-          var num = 0;
-          for (var i = 0; i < res.data.attachmentList.length; i++) {
-            num += res.data.attachmentList[i].attaSize;
-            res.data.attachmentList[i].url =
-              res.data.uploadProjectUrl +
-              "/" +
-              res.data.attachmentList[i].attaPath +
-              "/" +
-              res.data.attachmentList[i].smallImgName;
-          }
-          this.file_size = num;
-          this.file_list = res.data.attachmentList;
-        })
-        .catch(res => {});
-    },
+
     onCancel() {
       this.role_visible = false;
     },
@@ -326,7 +298,7 @@ export default {
         this.$post(
           "gwt/system/sysReport/report",
           {
-            appId: this.message_data.APP_ID,
+            appId: "5",
             arrayContentType: this.form.arrayContentType.join(","),
             cause: this.form.cause,
             contentId: this.data.noticeId,

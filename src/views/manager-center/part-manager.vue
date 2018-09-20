@@ -144,6 +144,8 @@
 import formButton from "@/components/Button/formButton";
 import arrowButton from "@/components/Button/arrowButton";
 import qs from "qs";
+import { generate_tree } from "@/utils";
+import { mapGetters } from "vuex";
 export default {
   components: {
     formButton,
@@ -199,6 +201,9 @@ export default {
       option_value3: "",
       expand_arr: []
     };
+  },
+  computed: {
+    ...mapGetters(["is_admin"])
   },
   watch: {
     filterText(val) {
@@ -353,8 +358,13 @@ export default {
     },
     //查询用户管理部门配置
     get_user_tree() {
+      this.is_admin;
+      var url = "gwt/system/sysOrg/getAreaOrgTreeData";
+      if (!this.is_admin) {
+        url = "gwt/system/sysOrg/getOrgTreeData";
+      }
       this.$post(
-        "gwt/system/sysOrg/getAreaOrgTreeData",
+        url,
         {
           showAllOrgFlag: "Y"
         },
@@ -364,12 +374,16 @@ export default {
           if (res.result !== "0000") {
             return;
           }
-          this.tree_data = res.data.nodes;
+          if (this.is_admin) {
+            this.tree_data = res.data.nodes;
+          } else {
+            this.tree_data = generate_tree(res.data.nodes);
+          }
           if (this.expand_arr.length) {
             this.search_child_part(this.pageSize, this.pageNo);
           } else {
-            this.temp_data = res.data.nodes[0];
-            this.expand_arr.push(res.data.nodes[0].id);
+            this.temp_data =  this.tree_data[0];
+            this.expand_arr.push( this.tree_data[0].id);
             this.search_child_part(this.pageSize, this.pageNo);
           }
         })
@@ -394,7 +408,7 @@ export default {
       });
     },
     handleNodeClick(data) {
-      console.log(data)
+      console.log(data);
       if (data.id === this.temp_data.id) {
         return;
       }

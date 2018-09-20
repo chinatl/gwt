@@ -21,7 +21,7 @@
                         <div class="all-checked">
                             <el-checkbox v-model="all_checked" @change="all_select_checkbox">全选</el-checkbox>
                         </div>
-                        <div class="one-checked">
+                        <div class="one-checked scrollbar" style="overflow:auto;height:335px">
                             <ul>
                                 <li v-for='(item,index) in user_list' :key='index'>
                                     <el-checkbox v-model="item.checked" @change="select_checkbox($event,index,item.ID)">{{item.REAL_NAME}}</el-checkbox>

@@ -23,7 +23,7 @@
             </div>
         </div>
         <ul class="message-list" v-loading ='loading'>
-            <li v-for="(item,index) in message_list" :key="index">
+            <li v-for="(item,index) in message_list" :key="index" @click="get_active_desc(item)">
               <div class="message-area">
                   <img :src="require('@/assets/imgs/message.png')">
               </div>
@@ -75,7 +75,11 @@
 </template>
 <script>
 import littleButton from "@/components/Button/littleButton";
-import { SET_MEETING_TYPE_LIST, SET_NOTICE_DATA } from "@/store/mutations";
+import {
+  SET_MEETING_TYPE_LIST,
+  SET_NOTICE_DATA,
+  SET_MESSAGE_DATA
+} from "@/store/mutations";
 import { mapGetters } from "vuex";
 import qs from "qs";
 import { action_fail } from "@/utils/user";
@@ -95,7 +99,7 @@ export default {
       input: "",
       date: null,
       message_list: [],
-      noticeType: undefined,
+      noticeType: "",
       noticeTitle: ""
     };
   },
@@ -115,6 +119,13 @@ export default {
     ...mapGetters(["meeting_type_list"])
   },
   methods: {
+    //获取详情
+    get_active_desc(item) {
+      this.$store.commit(SET_MESSAGE_DATA, item);
+      this.$router.push({
+        path: "/active-desc/index"
+      });
+    },
     //通知变更
     change_notice(item) {
       this.$store.commit(SET_NOTICE_DATA, item);

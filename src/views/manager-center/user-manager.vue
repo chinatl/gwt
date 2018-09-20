@@ -140,7 +140,7 @@
                     >
                     <template slot-scope="scope">
                       <little-button name='编辑' @click.native="edit_user(scope.row)"></little-button>
-                      <little-button name='转出' @click.native="edit_user(scope.row)"></little-button>
+                      <little-button name='转出'></little-button>
                       <little-button name='停用' @click.native="stop_user(scope.row)"></little-button>
                       <little-button name='删除' @click.native="handle_delete(scope.row)"></little-button>
                     </template>
@@ -517,7 +517,7 @@ export default {
           console.log(res);
         });
     },
-    start_user() {
+    start_user(item) {
       var _this = this;
       this.$swal({
         title: "启用原因",
@@ -529,32 +529,25 @@ export default {
         confirmButtonClass: "btn btn-success",
         allowOutsideClick: false,
         inputValidator: function(value) {
-          return new Promise(function(resolve, reject) {
-            if (value) {
-              resolve();
-            } else {
-              reject("请输入启用原因");
-            }
-          });
+          return !value && "请输入启用原因";
         },
-        showLoaderOnConfirm: true,
-        preConfirm: function(value) {
-          return new Promise(function(resolve, reject) {
-            _this
-              .$post(
-                "gwt/system/sysUser/editDisableUser",
-                {
-                  userId: item.userId,
-                  disableCause: value,
-                  isDisable: 0,
-                  outFlag: 0
-                },
-                "json"
-              )
-              .then(res => {
-                resolve(res);
-              })
-              .catch(res => {
+        showLoaderOnConfirm: true
+      }).then(res => {
+        if (res.value) {
+          _this
+            .$post(
+              "gwt/system/sysUser/editDisableUser",
+              {
+                userId: item.userId,
+                disableCause: res.value,
+                isDisable: 0,
+                outFlag: 0,
+                orgId: this.temp_data.id
+              },
+              "json"
+            )
+            .then(res => {
+              if (res.result !== "0000") {
                 _this.$swal({
                   title: "操作失败！",
                   text: res.msg,
@@ -563,27 +556,19 @@ export default {
                   confirmButtonText: "确定",
                   showConfirmButton: true
                 });
+                return;
+              }
+              this.$message({
+                message: "启用成功",
+                type: "success"
               });
-          });
+              _this.search_user_list(_this.pageSize, _this.pageNo);
+            })
+            .catch(res => {
+              console.log(res);
+            });
         }
-      })
-        .then(function(res) {
-          if (res.dismiss === "cancel") {
-            return;
-          }
-          _this.$message({
-            message: "启用用用户成功！",
-            type: "success"
-          });
-          _this.search_user_list(_this.pageSize, _this.pageNo);
-        })
-        .catch(res => {
-          _this.$message({
-            message: "未输入启用原因",
-            type: "warning"
-          });
-          console.log(res);
-        });
+      });
     },
     stop_user(item) {
       var _this = this;
@@ -597,31 +582,25 @@ export default {
         confirmButtonClass: "btn btn-success",
         allowOutsideClick: false,
         inputValidator: function(value) {
-          return new Promise(function(resolve, reject) {
-            if (value) {
-              resolve();
-            } else {
-              reject("请输入停用原因");
-            }
-          });
+          return !value && "请输入停用原因";
         },
-        showLoaderOnConfirm: true,
-        preConfirm: function(value) {
-          return new Promise(function(resolve, reject) {
-            _this
-              .$post(
-                "gwt/system/sysUser/editDisableUser",
-                {
-                  userId: item.userId,
-                  disableCause: value,
-                  isDisable: 1
-                },
-                "json"
-              )
-              .then(res => {
-                resolve(res);
-              })
-              .catch(res => {
+        showLoaderOnConfirm: true
+      }).then(res => {
+        if (res.value) {
+          _this
+            .$post(
+              "gwt/system/sysUser/editDisableUser",
+              {
+                userId: item.userId,
+                disableCause: res.value,
+                isDisable: 1,
+                outFlag: 0,
+                orgId: this.temp_data.id
+              },
+              "json"
+            )
+            .then(res => {
+              if (res.result !== "0000") {
                 _this.$swal({
                   title: "操作失败！",
                   text: res.msg,
@@ -630,28 +609,19 @@ export default {
                   confirmButtonText: "确定",
                   showConfirmButton: true
                 });
+                return;
+              }
+              this.$message({
+                message: "启用成功",
+                type: "success"
               });
-          });
+              _this.search_user_list(_this.pageSize, _this.pageNo);
+            })
+            .catch(res => {
+              console.log(res);
+            });
         }
-      })
-        .then(function(res) {
-          if (res.dismiss === "cancel") {
-            return;
-          }
-          console.log(res);
-          _this.$message({
-            message: "停用用户成功！",
-            type: "success"
-          });
-          _this.search_user_list(_this.pageSize, _this.pageNo);
-        })
-        .catch(res => {
-          _this.$message({
-            message: "未输入停用原因",
-            type: "warning"
-          });
-          console.log(res);
-        });
+      });
     },
     handle_delete(item) {
       this.$swal({
@@ -769,6 +739,7 @@ export default {
         var orgUserxId = "";
         var userId = "";
         var id = "";
+        var orgId = this.temp_data.id;
         var message = "创建新用户成功！";
         if (this.user_type === "update") {
           addFlag = "";
@@ -776,6 +747,7 @@ export default {
           userId = this.form.userId;
           id = this.form.id;
           message = "更新用户成功!";
+          orgId = this.form.orgId;
         }
         this.dialog_loading = true;
         this.$post(
@@ -787,7 +759,7 @@ export default {
             mobilePhone: this.form.mobilePhone,
             realName: this.form.realName,
             sex: this.form.sex,
-            "sysOrgUserX.orgId": this.form.orgId,
+            "sysOrgUserX.orgId":orgId,
             "sysOrgUserX.id": id,
             "sysOrgUserX.userLevel": this.form.userLevel,
             roleIds: this.form.roleIds.join(","),
@@ -818,6 +790,7 @@ export default {
             this.search_user_list(this.pageSize, this.pageNo);
           })
           .catch(res => {
+            console.log(res)
             this.dialog_loading = false;
           });
       });

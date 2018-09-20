@@ -149,6 +149,8 @@ export default {
         });
     },
     go_desc(item) {
+      console.log(JSON.stringify(item, {}, 4));
+      return
       this.$store.commit(SET_MESSAGE_DATA, item);
       // if(item.TYPE_ID === 1){
 

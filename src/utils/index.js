@@ -366,7 +366,7 @@ export function getFileType(name) {
     return "ppt";
   }
   if (/\.(csv|xlsx?)$/.test(name)) {
-    return "excel";
+    return "";
   }
   if (/\.(pdf)$/.test(name)) {
     return "pdf";
@@ -383,8 +383,8 @@ export function fileType(name) {
   if (/\.(docx?)$/.test(name)) {
     return "doc";
   }
-  if (name.includes('image')) {
-    return "png";
+  if (/\.(png|jpe?g|gif|svg)(\?.*)?$/.test(name)) {
+    return "photo";
   }
   if (/\.(pptx?)$/.test(name)) {
     return "ppt";
@@ -394,6 +394,9 @@ export function fileType(name) {
   }
   if (/\.(pdf)$/.test(name)) {
     return "pdf";
+  }
+  if (/\.(txt)$/.test(name)) {
+    return "txt";
   }
   if (!/\.[a-zA-z]+$/.test(name)) {
     return "文件夹";

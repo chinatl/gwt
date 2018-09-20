@@ -9,16 +9,16 @@
                 <span>{{data.orgName}}</span>
                 <span>{{data.createTime}}</span>
             </p>
-            <div class="img_status" v-if='status == "1002" || status == "1001" || status == "1003"|| status == "1004"'>
+            <div class="img_status" v-if='status == "1002" || status == "1001"'>
               <div class="imgs">
                   <img :src="require('@/assets/imgs/已拒签.png')" v-if='status == "1002"'>
-                  <img :src="require('@/assets/imgs/已签收.png')" v-if='status == "1001" || status == "1003" || status == "1004"'>
+                  <img :src="require('@/assets/imgs/已签收.png')" v-if='status == "1001"'>
               </div>
-              <p class="tips">{{ status == '1001' || status == "1003" || status == "1004" ?  tbNoticeSign.REAL_NAME : tbNoticeRefuse.REAL_NAME}}</p>
+              <p class="tips">{{ status === '1002' ? tbNoticeRefuse.REAL_NAME :tbNoticeSign.REAL_NAME}}</p>
               <p class="tips">
-                {{ status == '1002' ? tbNoticeRefuse.REFUSE_TIME : tbNoticeSign.SIGN_TIME}}
-                {{status == '1001'  || status == "1003" || status == "1004" ? "签收": null}}
-                {{status == '1002' ? "拒签": null}}
+                {{ status === '1002' ? tbNoticeRefuse.REFUSE_TIME :tbNoticeSign.SIGN_TIME}}
+                {{status === '1001' ? "签收": null}}
+                {{status === '1002' ? "拒签": null}}
               </p>
             </div>
         </div>
@@ -62,149 +62,74 @@
             </el-form>
         </el-dialog>  
     </div>
-    <div class="stuff-common" v-if="status == 1001 || status == 1003 || status == 1004">
+    <div class="stuff-common" v-if="status == 1001">
         <t-title>人员报名</t-title>
          <div class="common-action">
             <div class="common-table-bar">
-                <span :class="current === 0 ? 'current':''" @click="select_nav(0)">人员报名</span>
-                <span :class="current === 1 ? 'current':''" @click="select_nav(1)">附件上传</span>
+                <span class="current">附件上传</span>
             </div>
         </div>
-        <div class="meeting-div"  v-show="current === 0">
-            <div style="padding-left:20px;padding-bottom:10px" v-if="isTimeOut">>
-                <el-button type="success" size="medium" icon="el-icon-plus" @click="add_user_dialog = true">部门导入</el-button>
-            </div>
-             <div class="common-table">
-                <el-table
-                    :data="register_tableData"
-                    border
-                    v-loading ='loading'
-                    style="width: 100%">
-                    <el-table-column
-                    prop="name"
-                    align="center"
-                    label="姓名">
-                    </el-table-column>
-                    <el-table-column
-                    prop="duty"
-                    align="center"
-                    label="职务">
-                    </el-table-column>
-                    <el-table-column
-                    prop="telephone"
-                    align="center"
-                    label="联系方式	">
-                    </el-table-column>
-                    <el-table-column
-                    prop="orgName"
-                    align="center"
-                    label="所属部门">
-                    </el-table-column>
-                    <el-table-column
-                    align="center"
-                    label="操作">
-                        <template slot-scope="scope">
-                            <el-button
-                            size="mini"
-                            type="danger"
-                            icon="el-icon-delete"
-                            @click="handleDelete(scope.row)" v-wave>删除</el-button>
-                        </template>
-                    </el-table-column>
-                </el-table>
-            </div>
-            <div class="common-page">
+        <div class="common-table">
+            <el-table
+                :data="tableData"
+                border
+                v-loading ='loading'
+                style="width: 100%">
+                <el-table-column
+                prop="REAL_NAME"
+                align="center"
+                label="姓名">
+                </el-table-column>
+                <el-table-column
+                prop="appName"
+                align="center"
+                label="职务">
+                </el-table-column>
+                <el-table-column
+                prop="MOBILE_PHONE"
+                align="center"
+                label="联系方式	">
+                </el-table-column>
+                <el-table-column
+                prop="ORG_ALL_NAME"
+                align="center"
+                label="所属部门">
+                </el-table-column>
+                <el-table-column
+                align="center"
+                label="附件列表">
+                    <template slot-scope="scope">
+                        <div class="file-list">
+                            <p v-for="(item,index) in scope.row.ATTA_INFOS" :key='index'>
+                               <svg-icon :icon-class='fileType(item.type)'></svg-icon> {{item.originalName}}
+                            </p>
+                        </div>
+                    </template>
+                </el-table-column>
+            </el-table>
+        </div>
+        <div class="common-page">
             <el-pagination
-                @size-change="handleSizeChange"
-                @current-change="handleCurrentChange"
-                :current-page.sync="pageNo"
-                :page-sizes="$store.getters.page_list"
-                :page-size="pageSize"
-                layout="total, sizes, prev, pager, next, jumper"
-                background
-                :total="total">
-                </el-pagination>
-            </div>
-            <div class="common-action" v-if="isTimeOut">
-                <div>
-                    <el-input v-model='add_form.name' size="small" placeholder="请输入姓名（必填）"></el-input>
-                    <el-input v-model='add_form.orgName' size="small" placeholder="请输入部门（必填）"></el-input>
-                    <el-input v-model='add_form.duty' size="small" placeholder="请输入职务（必填）"></el-input>
-                    <el-input v-model='add_form.telephone' size="small" placeholder="请输入联系方式（必填）"></el-input>
-                    <el-button type="success" size="small" 
-                    style="height:32px"
-                    @click="add_new_user"
-                    icon="el-icon-plus">添加</el-button>
-                </div>
-            </div>
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page.sync="pageNo"
+            :page-sizes="$store.getters.page_list"
+            :page-size="pageSize"
+            layout="total, sizes, prev, pager, next, jumper"
+            background
+            :total="total">
+            </el-pagination>
         </div>
-        <div class="meeting-div" v-show="current === 1">
-            <div class="common-table">
-                <el-table
-                    :data="tableData"
-                    border
-                    v-loading ='loading'
-                    style="width: 100%">
-                    <el-table-column
-                    prop="REAL_NAME"
-                    align="center"
-                    label="姓名">
-                    </el-table-column>
-                    <el-table-column
-                    prop="appName"
-                    align="center"
-                    label="职务">
-                    </el-table-column>
-                    <el-table-column
-                    prop="MOBILE_PHONE"
-                    align="center"
-                    label="联系方式	">
-                    </el-table-column>
-                    <el-table-column
-                    prop="ORG_ALL_NAME"
-                    align="center"
-                    label="所属部门">
-                    </el-table-column>
-                    <el-table-column
-                    align="center"
-                    label="附件列表">
-                        <template slot-scope="scope">
-                            <div class="file-list">
-                                <p v-for="(item,index) in scope.row.ATTA_INFOS" :key='index'>
-                                <svg-icon :icon-class='fileType(item.type)'></svg-icon> {{item.originalName}}
-                                </p>
-                            </div>
-                        </template>
-                    </el-table-column>
-                </el-table>
-            </div>
-            <div class="common-page">
-                <el-pagination
-                @size-change="handleSizeChange"
-                @current-change="handleCurrentChange"
-                :current-page.sync="pageNo"
-                :page-sizes="$store.getters.page_list"
-                :page-size="pageSize"
-                layout="total, sizes, prev, pager, next, jumper"
-                background
-                :total="total">
-                </el-pagination>
-            </div>
-            <div class="common-action" v-if="isTimeOut">>
-                <upload-button  @on-change="upload_img">添加附件</upload-button>
-                <file-list :list='user_upload_list' @delete='delete_user_file'></file-list>
-            </div>
-            <div class="stuff-footer" v-show="is_upload">
-                <p class="tips">附件上传完成后，需确认才能提交</p>
-                <p class="stuff-button"><el-button type="primary" size="medium" @click="submit_upload">确认提交</el-button></p>
-            </div>
+        <div class="common-action">
+            <upload-button  @on-change="upload_img">添加附件</upload-button>
+            <file-list :list='user_upload_list' @delete='delete_user_file'></file-list>
+        </div>
+        <div class="stuff-footer" v-show="is_upload">
+            <p class="tips">附件上传完成后，需确认才能提交</p>
+            <p class="stuff-button"><el-button type="primary" size="medium" @click="submit_upload">确认提交</el-button></p>
         </div>
     </div>
-    <add-user 
-    :show='add_user_dialog' @close='add_user_dialog = false' 
-    :loading = 'add_user_loading'
-    :user-list='has_select_user_list'
-    @submit="submit_user_dialog"></add-user>
+
 </div>
 </template>
 <script>
@@ -217,7 +142,6 @@ import uploadButton from "@/components/Button/uploadButton";
 import { action_fail, delete_item } from "@/utils/user";
 import { fileType } from "@/utils";
 import qs from "qs";
-
 export default {
   components: {
     fileList,
@@ -227,12 +151,10 @@ export default {
   },
   data() {
     return {
-      add_user_dialog: false,
       dialog: false,
-      current: 0,
+      current: false,
       table_loading: false,
       tableData: [],
-      register_tableData: [],
       file_list: [],
       data: {},
       tbNoticeReceive: {},
@@ -264,11 +186,7 @@ export default {
       pageSize: 5,
       pageNo: 1,
       total: 0,
-      is_upload: false,
-      has_select_user_list: [],
-      add_user_loading: false,
-      add_form: {},
-      isTimeOut: true
+      is_upload: false
     };
   },
   beforeDestroy(e) {
@@ -288,183 +206,27 @@ export default {
     this.get_meeting_data();
     this.init_file(this.message_data.NOTICE_ID);
     this.status = this.message_data.REC_STATUS;
+    if (this.status == 1001) {
+      this.get_user_sign_table(this.pageSize, this.pageNo);
+    }
   },
   computed: {
     ...mapGetters(["message_data", "user_info"])
   },
   methods: {
-    add_new_user() {
-      if (!this.add_form.name) {
-        this.$message({
-          message: "请输入姓名",
-          type: "warning"
-        });
-        return;
-      }
-      if (!this.add_form.orgName) {
-        this.$message({
-          message: "请输入部门",
-          type: "warning"
-        });
-        return;
-      }
-      if (!this.add_form.duty) {
-        this.$message({
-          message: "请输入职务",
-          type: "warning"
-        });
-        return;
-      }
-      if (!this.add_form.telephone) {
-        this.$message({
-          message: "请输入电话",
-          type: "warning"
-        });
-        return;
-      }
-      this.$post(
-        "gwt/notice/tbNoticeRegister/batchSave",
-        {
-          tbNoticeRegisters: [
-            {
-              noticeId: this.message_data.NOTICE_ID,
-              forwardId: "",
-              receId: this.message_data.RECEIVE_ID,
-              name: this.add_form.name,
-              orgName: this.add_form.orgName,
-              duty: this.add_form.duty,
-              telephone: this.add_form.telephone
-            }
-          ]
-        },
-        "json"
-      )
-        .then(res => {
-          if (action_fail(res)) return;
-          this.add_form = {};
-          this.get_register(this.pageSize, this.pageNo);
-        })
-        .catch(res => {
-          console.log(res);
-        });
-    },
-    //提交选择的用户
-    submit_user_dialog(list) {
-      this.add_user_loading = true;
-      this.has_select_user_list = list;
-      this.$post(
-        "gwt/notice/tbNoticeRegister/batchAddRegisterByXId",
-        {
-          userXIds: list.map(res => res.USER_ID).join(","),
-          noticeId: this.message_data.NOTICE_ID,
-          forwardId: "",
-          receId: this.message_data.RECEIVE_ID
-        },
-        "json"
-      )
-        .then(res => {
-          this.add_user_loading = false;
-          this.add_user_dialog = false;
-          if (action_fail(res)) return;
-          this.get_register(this.pageSize, this.pageNo);
-        })
-        .catch(res => {
-          this.add_user_loading = false;
-          console.log(res);
-        });
-    },
-    //获取注册的人
-    get_register(pageSize, currentPage) {
-      this.$post(
-        "gwt/notice/tbNoticeRegister/getRegiseterList",
-        {
-          getAllFlag: "Y",
-          noticeId: this.message_data.NOTICE_ID
-        },
-        "json"
-      )
-        .then(res => {
-          if (res.result !== "0000") {
-            return;
-          }
-          this.has_select_user_list = res.data.tbNoticeRegisterListBean.map(
-            res => {
-              res.REAL_NAME = res.name;
-              res.ORG_NAME = res.orgName;
-              return res;
-            }
-          );
-        })
-        .catch(res => {
-          console.log(res);
-        });
-      this.$post(
-        `gwt/notice/tbNoticeRegister/getRegiseterList?${qs.stringify({
-          pageSize,
-          currentPage
-        })}`,
-        {
-          dataType: 1,
-          noticeId: this.message_data.NOTICE_ID
-        },
-        "json"
-      )
-        .then(res => {
-          if (res.result !== "0000") {
-            return;
-          }
-          this.register_tableData = res.data.tbNoticeRegisterPageBean.datas;
-          this.total = res.data.tbNoticeRegisterPageBean.totalCount - 0;
-        })
-        .catch(res => {
-          console.log(res);
-        });
-    },
-    //删除一个已报名人员
-    handleDelete(item) {
-      this.$post(
-        "gwt/notice/tbNoticeRegister/del",
-        {
-          id: item.id
-        },
-        "json"
-      ).then(res => {
-        if (action_fail(res)) return;
-        this.get_register(this.pageSize, this.pageNo);
-      });
-    },
     fileType(name) {
       return fileType(name);
-    },
-
-    //导入部门
-    select_nav(index) {
-      this.total = 0;
-      this.current = index;
-      if (index) {
-        this.get_user_sign_table(this.pageSize, 1);
-      } else {
-        this.get_register(this.pageSize, 1);
-      }
     },
     handleSizeChange(e) {
       localStorage.setItem("stuff-desc/index/pageSize", e);
       this.pageNo = 1;
       this.pageSize = e;
-      if (this.current) {
-        this.get_user_sign_table(e, 1);
-      } else {
-        this.get_register(e, 1);
-      }
+      this.get_user_sign_table(e, 1);
     },
     handleCurrentChange(e) {
       sessionStorage.setItem("stuff-desc/indexpageNo", e);
       this.pageNo = e;
-      if (this.current) {
-        this.get_user_sign_table(this.pageSize, e);
-      } else {
-        this.get_register(this.pageSize, e);
-      }
+      this.get_user_sign_table(this.pageSize, e);
     },
     submit_upload() {
       this.$post(
@@ -524,6 +286,10 @@ export default {
         });
     },
 
+    //导入部门
+    select_nav(index) {
+      this.current = index;
+    },
     // 查看附件列表
     get_user_sign_table(pageSize, pageNo) {
       this.$post(
@@ -674,15 +440,8 @@ export default {
           this.tbNoticeSign = res.data.tbNoticeSign;
           this.tbNoticeRefuse = res.data.tbNoticeRefuse;
           this.status = res.data.tbNoticeReceive.recStatus;
-          
-          this.isTimeOut =
-            +new Date(res.data.tbNotice.startTime) - Date.now() > 0;
-          if (
-            this.status == 1001 ||
-            this.status == 1003 ||
-            this.status == 1004
-          ) {
-            this.get_register(this.pageSize, this.pageNo);
+          if (this.status == 1001) {
+            this.get_user_sign_table(this.pageSize, this.pageNo);
           }
         })
         .catch(res => {
