@@ -254,7 +254,7 @@ export default {
           }
           this.data = res.data.tbNotice;
           this.tbNoticeReceive = res.data.tbNoticeReceive;
-          this.status = res.data.tbNotice.noticeStatus;
+          this.status = res.data.tbNoticeReceive.recStatus;
           this.init_file(res.data.tbNotice.noticeId);
         })
         .catch(res => {
