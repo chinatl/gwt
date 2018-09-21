@@ -19,6 +19,14 @@
         </div>
     </div>
     <div slot="right" style="background-color:#f3f3f4">
+        <add-user 
+          :show='add_dialog' 
+          @cancel='add_dialog = false'
+          @close='add_dialog = false' 
+          :loading='user_dialog_loading' 
+          @submit="submit_add_user" 
+          :user-list='userAndOrgList'>
+        </add-user>
         <div class="part-top">
             <t-title>用户管理</t-title>
             <div class="user-desc-info">
@@ -31,7 +39,8 @@
                     <span class="span1">部门管理员：</span>
                     <span class="blod">{{userAndOrgList.map(res=>{
                       return  res.REAL_NAME
-                      }).join(',')}}</span>
+                      }).join('、')}}</span>
+                      <span style="margin-left:20px"><el-button size="small" type="success" icon="el-icon-plus" @click="open_user_dialog">添加</el-button></span>
                 </p>
                 <p>
                     <span class="span1">部门地址：</span>
@@ -213,6 +222,7 @@
         </div>
     </div>
     <!-- 弹窗 -->
+    
     <el-dialog :close-on-click-modal='false'
         slot="else"
         :title="user_type ==='add' ?'添加用户':'编辑用户'"
@@ -271,10 +281,12 @@ import arrowButton from "@/components/Button/arrowButton";
 import qs from "qs";
 import { validatePhone } from "@/utils/validate";
 import { generate_tree } from "@/utils";
+import AddUser from "@/components/AddUser";
 export default {
   components: {
     littleButton,
-    arrowButton
+    arrowButton,
+    AddUser
   },
   data() {
     var validatePass = (rule, value, callback) => {
@@ -287,6 +299,8 @@ export default {
       }
     };
     return {
+      add_dialog: false,
+      user_dialog_loading: false,
       pageNo: 1,
       pageSize: 5,
       total: 0,
@@ -356,6 +370,10 @@ export default {
     this.$post("gwt/system/sysOrg/getOrgTreeData", {}, "json")
       .then(res => {
         this.tree_data = generate_tree(res.data.nodes);
+        if (this.tree_data.length) {
+          this.temp_data = this.tree_data[0];
+          this.handleNodeClick(this.tree_data[0]);
+        }
       })
       .catch(res => {
         console.log(res);
@@ -365,6 +383,61 @@ export default {
     this.pageSize = pageSize ? pageSize - 0 : 5;
   },
   methods: {
+    open_user_dialog(){
+      this.add_dialog =  true;
+      console.log(this.add_dialog)
+    },
+    submit_add_user(list) {
+      this.user_dialog_loading = true;
+      this.$post(
+        "gwt/system/sysUser/saveOrgUser",
+        {
+          userIds: list.map(res => res.ID).join(","),
+          orgId: this.temp_data.id
+        },
+        "json"
+      )
+        .then(res => {
+          this.user_dialog_loading = false;
+          if (res.result !== "0000") {
+            this.$swal({
+              title: "操作失败！",
+              text: res.msg,
+              type: "error",
+              confirmButtonColor: "#DD6B55",
+              confirmButtonText: "确定",
+              showConfirmButton: true
+            });
+            return;
+          }
+          this.add_dialog = false;
+          this.$message({
+            message: "新增成功",
+            type: "success"
+          });
+          this.$post(
+            "gwt/system/sysUser/getOrgInfo",
+            {
+              orgId: data.id
+            },
+            "json"
+          )
+            .then(res => {
+              if (res.result !== "0000") {
+                return;
+              }
+              this.orgInfo = res.data.orgInfo;
+              this.userAndOrgList = res.data.userAndOrgList;
+            })
+            .catch(res => {
+              console.log(res);
+            });
+        })
+        .catch(res => {
+          console.log(res);
+          this.user_dialog_loading = false;
+        });
+    },
     //条件搜索
     condition_search() {
       this.pageNo = 1;
@@ -680,7 +753,7 @@ export default {
       this.search_user_list(this.pageSize, e);
     },
     edit_user(item) {
-      console.log(JSON.stringify(item,{},4));
+      console.log(JSON.stringify(item, {}, 4));
       this.user_visible = true;
       this.user_type = "update";
       this.form.userName = item.userName;

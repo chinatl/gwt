@@ -83,7 +83,7 @@
                 width="120"
                 >
                  <template slot-scope="scope">
-                    <little-button name='删除' @click.native="handleDelete(scope.$index, tableData)"></little-button>
+                    <little-button name='删除' @click.native="handleDelete(scope.row.id)"></little-button>
                 </template>
                 </el-table-column>
             </el-table>
@@ -217,45 +217,47 @@ export default {
   },
   data() {
     var validOldPwd = (rule, value, callback) => {
-        if (value === '') {
-          callback(new Error('密码不能为空'));
-        } else if (value !== this.password_first_visible_form.password) {
-          callback(new Error('两次输入密码不一致!'));
-        } else {
-          callback();
-        }
-      };
+      if (value === "") {
+        callback(new Error("密码不能为空"));
+      } else if (value !== this.password_first_visible_form.password) {
+        callback(new Error("两次输入密码不一致!"));
+      } else {
+        callback();
+      }
+    };
     var validateNewpwd1 = (rule, value, callback) => {
-        if (value === '') {
-          callback(new Error('请输入密码'));
-        }else if(!(/^\S*([a-zA-Z]+\S*[0-9]+|[0-9]+\S*[a-zA-Z]+)\S*$/.test(value))){
-          callback(new Error('密码必须是字母和数字组合，不能为纯数字或字母!'));
-        }else {
-          if (this.pwdform.newpwd2 !== '') {
-            this.$refs.pwdform.validateField('newpwd2');
-          }
-          callback();
+      if (value === "") {
+        callback(new Error("请输入密码"));
+      } else if (
+        !/^\S*([a-zA-Z]+\S*[0-9]+|[0-9]+\S*[a-zA-Z]+)\S*$/.test(value)
+      ) {
+        callback(new Error("密码必须是字母和数字组合，不能为纯数字或字母!"));
+      } else {
+        if (this.pwdform.newpwd2 !== "") {
+          this.$refs.pwdform.validateField("newpwd2");
         }
-      };
-      var validateNewpwd2 = (rule, value, callback) => {
-        if (value === '') {
-          callback(new Error('请再次输入密码'));
-        } else if (value !== this.pwdform.newpwd1) {
-          callback(new Error('两次输入密码不一致!'));
-        } else {
-          callback();
-        }
-      };
+        callback();
+      }
+    };
+    var validateNewpwd2 = (rule, value, callback) => {
+      if (value === "") {
+        callback(new Error("请再次输入密码"));
+      } else if (value !== this.pwdform.newpwd1) {
+        callback(new Error("两次输入密码不一致!"));
+      } else {
+        callback();
+      }
+    };
     return {
       pwdform: {
-        oldpwd:"",
-        newpwd1:"",
-        newpwd2:""
+        oldpwd: "",
+        newpwd1: "",
+        newpwd2: ""
       },
       pwdformrules: {
         oldpwd: [{ required: true, message: "请输入旧密码", trigger: "blur" }],
-        newpwd1: [{ validator: validateNewpwd1, trigger: 'blur' }],
-        newpwd2: [{ validator: validateNewpwd2, trigger: 'blur' }]
+        newpwd1: [{ validator: validateNewpwd1, trigger: "blur" }],
+        newpwd2: [{ validator: validateNewpwd2, trigger: "blur" }]
       },
       // loading:true,
       upload_img_dialog: false,
@@ -291,7 +293,7 @@ export default {
         userName: "",
         mobilePhone: "",
         password: "",
-        pwd:""
+        pwd: ""
       },
 
       //编辑信息
@@ -315,9 +317,7 @@ export default {
         password: ""
       },
       password_first_visible_form_rules: {
-        password: [
-          { required: true, trigger: "blur", validator: validOldPwd },
-        ]
+        password: [{ required: true, trigger: "blur", validator: validOldPwd }]
       },
       phone_first_visible_form: {
         phone: "",
@@ -360,7 +360,7 @@ export default {
           this.userform.remark = res.data.user.sysOrgUserX.remark;
           this.userform.userName = res.data.user.userName;
           this.userform.mobilePhone = res.data.user.mobilePhone;
-          this.userform.password = res.data.user.password.replace(/\w/g, "*")
+          this.userform.password = res.data.user.password.replace(/\w/g, "*");
           this.userform.pwd = res.data.user.password;
           this.user_img = res.data.AttrHeadId;
           this.isShow = !this.isShow;
@@ -371,37 +371,36 @@ export default {
     },
     //提交编辑用户信息
     oneditSubmit(formName) {
-      this.$refs[formName].validate((valid) => {
-          if (valid) {
-            this.$post(
-              `gwt/system/sysUserZone/updateUser`,
-              {
-                userId: this.userId,
-                sex: this.userform.sex,
-                sysOrgUserX: {
-                  id: this.userform.id,
-                  phone: this.userform.phone,
-                  remark: this.userform.remark,
-                  duty: this.userform.duty
-                }
-              },
-              "json"
-            ).then(res => {
-              console.log(res);
-              if (res.result === "0000") {
-                this.isHide = false;
-                this.getUserInfo();
+      this.$refs[formName].validate(valid => {
+        if (valid) {
+          this.$post(
+            `gwt/system/sysUserZone/updateUser`,
+            {
+              userId: this.userId,
+              sex: this.userform.sex,
+              sysOrgUserX: {
+                id: this.userform.id,
+                phone: this.userform.phone,
+                remark: this.userform.remark,
+                duty: this.userform.duty
               }
-            });
-          } else {
-            console.log('error submit!!');
-            return false;
-          }
-        });
-      
+            },
+            "json"
+          ).then(res => {
+            console.log(res);
+            if (res.result === "0000") {
+              this.isHide = false;
+              this.getUserInfo();
+            }
+          });
+        } else {
+          console.log("error submit!!");
+          return false;
+        }
+      });
     },
     resetForm(formName) {
-        this.isHide = true;
+      this.isHide = true;
     },
     //获取登陆信息表格
     getloginTable() {
@@ -419,28 +418,18 @@ export default {
         }
       });
     },
-    handleDelete(index,rows) {
-      this.$swal({
-        title: "确定移除设备授权吗？",
-        text: "删除后将无法恢复，请谨慎操作！",
-        type: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#DD6B55",
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        confirmButtonClass: "btn btn-success"
-      });
+    handleDelete(id) {
       delete_item({
         url: "gwt/system/sysEquipmentAuth/del",
         data: {
-          id: [index],
+          id: [id],
           removeFlag: "Y"
         },
         success: res => {
-          if(res.result === "0000"){
-            // this.getloginTable();
+          if (res.result !== "0000") {
+            return;
           }
-          
+          this.getloginTable();
         }
       });
     },
@@ -449,32 +438,32 @@ export default {
     },
     //确认修改密码
     submitForm(formName) {
-      this.$refs[formName].validate((valid) => {
-          if (valid) {
-            this.$post(`gwt/system/sysUserZone/selectPassWord`,
+      this.$refs[formName].validate(valid => {
+        if (valid) {
+          this.$post(
+            `gwt/system/sysUserZone/selectPassWord`,
             {
               firstPassWord: this.pwdform.oldpwd,
               newPassWord: this.pwdform.newpwd1,
-              userId: this.userform.id,
+              userId: this.userform.id
             },
-            'json'
-            ).then(res=>{
-              // this.$store.commit('SET_USER_INFO',)
-              if(res.result !== "0000"){
-                this.$message.error(res.msg)
-              }else{
-                this.$message.success(res.msg);
-                this.userform.password = this.pwdform.newpwd1.replace(/\w/g, "*")
-                this.role_visible = false;
-                // this.getUserInfo();
-              }
-            })
-            
-          } else {
-            console.log('error submit!!');
-            return false;
-          }
-        });
+            "json"
+          ).then(res => {
+            // this.$store.commit('SET_USER_INFO',)
+            if (res.result !== "0000") {
+              this.$message.error(res.msg);
+            } else {
+              this.$message.success(res.msg);
+              this.userform.password = this.pwdform.newpwd1.replace(/\w/g, "*");
+              this.role_visible = false;
+              // this.getUserInfo();
+            }
+          });
+        } else {
+          console.log("error submit!!");
+          return false;
+        }
+      });
     },
     //取消修改密码
     onCancel_first() {
@@ -485,7 +474,7 @@ export default {
     },
     //确定修改密码
     onSubmit_first() {
-      console.log(this.password_first_visible_form.password)
+      console.log(this.password_first_visible_form.password);
       this.$refs.password_first_visible_form.validate(res => {
         if (!res) return;
         this.$post(
@@ -508,7 +497,7 @@ export default {
     },
 
     //获取验证码
-    getCode() {    
+    getCode() {
       this.$post(
         `gwt/getPhoneValidateCode`,
         {
@@ -519,18 +508,18 @@ export default {
         "json"
       ).then(res => {
         console.log(res);
-        if(res.result !== "0000"){
-            this.$message.error(res.msg)
-        }else{
-            let me = this;
-            me.sendMsgDisabled = true;
-            let interval = window.setInterval(function() {
-              if (me.time-- <= 0) {
-                me.time = 60;
-                me.sendMsgDisabled = false;
-                window.clearInterval(interval);
-              }
-            }, 1000);
+        if (res.result !== "0000") {
+          this.$message.error(res.msg);
+        } else {
+          let me = this;
+          me.sendMsgDisabled = true;
+          let interval = window.setInterval(function() {
+            if (me.time-- <= 0) {
+              me.time = 60;
+              me.sendMsgDisabled = false;
+              window.clearInterval(interval);
+            }
+          }, 1000);
         }
       });
     },
@@ -549,7 +538,7 @@ export default {
         console.log(res);
         if (res.result === "0000") {
           this.getUserInfo();
-          this.$message.success(res.msg)
+          this.$message.success(res.msg);
           this.password_second_visible = false;
         }
       });

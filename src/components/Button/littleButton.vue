@@ -173,6 +173,10 @@ export default {
           return {
             className: "rukediaochan"
           };
+        case "网站信息":
+          return {
+            className: "rukediaochan"
+          };
         case "移除":
           return {
             className: "shanchu",

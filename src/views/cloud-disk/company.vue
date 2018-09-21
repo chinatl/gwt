@@ -3,9 +3,9 @@
   <div slot="left">
       <div class="part-content common-temp">
           <ul class="data-ul-list">
-              <li :class="left_nav_data_current === index ? 'current':''"
-              @click="change_left_nav(index)"
-                v-for='(item,index) in left_nav_data' :key='index'>{{item}}</li>
+              <li :class="left_nav_data_current === index ? 'current' : '' "
+              @click="change_left_nav(item,index)"
+                v-for='(item,index) in left_nav_data' :key='index'>{{item.orgAllName}}</li>
           </ul>
       </div>
   </div>
@@ -15,39 +15,40 @@
           <div class="common-action">
               <div class="disk-cloud">
                   <upload-button icon="el-icon-upload2" @on-change="upload_img" size='medium' type="success" v-wave>上传</upload-button>
-                  <el-button type="success" icon="el-icon-plus" size='medium' v-wave>新建文件夹</el-button>
-                  <el-button type="primary" icon="el-icon-download" size='medium' v-wave>下载</el-button>
-                  <el-button type="danger" icon="el-icon-close" size='medium' v-wave>删除</el-button>
-                  <el-button type="warning" icon="el-icon-close" size='medium' v-wave>举报</el-button>
+                  <el-button type="success" icon="el-icon-plus" size='medium' v-wave @click="dialogFolderVisible = true">新建文件夹</el-button>
+                  <el-button type="primary" icon="el-icon-download" size='medium' v-wave @click="download_file">下载</el-button>
+                  <el-button type="danger" icon="el-icon-close" size='medium' v-wave @click="delete_btn">删除</el-button>
+                  <el-button type="warning" icon="el-icon-close" size='medium' v-wave @click="report">举报</el-button>
               </div>
               <div>
-                  <el-input v-model="input" placeholder="请输入文件名" style="width:120px" size='medium'></el-input>
-                  <el-button type="primary" icon="el-icon-search" size='medium' v-wave>搜索</el-button>
+                  <el-input v-model="input" placeholder="请输入文件名" style="width:120px" size='medium' @keyup.native.enter='condition'></el-input>
+                  <el-button type="primary" icon="el-icon-search" size='medium' v-wave @click="condition">搜索</el-button>
               </div>
           </div>
           <div class="disk-cloud-router">
           <el-breadcrumb separator-class="el-icon-arrow-right">
               <el-breadcrumb-item @click.native="show_all_file">全部文件</el-breadcrumb-item>
-              <el-breadcrumb-item v-for="(item,index) in file_nav" :key="index" @click.native="go_child_file(index)">{{item.name}}</el-breadcrumb-item>
+              <el-breadcrumb-item v-for="(item,index) in file_nav" :key="index" @click.native="go_child_file(index)">{{item.originalName}}</el-breadcrumb-item>
           </el-breadcrumb>
           </div>
           <div class="common-table">
               <el-table
                   :data="tableData"
                   @selection-change="handleSelectionChange"
+                  v-loading='loading'
                   style="width: 100%">
                   <el-table-column type="selection" width="60" align="center"></el-table-column>
-                  <el-table-column prop="name"  :label="file_name"  align="left"  show-overflow-tooltip> 
+                  <el-table-column prop="originalName"  :label="file_name"  align="left"  show-overflow-tooltip> 
                       <template slot-scope="scope">
-                        <div class="disk-icon" @click="file_click(scope.$index)">
+                        <div class="disk-icon" @click="file_click(scope.row)">
                             <svg-icon :icon-class='get_svg_name(scope.row.name)'></svg-icon>
-                            <span>{{scope.row.name}}</span>
+                            <span>{{scope.row.originalName}}</span>
                         </div>
                       </template>
                   </el-table-column>
-                  <el-table-column prop="size"  label="大小" align="center"  width="100"></el-table-column>
-                  <el-table-column prop="time"  label="修改日期" align="center" width="180"></el-table-column>
-                  <el-table-column prop="user"  label="上传者" align="center" width="120"></el-table-column>
+                  <el-table-column prop="attaSize"  label="大小" align="center"  width="100"></el-table-column>
+                  <el-table-column prop="updateTime"  label="修改日期" align="center" width="180"></el-table-column>
+                  <el-table-column prop="userName"  label="上传者" align="center" width="120"></el-table-column>
               </el-table>
           </div>
           <div class="common-page">
@@ -55,121 +56,93 @@
               @size-change="handleSizeChange"
               @current-change="handleCurrentChange"
               :current-page="pageNo"
-              :page-sizes="[10, 20, 30, 40]"
+              :page-sizes="[5, 10, 15, 20]"
               :page-size="pageSize"
               layout="total, sizes, prev, pager, next, jumper"
               background
-              :total="40">
+              :total="totalCount">
               </el-pagination>
           </div>
+          <!-- 新建文件夹弹窗 -->
+          <el-dialog title="请输入新建文件夹名称" :visible.sync="dialogFolderVisible" center class="folder" width="30%">
+            <el-form :model="folderform" :rules="folderrules" ref="folderform" @submit.native.prevent>
+              <el-form-item prop="foldername">
+                <el-input v-model="folderform.foldername" autocomplete="off"></el-input>
+              </el-form-item>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+              <el-button @click="dialogFolderVisible = false">取 消</el-button>
+              <el-button type="primary" @click="add_older('folderform')">确 定</el-button>
+            </div>
+          </el-dialog>
+          <!-- 举报弹框 -->
+          <el-dialog
+            title="举报信息"
+            :visible.sync="reportDialogVisible"
+            class="common-dialog edu"
+            width="40%">
+            <el-form ref="reportform" :model="reportform" :rules="reportrules">
+              <el-form-item prop="type">
+                <el-checkbox-group v-model="reportform.type">
+                  <el-checkbox label="信息涉密" name="type"></el-checkbox>
+                  <el-checkbox label="非法内容" name="type"></el-checkbox>
+                  <el-checkbox label="其它" name="type"></el-checkbox>
+                </el-checkbox-group>
+              </el-form-item>
+              <el-form-item prop="desc">
+                <el-input
+                  type="textarea"
+                  :rows="10"
+                  class="textarea"
+                  placeholder="请输入内容"
+                  v-model="reportform.desc">
+                </el-input>
+              </el-form-item>
+              <!-- <form-button  @submit="submit_report('reportform')"></form-button> -->
+              <el-form-item class="footer_btn">
+                <el-button @click="reportDialogVisible = false">取 消</el-button>
+                <el-button type="primary" @click="submit_report('reportform')">确 定</el-button>
+              </el-form-item>
+            </el-form>
+
+          </el-dialog>
       </div>              
     </div>
 </t-layout>
 </template>
 <script>
 import uploadButton from "@/components/Button/uploadButton";
+import qs from "qs";
 export default {
   components: {
     uploadButton
   },
   data() {
     return {
-      left_nav_data_current: 1,
+      loading: false,
+      checkList: [],
+      reportform: {
+        desc: "",
+        type: []
+      },
+      reportrules: {
+        type: [
+          {
+            type: "array",
+            required: true,
+            message: "请选择举报类型",
+            trigger: "change"
+          }
+        ],
+        desc: [{ required: true, message: "请输入举报原因", trigger: "blur" }]
+      },
+      left_nav_data_current: 0,
       pageNo: 1,
       pageSize: 5,
+      totalCount: 0,
       input: "",
       checked: false,
       left_nav_data: [],
-      pageData: [
-        {
-          name: "合计采购员合计采购员合计采购员",
-          size: "",
-          time: "2018-05-18 10:39:47",
-          user: "allan",
-          children: [
-            {
-              name: "合计采购员合计采购员合计采购员",
-              size: "",
-              time: "2018-05-18 10:39:47",
-              children: [
-                {
-                  name: "合计采购员合计采购员合计采购员.doc",
-                  size: "",
-                  time: "2018-05-18 10:39:47",
-                  user: "allan"
-                },
-                {
-                  name: "合计采购员合计采购员合计采购员.doc",
-                  size: "",
-                  time: "2018-05-18 10:39:47",
-                  user: "allan"
-                },
-                {
-                  name: "合计采购员合计采购员合计采购员.doc",
-                  size: "",
-                  time: "2018-05-18 10:39:47",
-                  user: "allan"
-                }
-              ]
-            },
-            {
-              name: "合计采购员合计采购员合计采购员.doc",
-              size: "",
-              time: "2018-05-18 10:39:47",
-              user: "allan"
-            },
-            {
-              name: "合计采购员合计采购员合计采购员.pdf",
-              size: "",
-              time: "2018-05-18 10:39:47",
-              user: "allan"
-            }
-          ]
-        },
-        {
-          name: "快快快我哦啊看了几十次",
-          size: "",
-          time: "2018-05-18 10:39:47",
-          children: [
-            {
-              name: "合计采购员合计采购员合计采购员.jpg",
-              size: "",
-              time: "2018-05-18 10:39:47",
-              user: "allan"
-            },
-            {
-              name: "合计采购员合计采购员合计采购员.doc",
-              size: "",
-              time: "2018-05-18 10:39:47",
-              user: "allan"
-            },
-            {
-              name: "合计采购员合计采购员合计采购员.pdf",
-              size: "",
-              time: "2018-05-18 10:39:47",
-              user: "allan"
-            }
-          ]
-        },
-        {
-          name: "合计采购员合计采购员合计采购员.jpg",
-          size: "",
-          time: "2018-05-18 10:39:47",
-          user: "allan"
-        },
-        {
-          name: "合计采购员合计采购员合计采购员.doc",
-          size: "",
-          time: "2018-05-18 10:39:47",
-          user: "allan"
-        },
-        {
-          name: "合计采购员合计采购员合计采购员.pdf",
-          size: "",
-          time: "2018-05-18 10:39:47",
-          user: "allan"
-        }
-      ],
       doc_reg: /\.(docx?)$/,
       png_reg: /\.(png|jpe?g|gif|svg)(\?.*)?$/,
       ppt_reg: /\.(pptx?)$/,
@@ -177,7 +150,38 @@ export default {
       pdf_reg: /\.(pdf)$/,
       select_list: [],
       tableData: [],
-      file_nav: [] //文件导航
+      file_nav: [], //文件导航,
+      dialogFolderVisible: false,
+
+      current_user: {
+        userId: "",
+        orgId: "",
+        originalName: ""
+      },
+      folderform: {
+        foldername: "",
+        updateTime: "",
+        userId: "",
+        orgId: "",
+        originalName: "",
+        userName: ""
+      },
+      folderrules: {
+        foldername: [
+          { required: true, message: "文件名不能为空", trigger: "blur" }
+        ]
+      },
+      type: "",
+      dirId: "",
+      fileId: "",
+      dirIds: [],
+      fileIds: [],
+      parentId: "",
+      manage_org: [], //部门
+      temp_data: {},
+      reportDialogVisible: false,
+      originalName: "",
+      input: ""
     };
   },
   computed: {
@@ -191,57 +195,324 @@ export default {
   },
   created() {
     // this.tableData = this.pageData;
+    this.get_CurrentOrgUser();
     this.init_getManagerOrg();
-    this.init_isCurrentOrgManager()
   },
   methods: {
-    init_isCurrentOrgManager(){
-      this.$post(`gwt/isCurrentOrgManager`)
-      .then(res=>{
-        console.log(res)
-      })
+    condition() {
+      this.pageNo = 1;
+      this.get_deptCloudisk(this.pageSize, 1);
     },
-    //初始化部门
-    init_getManagerOrg(){
-      this.$post(`gwt/system/sysOrg/getManagerOrgByToken`)
-      .then(res=>{
-        console.log(res)
-      })
+    //获取当前登陆用户
+    get_CurrentOrgUser() {
+      this.$post(`gwt/getCurrentOrgUser`, {}, "json").then(res => {
+        console.log(res);
+        if (res.result !== "0000") {
+          this.$message.error(res.msg);
+        }
+        this.current_user = res.data.hashMap;
+        this.current_user.userId = res.data.hashMap.userId;
+        this.current_user.orgId = res.data.hashMap.orgId;
+      });
     },
+    //部门
+    init_getManagerOrg() {
+      this.$post(`gwt/system/sysOrg/getManagerOrgByToken`, {}, "json")
+        .then(res => {
+          this.left_nav_data = res.data.sysOrgs;
+          if (!this.left_nav_data.length) return;
+          this.temp_data = this.left_nav_data[0];
+          this.get_deptCloudisk(this.pageSize, this.pageNo);
+        })
+        .catch(res => {});
+    },
+    //获取部门云盘
+    get_deptCloudisk(pageSize, pageNo) {
+      // console.log(this.temp_data[0].orgId)
+      this.loading = true;
+      this.$post(
+        `gwt/cloudisk/cloudiskAttaOrgRelation/deptCloudiskPage?${qs.stringify({
+          currentPage: pageNo,
+          pageSize: pageSize
+        })}`,
+        {
+          originalName: this.input,
+          orgId: this.temp_data.orgId,
+          searchFlag: this.input ? "Y" : "N",
+          parentId: this.parentId
+        },
+        "json"
+      ).then(res => {
+        this.loading = false;
+        console.log(res);
+        if (res.result !== "0000") {
+          return;
+        }
+        this.tableData = res.data.deptCloudiskPageBean.datas;
+        this.totalCount = parseInt(res.data.deptCloudiskPageBean.totalCount);
+      })
+      .catch(res => {
+          this.loading = false;
+        });
+    },
+    //上传
     upload_img(e) {
       console.log(e);
+      var formData = new FormData();
+      formData.append("ownerSystem", "gwt-platform");
+      formData.append("ownerModule", "cloudisk");
+      formData.append("userId", this.current_user.userId);
+      formData.append("orgId", this.temp_data.orgId);
+      formData.append("uploadOpt", "add");
+      formData.append("cloudiskType", 2);
+      formData.append("dirId", this.parentId === "" ? "" : this.parentId);
+      formData.append("cloudiskType", "org");
+      formData.append("file", e.raw);
+      console.log(this.temp_data.orgId);
+      this.$post("gwt/uploadFile/uploadCloudisk", formData, "form")
+        .then(res => {
+          console.log(res);
+          if (res.result === "0000") {
+            this.get_deptCloudisk();
+            this.$message({
+              type: "success",
+              message: "上传成功"
+            });
+          }
+        })
+        .catch(res => {});
     },
-    change_left_nav(index) {
+    //新建文件夹
+    add_older(formName) {
+      // alert(this.folderform.foldername)
+      console.log(this.folderform);
+      this.$refs[formName].validate(valid => {
+        if (valid) {
+          this.$post(
+            `gwt/cloudisk/cloudiskAttaDir/addFolder`,
+            {
+              type: "org",
+              orgId: this.temp_data.orgId,
+              name: this.folderform.foldername,
+              parentId: this.parentId
+            },
+            "json"
+          ).then(res => {
+            console.log(res);
+            if (res.result === "0000") {
+              this.dialogFolderVisible = false;
+              this.get_deptCloudisk();
+              this.$message({
+                type: "success",
+                message: "新建成功"
+              });
+            } else {
+              this.$message.error(res.msg);
+            }
+            // console.log(this.tableData.type)
+          });
+        } else {
+          console.log("error submit!!");
+          return false;
+        }
+      });
+    },
+    //下载
+    download_file() {
+      if (this.fileIds.length == 0 && this.dirIds.length == 0) {
+        this.$swal({
+          title: "提示信息！",
+          text: "请选择要下载的文件",
+          type: "warning",
+          confirmButtonColor: "#DD6B55",
+          confirmButtonText: "确定",
+          showConfirmButton: true
+        });
+        return;
+      }
+      this.$post(
+        `gwt/cloudisk/cloudiskAttachment/sigleFileDownload`,
+        {
+          fileIds: this.fileIds.map(res => res + "").join(",")
+          // dirIds: this.dirIds.map(res => res + "").join(","),
+          // orgId: this.folderform.orgId,
+          // token: "03353_40c8ec12-c7e5-4926-8919-2d3cc28d2a39"
+        },
+        "json"
+      )
+        .then(res => {
+          console.log(res);
+          this.get_deptCloudisk();
+        })
+        .catch(res => {
+          this.get_deptCloudisk();
+        });
+    },
+    //删除
+    delete_btn() {
+      if (this.fileIds.length == 0 && this.dirIds.length == 0) {
+        this.$swal({
+          title: "提示信息！",
+          text: "请选择要删除的文件或文件夹",
+          type: "warning",
+          confirmButtonColor: "#DD6B55",
+          confirmButtonText: "确定",
+          showConfirmButton: true
+        });
+        return;
+      }
+      this.$swal({
+        title: "确定要删除吗？",
+        text: "删除后将无法恢复，请谨慎操作！",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#DD6B55",
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        confirmButtonClass: "btn btn-success"
+      }).then(res => {
+        if (!res.value) {
+          return;
+        }
+        this.$post(
+          `gwt/cloudisk/cloudiskAttaOrgRelation/orgDelete`,
+          {
+            dirIds: this.dirIds.map(res => res + "").join(","),
+            fileIds: this.fileIds.map(res => res + "").join(","),
+            orgId: this.temp_data.orgId
+          },
+          "json"
+        )
+          .then(res => {
+            console.log(res);
+            if (res.result === "0000") {
+              this.get_deptCloudisk();
+              this.$message({
+                type: "success",
+                message: "删除成功"
+              });
+            }
+          })
+          .catch(res => {
+            console.log(res);
+          });
+      });
+    },
+    //举报
+    report() {
+      if (this.fileIds.length == 0 && this.dirIds.length == 0) {
+        this.$swal({
+          title: "提示信息！",
+          text: "请选择要举报的文件或文件夹",
+          type: "warning",
+          confirmButtonColor: "#DD6B55",
+          confirmButtonText: "确定",
+          showConfirmButton: true
+        });
+        return;
+      }
+      this.reportDialogVisible = true
+    },
+    //举报信息提交
+    submit_report(formName) {
+      console.log(this.reportform.type);
+      console.log(this.reportform);
+      this.$refs[formName].validate(valid => {
+        if (valid) {
+          this.$post(
+            `gwt/cloudisk/cloudiskAttaOrgRelation/reportCloudiskInfo`,
+            {
+              orgId: this.temp_data.orgId,
+              dirIds: this.dirIds.map(res => res + "").join(","),
+              fileIds: this.fileIds.map(res => res + "").join(",")
+            },
+            "json"
+          ).then(res => {
+            // console.log(res);
+            if(res.result !== "0000"){
+              return;
+            }
+            this.reportDialogVisible = false;
+            this.get_deptCloudisk();
+            this.$message({
+              type: "success",
+              message: "举报成功"
+            });
+          });
+        } else {
+          console.log("error submit!!");
+          return false;
+        }
+      });
+    },
+    change_left_nav(item, index) {
       this.left_nav_data_current = index;
+      // if(this.left_nav_data_current){
+      //     this.get_deptCloudisk()
+      // }
+      this.temp_data = item;
+      console.log(item);
+      this.get_deptCloudisk();
     },
     //递归取数
     go_child_file(index) {
       if (index === this.file_nav.length) {
         return;
       }
-      var arr = JSON.parse(JSON.stringify(this.pageData));
+      var arr = [];
+      console.log(this.file_nav);
       for (var i = 0; i < this.file_nav.length; i++) {
-        arr = arr[this.file_nav[i].index].children;
-        if (i === index) {
-          break;
-        }
+        arr.push(this.file_nav[i].id);
       }
-      this.tableData = arr;
+      console.log(arr);
       this.file_nav = this.file_nav.slice(0, index + 1);
+      this.$post(
+        `gwt/cloudisk/cloudiskAttaOrgRelation/deptCloudiskPage?${qs.stringify({
+          currentPage: this.pageNo,
+          pageSize: this.pageSize
+        })}`,
+        {
+          originalName: this.input,
+          orgId: this.temp_data.orgId,
+          searchFlag: this.input ? "Y" : "N",
+          parentId: arr.slice(index)[0]
+        },
+        "json"
+      ).then(res => {
+        console.log(res);
+        if (res.result === "0000") {
+          this.tableData = res.data.deptCloudiskPageBean.datas;
+          // this.totalCount = parseInt(res.data.deptCloudiskPageBean.totalCount);
+        }
+      });
     },
     //
     show_all_file() {
-      this.tableData = this.pageData;
       this.file_nav = [];
+      this.parentId = "";
+      this.pageNo = 1;
+      this.get_deptCloudisk(this.pageSize, 1);
     },
     file_click(index) {
-      if (this.get_svg_name(this.tableData[index].name) === "文件夹") {
+      console.log(index);
+      this.parentId = index.dirId;
+      if (index.type === "folder") {
         this.file_nav.push({
           index,
-          name: this.tableData[index].name
+          originalName: index.originalName,
+          id: index.dirId
         });
-        this.tableData = this.tableData[index].children;
+        this.parentId = index.dirId;
+        this.pageNo = 1;
+        this.get_deptCloudisk(this.pageSize, 1);
+      }else{
+        var img_src = index.originalName.substring(index.originalName.lastIndexOf("."),index.originalName.length)
+        console.log(img_src)
+        if(img_src !=".bmp" && img_src != ".png" && img_src != ".gif" && img_src != ".jpg" && img_src != ".jpeg"){
+          
+        }
       }
+      
     },
     //row-click
     get_svg_name(name) {
@@ -264,9 +535,26 @@ export default {
     },
     handleSelectionChange(e) {
       this.select_list = e;
+      this.fileIds = [];
+      this.dirIds = [];
+      for (var i = 0; i < e.length; i++) {
+        if (e[i].type === "file") {
+          this.fileIds.push(e[i].fileId);
+          console.log(e[i].fileId);
+          this.originalName = e[i].originalName;
+        } else {
+          this.dirIds.push(e[i].dirId);
+        }
+      }
     },
-    handleSizeChange() {},
-    handleCurrentChange() {}
+    handleSizeChange(val) {
+      this.pageSize = val;
+      this.get_deptCloudisk(this.pageSize, this.pageNo);
+    },
+    handleCurrentChange(val) {
+      this.pageNo = val;
+      this.get_deptCloudisk(this.pageSize, this.pageNo);
+    }
   }
 };
 </script>
@@ -361,4 +649,11 @@ export default {
     margin-right: 8px;
   }
 }
+.el-checkbox {
+  width: 25%;
+}
+.textarea {
+  margin-top: 20px;
+}
+
 </style>

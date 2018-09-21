@@ -39,27 +39,30 @@ export default {
   },
   methods: {
     preview(item) {
-      var url = config + item.attaPath + "/" + item.storeName;
-      this.$axios({
-        url,
-        headers: {
-          Authorization: this.$store.getters.token
-        },
-        responseType: "blob"
-      })
-        .then(res => {
-          var eleLink = document.createElement("a");
-          eleLink.style.display = "none";
-          // 字符内容转变成blob地址
-          var blob = new Blob([res.data]);
-          eleLink.href = URL.createObjectURL(blob);
-          eleLink.target = "_blank";
-          // 触发点击
-          eleLink.click();
-        })
-        .catch(res => {
-          console.log(res);
-        });
+      console.log(item);
+      window.open(item.fullAttaPath);
+      return
+      // var url = config + item.attaPath + "/" + item.storeName;
+      // this.$axios({
+      //   url,
+      //   headers: {
+      //     Authorization: this.$store.getters.token
+      //   },
+      //   responseType: "blob"
+      // })
+      //   .then(res => {
+      //     var eleLink = document.createElement("a");
+      //     eleLink.style.display = "none";
+      //     // 字符内容转变成blob地址
+      //     var blob = new Blob([res.data]);
+      //     eleLink.href = URL.createObjectURL(blob);
+      //     eleLink.target = "_blank";
+      //     // 触发点击
+      //     eleLink.click();
+      //   })
+      //   .catch(res => {
+      //     console.log(res);
+      //   });
     },
     //删除文件
     delete_file(index) {
