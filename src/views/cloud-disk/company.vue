@@ -377,22 +377,21 @@ export default {
         this.$post(
           `gwt/cloudisk/cloudiskAttaOrgRelation/orgDelete`,
           {
-            fileIds: this.fileIds.map(res => res - 0),
-            dirIds: this.dirIds.map(res => res - 0),
-            orgId: this.temp_data.orgId,
-            creatUserIds:[1,2,3],
+            dirIds: this.dirIds.map(res => res + "").join(","),
+            fileIds: this.fileIds.map(res => res + "").join(","),
+            orgId: this.temp_data.orgId
           },
           "json"
         )
           .then(res => {
             console.log(res);
-            // if (res.result === "0000") {
-            //   this.init_usercloudisk();
-            //   this.$message({
-            //     type: "success",
-            //     message: "删除成功"
-            //   });
-            // }
+            if (res.result === "0000") {
+              this.get_deptCloudisk();
+              this.$message({
+                type: "success",
+                message: "删除成功"
+              });
+            }
           })
           .catch(res => {
             console.log(res);
@@ -506,7 +505,14 @@ export default {
         this.parentId = index.dirId;
         this.pageNo = 1;
         this.get_deptCloudisk(this.pageSize, 1);
+      }else{
+        var img_src = index.originalName.substring(index.originalName.lastIndexOf("."),index.originalName.length)
+        console.log(img_src)
+        if(img_src !=".bmp" && img_src != ".png" && img_src != ".gif" && img_src != ".jpg" && img_src != ".jpeg"){
+          
+        }
       }
+      
     },
     //row-click
     get_svg_name(name) {
