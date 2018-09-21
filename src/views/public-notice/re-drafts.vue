@@ -315,7 +315,7 @@ export default {
           startTime: parseTime(this.form.startTime, "{y}-{m}-{d} {h}:{i}:{s}"),
           endTime: "",
           selectedUsers: this.has_select_user_list
-            .map(res => res.USER_ID)
+            .map(res => res.ID)
             .join(","),
           attrArray: this.file_list.map(res => res.id).join(","),
           orgArray: this.has_select_part_list

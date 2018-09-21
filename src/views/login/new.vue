@@ -3,7 +3,7 @@
         <div class="first-login-content">
             <h3>新用户验证！</h3>
             <p>首次登录用户，请验证姓名并修改密码，才能使用本系统！</p>
-            <el-form ref="form" :model="form" label-width="120px" :rules="rules">
+            <el-form ref="form" :model="form" label-width="120px" :rules="rules" @submit.native.prevent>
                 <el-form-item label="请验证姓名：" prop='name'>
                         <el-input v-model="form.name" size="small" placeholder="请输入姓名"></el-input>
                 </el-form-item>

@@ -12,7 +12,7 @@ module.exports = {
     proxyTable: {
       '/gwt': {
         // target: 'http://192.168.31.169:8080',  // 接口域名 -谢震
-        // target: 'http://192.168.31.5:8099',  // 接口域名 - 陈普
+        target: 'http://192.168.31.5:8080',  // 接口域名 - 陈普
         // target: 'http://192.168.31.72:8080',  // 接口域名 - 尚旭光
         // target: 'http://192.168.31.4:10000',  // 接口域名 - 景蒙
         target: 'http://192.168.31.8:8080',  // 接口域名 - 陈小东
@@ -20,9 +20,6 @@ module.exports = {
         // pathRewrite: {
         //   '^/apis': ''   //需要rewrite重写的,
         // }
-      },
-      '/gwt-web-cloudisk':{
-        target: 'http://192.168.31.5:8080'
       },
       '/uploadfiles': {
         // target: 'http://192.168.31.169:8080',  // 接口域名 -谢震

@@ -4,46 +4,23 @@
     <div class="select-user-container">
         <div class="select-left">
             <div class="select-part-top">
-                <el-select v-model="part" size="small" style="width:100px" @change="checkout_type">
-                    <el-option :value="1" label="部门"></el-option>
-                    <el-option :value="0" label="姓名"></el-option>
-                </el-select>
                 <el-input v-model="input" size="small">
                     <i slot="suffix" class="el-input__icon el-icon-search"></i>
                 </el-input>
             </div>
             <div class="select-part-bottom scrollbar">
-                <div v-if="part">
-                    <div class="select-part-tree common-temp">
-                        <el-tree :data="part_tree" :props="defaultProps" @node-click="handleNodeClick"></el-tree>
-                    </div>
-                    <div class="select-part-checkbox">
-                        <div class="all-checked">
-                            <el-checkbox v-model="all_checked" @change="all_select_checkbox">全选</el-checkbox>
-                        </div>
-                        <div class="one-checked scrollbar" style="overflow:auto;height:335px">
-                            <ul>
-                                <li v-for='(item,index) in user_list' :key='index'>
-                                    <el-checkbox v-model="item.checked" @change="select_checkbox($event,index,item.ID)">{{item.REAL_NAME}}</el-checkbox>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
+                <div class="all-checked">
+                    <el-checkbox v-model="user_all_checked" @change="all_user_box">全选</el-checkbox>
                 </div>
-                <div v-else class="all-user-css">
-                    <div class="all-checked">
-                        <el-checkbox v-model="user_all_checked" @change="all_user_box">全选</el-checkbox>
-                    </div>
-                    <div class="one-checked scrollbar">
-                        <ul>
-                            <li v-for='(item,index) in has_user_data' :key='index'>
-                                <el-checkbox v-model="item.checked" @change="user_select_checkbox($event,index,item.ID)">
-                                    <span style="width:80px;display:inline-block">{{item.REAL_NAME}}</span>
-                                    {{item.ORG_ALL_NAME}}
-                                </el-checkbox>
-                            </li>
-                        </ul>
-                    </div>
+                <div class="one-checked scrollbar">
+                    <ul>
+                        <li v-for='(item,index) in allList' :key='index'>
+                            <el-checkbox v-model="item.checked" @change="user_select_checkbox($event,index,item.ID)">
+                                <span style="width:80px;display:inline-block">{{item.REAL_NAME}}</span>
+                                {{item.ORG_ALL_NAME}}
+                            </el-checkbox>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
@@ -91,11 +68,13 @@ export default {
       has_select_user: [],
       all_checked: false,
       user_all_checked: false,
-      has_user_data: [],
       user_list: []
     };
   },
   props: {
+    allList: {
+      default: []
+    },
     show: {
       type: Boolean,
       default: false
@@ -145,13 +124,13 @@ export default {
             }
           }
         }
-        this.has_user_data = [...this.part_user_list];
+        this.allList = [...this.part_user_list];
       }
     },
     //用户查询单点选择框
     user_select_checkbox(e, index, ID) {
       if (e) {
-        this.has_select_user.push(this.has_user_data[index]);
+        this.has_select_user.push(this.allList[index]);
       } else {
         for (var i = 0; i < this.has_select_user.length; i++) {
           if (this.has_select_user[i].ID === ID) {
@@ -164,15 +143,15 @@ export default {
     //用户查询全选
     all_user_box(e) {
       if (e) {
-        for (var i = 0; i < this.has_user_data.length; i++) {
-          this.has_user_data[i].checked = true;
-          this.has_select_user.push(this.has_user_data[i]);
+        for (var i = 0; i < this.allList.length; i++) {
+          this.allList[i].checked = true;
+          this.has_select_user.push(this.allList[i]);
         }
       } else {
-        for (var j = 0; j < this.has_user_data.length; j++) {
-          this.has_user_data[j].checked = false;
+        for (var j = 0; j < this.allList.length; j++) {
+          this.allList[j].checked = false;
           for (var i = 0; i < this.has_select_user.length; i++) {
-            if (this.has_select_user[i].ID === this.has_user_data[j].ID) {
+            if (this.has_select_user[i].ID === this.allList[j].ID) {
               this.has_select_user.splice(i, 1);
             }
           }
@@ -190,8 +169,8 @@ export default {
         }
       } else {
         this.user_all_checked = false;
-        for (var i = 0; i < this.has_user_data.length; i++) {
-          this.has_user_data[i].checked = false;
+        for (var i = 0; i < this.allList.length; i++) {
+          this.allList[i].checked = false;
         }
       }
     },
@@ -205,9 +184,9 @@ export default {
           }
         }
       } else {
-        for (var i = 0; i < this.has_user_data.length; i++) {
-          if (this.has_user_data[i].ID === ID) {
-            this.has_user_data[i].checked = false;
+        for (var i = 0; i < this.allList.length; i++) {
+          if (this.allList[i].ID === ID) {
+            this.allList[i].checked = false;
           }
         }
       }
@@ -246,12 +225,12 @@ export default {
           this.all_checked = false;
         }
       } else {
-        for (var i = 0; i < this.has_user_data.length; i++) {
-          if (this.has_user_data[i].checked) {
+        for (var i = 0; i < this.allList.length; i++) {
+          if (this.allList[i].checked) {
             index++;
           }
         }
-        if (index === this.has_user_data.length) {
+        if (index === this.allList.length) {
           this.user_all_checked = true;
         } else {
           this.user_all_checked = false;

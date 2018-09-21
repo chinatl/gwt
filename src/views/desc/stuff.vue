@@ -9,14 +9,14 @@
                 <span>{{data.orgName}}</span>
                 <span>{{data.createTime}}</span>
             </p>
-            <div class="img_status" v-if='status === "1002" || status === "1001"'>
+            <div class="img_status" v-if='status == "1002" || status == "1001"'>
               <div class="imgs">
-                  <img :src="require('@/assets/imgs/已拒签.png')" v-if='status === "1002"'>
-                  <img :src="require('@/assets/imgs/已签收.png')" v-if='status === "1001"'>
+                  <img :src="require('@/assets/imgs/已拒签.png')" v-if='status == "1002"'>
+                  <img :src="require('@/assets/imgs/已签收.png')" v-if='status == "1001"'>
               </div>
               <p class="tips">{{ status === '1002' ? tbNoticeRefuse.REAL_NAME :tbNoticeSign.REAL_NAME}}</p>
               <p class="tips">
-                {{ status === '1002' ? tbNoticeRefuse.SIGN_TIME :tbNoticeSign.SIGN_TIME}}
+                {{ status === '1002' ? tbNoticeRefuse.REFUSE_TIME :tbNoticeSign.SIGN_TIME}}
                 {{status === '1001' ? "签收": null}}
                 {{status === '1002' ? "拒签": null}}
               </p>
@@ -24,7 +24,7 @@
         </div>
         <div class="article-main">
             <div class="artive-address">
-                <p v-if='status === "1002"'>拒签理由：<span>测试拒签</span></p>
+                <p v-if='status === "1002"'>拒签理由：<span>{{tbNoticeRefuse.REFUSE_REASON}}</span></p>
                 <p v-if='data.startTime'>开始时间：<span>{{data.startTime}}</span></p>
                 <p v-if='data.noticeAdress'>会议地点：<span>{{data.noticeAdress}}</span></p>
             </div>
@@ -38,9 +38,9 @@
         </div>
         <p style="text-align:right" class="notice-desc-button">
           <el-button type="warning" size="medium" @click="report_notice" ><svg-icon icon-class='警察'></svg-icon>举报</el-button>
-          <el-button type="danger" size="medium"  @click="refuse"  v-if='status === "1000"'><svg-icon icon-class='拒签'></svg-icon>拒签</el-button>
-          <el-button type="primary" size="medium" @click="reveive_report" v-if='status === "1000"'><svg-icon icon-class='签收'></svg-icon>签收</el-button>
-          <el-button type="success" size="medium" @click="forward_report" v-if='status === "1001"'><svg-icon icon-class='转发'></svg-icon>转发</el-button>
+          <el-button type="danger" size="medium"  @click="refuse"  v-if='status == "1000"'><svg-icon icon-class='拒签'></svg-icon>拒签</el-button>
+          <el-button type="primary" size="medium" @click="reveive_report" v-if='status == "1000"'><svg-icon icon-class='签收'></svg-icon>签收</el-button>
+          <el-button type="success" size="medium" @click="forward_report" v-if='status == "1001"'><svg-icon icon-class='转发'></svg-icon>转发</el-button>
         </p>
         <el-dialog :close-on-click-modal='false'
             title="举报信息"
@@ -62,6 +62,74 @@
             </el-form>
         </el-dialog>  
     </div>
+    <div class="stuff-common" v-if="status == 1001">
+        <t-title>人员报名</t-title>
+         <div class="common-action">
+            <div class="common-table-bar">
+                <span class="current">附件上传</span>
+            </div>
+        </div>
+        <div class="common-table">
+            <el-table
+                :data="tableData"
+                border
+                v-loading ='loading'
+                style="width: 100%">
+                <el-table-column
+                prop="REAL_NAME"
+                align="center"
+                label="姓名">
+                </el-table-column>
+                <el-table-column
+                prop="appName"
+                align="center"
+                label="职务">
+                </el-table-column>
+                <el-table-column
+                prop="MOBILE_PHONE"
+                align="center"
+                label="联系方式	">
+                </el-table-column>
+                <el-table-column
+                prop="ORG_ALL_NAME"
+                align="center"
+                label="所属部门">
+                </el-table-column>
+                <el-table-column
+                align="center"
+                label="附件列表">
+                    <template slot-scope="scope">
+                        <div class="file-list">
+                            <p v-for="(item,index) in scope.row.ATTA_INFOS" :key='index'>
+                               <svg-icon :icon-class='fileType(item.type)'></svg-icon> {{item.originalName}}
+                            </p>
+                        </div>
+                    </template>
+                </el-table-column>
+            </el-table>
+        </div>
+        <div class="common-page">
+            <el-pagination
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page.sync="pageNo"
+            :page-sizes="$store.getters.page_list"
+            :page-size="pageSize"
+            layout="total, sizes, prev, pager, next, jumper"
+            background
+            :total="total">
+            </el-pagination>
+        </div>
+        <div class="common-action">
+            <upload-button  @on-change="upload_img">添加附件</upload-button>
+            <file-list :list='user_upload_list' @delete='delete_user_file'></file-list>
+        </div>
+        <div class="stuff-footer" v-show="is_upload">
+            <p class="tips">附件上传完成后，需确认才能提交</p>
+            <p class="stuff-button"><el-button type="primary" size="medium" @click="submit_upload">确认提交</el-button></p>
+        </div>
+    </div>
+
 </div>
 </template>
 <script>
@@ -70,11 +138,16 @@ import fileList from "@/components/FileList";
 import { mapGetters } from "vuex";
 import formButton from "@/components/Button/formButton";
 import AddUser from "@/components/AddUser";
+import uploadButton from "@/components/Button/uploadButton";
+import { action_fail, delete_item } from "@/utils/user";
+import { fileType } from "@/utils";
+import qs from "qs";
 export default {
   components: {
     fileList,
     formButton,
-    AddUser
+    AddUser,
+    uploadButton
   },
   data() {
     return {
@@ -82,16 +155,6 @@ export default {
       current: false,
       table_loading: false,
       tableData: [],
-      select_arr: [
-        {
-          name: "人员报名",
-          Q_isActive_L: "all"
-        },
-        {
-          name: "上传附件",
-          Q_isActive_L: "1"
-        }
-      ],
       file_list: [],
       data: {},
       tbNoticeReceive: {},
@@ -118,26 +181,153 @@ export default {
         ]
       },
       tbNoticeSign: {}, //签收详情
-      tbNoticeRefuse: {} //签收详情
+      tbNoticeRefuse: {}, //签收详情
+      user_upload_list: [],
+      pageSize: 5,
+      pageNo: 1,
+      total: 0,
+      is_upload: false
     };
   },
+  beforeDestroy(e) {
+    sessionStorage.removeItem("stuff-desc/index/pageNo");
+    sessionStorage.removeItem("stuff-desc/index/total");
+  },
   created() {
+    var total = sessionStorage.getItem("stuff-desc/index/total");
+    this.total = total ? total - 0 : 0;
+    var pageNo = sessionStorage.getItem("stuff-desc/index/pageNo");
+    this.pageNo = pageNo ? pageNo - 0 : 1;
+    //页数存到localstorage里面
+    var pageSize = localStorage.getItem("stuff-desc/index/pageSize");
+    this.pageSize = pageSize ? pageSize - 0 : 5;
     this.$store.dispatch("readSession", SET_MESSAGE_DATA);
     console.log(JSON.stringify(this.message_data, {}, 4));
     this.get_meeting_data();
     this.init_file(this.message_data.NOTICE_ID);
-    
+    this.status = this.message_data.REC_STATUS;
+    if (this.status == 1001) {
+      this.get_user_sign_table(this.pageSize, this.pageNo);
+    }
   },
   computed: {
-    ...mapGetters(["message_data"])
+    ...mapGetters(["message_data", "user_info"])
   },
   methods: {
+    fileType(name) {
+      return fileType(name);
+    },
+    handleSizeChange(e) {
+      localStorage.setItem("stuff-desc/index/pageSize", e);
+      this.pageNo = 1;
+      this.pageSize = e;
+      this.get_user_sign_table(e, 1);
+    },
+    handleCurrentChange(e) {
+      sessionStorage.setItem("stuff-desc/indexpageNo", e);
+      this.pageNo = e;
+      this.get_user_sign_table(this.pageSize, e);
+    },
+    submit_upload() {
+      this.$post(
+        "gwt/system/tbNoticeAttachment/addFiles",
+        {
+          noticeId: this.message_data.NOTICE_ID,
+          forwardId: "",
+          attaUploadNode: 2,
+          attaIds: this.user_upload_list
+            .filter(res => res.is_normal)
+            .map(res => res.id)
+            .join(",")
+        },
+        "json"
+      )
+        .then(res => {
+          if (action_fail(res)) return;
+          this.is_upload = false;
+          this.get_user_sign_table(this.pageSize, this.pageNo);
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
+    //删除用户自己签收附件
+    delete_user_file(index) {
+      delete_item({
+        url: "gwt/cloudisk/attachment/del",
+        title: "您确定要删除附件吗?",
+        data: {
+          id: this.user_upload_list[index].id
+        },
+        success: res => {
+          if (action_fail(res)) return;
+          this.get_user_sign_table(this.pageSize, this.pageNo);
+        }
+      });
+    },
+    upload_img(e) {
+      var formData = new FormData();
+      formData.append("selectFile", e.raw);
+      formData.append("ownerSystem", "gwt-platform");
+      formData.append("ownerModule", "Anno");
+      formData.append("ownerAperation", "ownerAperation");
+      formData.append("uploadOpt", "add");
+      formData.append("editFileId", undefined);
+      this.$post("gwt/uploadFile/upload", formData, "form")
+        .then(res => {
+          if (action_fail(res, "上传成功！", "上传失败！")) return;
+          res.data.attachment.url = e.url;
+          res.data.attachment.is_normal = true;
+          this.user_upload_list.push(res.data.attachment);
+          this.is_upload = true;
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
+
     //导入部门
     select_nav(index) {
       this.current = index;
     },
-    // 查看人员报名表数据
- 
+    // 查看附件列表
+    get_user_sign_table(pageSize, pageNo) {
+      this.$post(
+        `gwt/system/tbNoticeAttachment/attachmentList?${qs.stringify({
+          pageSize,
+          pageNo
+        })}`,
+        {
+          noticeId: this.message_data.NOTICE_ID,
+          attaUploadNode: 2
+        },
+        "json"
+      )
+        .then(res => {
+          if (res.result !== "0000") {
+            return;
+          }
+          this.tableData = res.data.tbNoticeAttachmentPageBean;
+          this.total = res.data.totalCount;
+          for (var i = 0; i < res.data.tbNoticeAttachmentPageBean.length; i++) {
+            if (
+              res.data.tbNoticeAttachmentPageBean[i].UPLOAD_USER ==
+              this.user_info.sysOrgUserX.id
+            ) {
+              this.user_upload_list = res.data.tbNoticeAttachmentPageBean[
+                i
+              ].ATTA_INFOS.map(res => {
+                res.url = "/" + res.attaPath + "/" + res.ressmallImgName;
+                return res;
+              });
+              break;
+            }
+          }
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
     //转发
     forward_report() {
       this.$router.push({
@@ -250,6 +440,9 @@ export default {
           this.tbNoticeSign = res.data.tbNoticeSign;
           this.tbNoticeRefuse = res.data.tbNoticeRefuse;
           this.status = res.data.tbNoticeReceive.recStatus;
+          if (this.status == 1001) {
+            this.get_user_sign_table(this.pageSize, this.pageNo);
+          }
         })
         .catch(res => {
           this.loading = false;
@@ -341,6 +534,33 @@ export default {
 };
 </script>
 <style rel="stylesheet/scss" lang="scss" scoped>
+.file-list {
+  width: 60%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  margin: 0 auto;
+  text-align: left;
+  .svg-icon {
+    font-size: 16px;
+  }
+}
+.stuff-footer {
+  padding: 0px 20px 40px;
+  .tips {
+    color: rgb(220, 20, 60);
+    font-size: 13px;
+    margin-bottom: 12px;
+  }
+  .stuff-button {
+    font-size: 14px;
+  }
+}
+.stuff-common {
+  margin: 0 auto;
+  width: 90%;
+  background-color: #fff;
+}
 .sign-up {
   width: 90%;
   margin: 0 auto;

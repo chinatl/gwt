@@ -4,7 +4,7 @@
         <div class="common-action">
             <div>
                 <el-select v-model="noticeType" size="medium" style="margin-right:8px;" @change="condition">
-                    <el-option v-for="(item,index) in meeting_type_list" :key='index' :label="item.itemName" :value="index"></el-option>
+                    <el-option v-for="(item,index) in meeting_type_list" :key='index' :label="item.itemName" :value="item.sn"></el-option>
                 </el-select>
                 <el-date-picker
                     v-model="date"
@@ -71,6 +71,8 @@ export default {
     this.total = total ? total - 0 : 0;
     var pageNo = sessionStorage.getItem("public-notice/signin/pageNo");
     this.pageNo = pageNo ? pageNo - 0 : 1;
+    var noticeType = sessionStorage.getItem("public-notice/signin/noticeType");
+    this.noticeType = noticeType ? noticeType : "";
     var pageSize = localStorage.getItem("public-notice/signin/pageSize");
     this.pageSize = pageSize ? pageSize - 0 : 10;
     this.init(this.pageSize, this.pageNo);
@@ -80,6 +82,10 @@ export default {
   },
   methods: {
     condition() {
+      sessionStorage.setItem(
+        "public-notice/signin/noticeType",
+        this.noticeType
+      );
       this.pageNo = 1;
       sessionStorage.setItem("public-notice/signin/pageNo", 1);
       this.init(this.pageSize, 1);
@@ -92,8 +98,14 @@ export default {
         });
         //通知
       } else if (item.NOTICE_TYPE === 3) {
+        this.$router.push({
+          path: "/stuff-desc/index"
+        });
         //材料征集
       } else if (item.NOTICE_TYPE === 1) {
+        this.$router.push({
+          path:'/meeting-desc/index'
+        })
         //会议通知
       }
     },

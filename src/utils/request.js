@@ -31,7 +31,10 @@ service.interceptors.response.use(
      * code为非20000是抛错 可结合自己业务进行修改
      */
     const res = response.data
-    if (res.sEcho === '1' || res.ret === 0 || typeof res.data === 'object' || typeof res.recordsTotal === 'number' || res.result &&  res.result !== "7002") {
+    if (res.sEcho === '1' || res.ret === 0 || typeof res.data === 'object' || typeof res.recordsTotal === 'number' || res.result
+      && res.result !== "7001"
+      && res.result !== "7000"
+      && res.result !== "7002") {
       return response.data
     } else {
       Message({
@@ -48,7 +51,7 @@ service.interceptors.response.use(
           path: '/login'
         })
       }
-      if (res.result === '7001') {
+      if (res.result === '7000') {
         Message({
           message: 'token过期，请重新登录！',
           type: 'error'

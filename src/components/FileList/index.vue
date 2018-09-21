@@ -2,17 +2,17 @@
 <div class="cnclosure-area" v-if="list.length">
     <div class="cnclosure-list" v-for='(item,index) in list' :key="index">
         <div class="file-logo">
-            <img :src="item.url" v-if="item.type">
-            <svg-icon :icon-class='get_svg_name(item.type)' v-else></svg-icon>
+            <img :src="item.url" v-if="get_svg_name(item.suffix) === 'photo'">
+            <svg-icon :icon-class='get_svg_name(item.suffix)' v-else></svg-icon>
         </div>
         <div class="file-name">{{item.originalName}}</div>
         <div class="cnclosure-mask">
             <div class="cnclosure-mask-title">{{item.originalName}}</div>
             <div class="cnclosure-mask-action">
                 <div class="file-action">
-                    <i class="el-icon-delete" @click="delete_file(index)"></i>
+                    <i class="el-icon-delete" @click="delete_file(index)" v-if="!remove"></i>
                     <svg-icon icon-class='眼睛' @click.native="preview(item)"
-                     v-if="get_svg_name(item.type) === 'pdf' || get_svg_name(item.type) === 'png'"></svg-icon>
+                     v-if="get_svg_name(item.suffix) === 'pdf' || get_svg_name(item.suffix) === 'photo'"></svg-icon>
                     <i class="el-icon-download" @click="download_file(item)"></i>
                 </div>
                 <div class="file-size">{{item.attaSize | fileSize}}</div>
@@ -32,24 +32,37 @@ export default {
     list: {
       default: [],
       required: true
+    },
+    remove: {
+      default: false
     }
   },
   methods: {
     preview(item) {
-      var url = config + item.attaPath + "/" + item.storeName;
-      this.$axios({
-        url,
-        headers: {
-          Authorization: this.$store.getters.token
-        },
-        responseType: "blob"
-      })
-        .then(res => {
-          window.open(window.URL.createObjectURL(res.data));
-        })
-        .catch(res => {
-          console.log(res);
-        });
+      console.log(item);
+      window.open(item.fullAttaPath);
+      return
+      // var url = config + item.attaPath + "/" + item.storeName;
+      // this.$axios({
+      //   url,
+      //   headers: {
+      //     Authorization: this.$store.getters.token
+      //   },
+      //   responseType: "blob"
+      // })
+      //   .then(res => {
+      //     var eleLink = document.createElement("a");
+      //     eleLink.style.display = "none";
+      //     // 字符内容转变成blob地址
+      //     var blob = new Blob([res.data]);
+      //     eleLink.href = URL.createObjectURL(blob);
+      //     eleLink.target = "_blank";
+      //     // 触发点击
+      //     eleLink.click();
+      //   })
+      //   .catch(res => {
+      //     console.log(res);
+      //   });
     },
     //删除文件
     delete_file(index) {
@@ -85,8 +98,6 @@ export default {
     },
     //  获取文件类型
     get_svg_name(name) {
-      console.log(name);
-      console.log(fileType(name));
       return fileType(name);
     }
   }
@@ -122,6 +133,7 @@ export default {
       bottom: 0;
       display: none;
       .cnclosure-mask-title {
+        padding-top: 12px;
         height: 108px;
         background-color: rgba(224, 224, 224, 0.5);
         color: #000;

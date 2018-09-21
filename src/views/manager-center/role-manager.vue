@@ -114,7 +114,7 @@
                   <el-button type="primary" icon="el-icon-search" size='medium' style="margin:0 8px" v-wave @click="condition_search">搜索</el-button>
                </div>
                <div>
-                  <el-button type="success" icon="el-icon-plus" size='medium' style="margin:0 8px" v-wave>新增角色</el-button>
+                  <el-button type="success" icon="el-icon-plus" size='medium' style="margin:0 8px" v-wave @click="add_role">新增角色</el-button>
                </div>
              </div>
              <div class="common-table">
@@ -143,7 +143,7 @@
                   >
                   <template slot-scope="scope">
                       <little-button name='添加' @click="open_add_user_dialog(scope.row)"></little-button>
-                      <little-button name='查看'  @click="handleDelete(scope.row.domainId)"></little-button>
+                      <little-button name='查看' @click="edit_role(scope.row)"></little-button>
                   </template>
                   </el-table-column>
               </el-table>
@@ -160,9 +160,37 @@
               :total="total">
             </el-pagination>
             </div>
-        <add-user :show='add_dialog' 
-        @cancel='add_dialog = false'
-        @close='add_dialog = false' :loading='dialog_loading' @submit="submit_add_user" :user-list='user_list'></add-user>
+            <el-dialog :close-on-click-modal='false'
+            :title="role_type === 'add' ? '新增角色':'编辑角色'"
+            class="common-dialog padding0"
+            :visible.sync="role_visible">
+            <el-form ref="form" :model="form" label-width="80px" :rules="rules"  v-loading='form_loading'>
+                <el-form-item label="角色名称" prop='roleName' maxlength='10'>
+                    <el-input v-model="form.roleName" size="small" :readonly='role_type === "update"'></el-input>
+                </el-form-item>
+                <el-form-item :label="item.appName" v-for="(item,index) in checked_list" :key="index +'00'">
+                    <el-checkbox-group v-model="item.checked">
+                        <el-checkbox 
+                        readonly
+                        :label="item_check.resId" :name="item_check.appId" v-for="(item_check,index_check) in item.children" :key="index_check">{{item_check.resName}}</el-checkbox>
+                    </el-checkbox-group>
+                </el-form-item>
+                <el-form-item label="角色描述" prop="remark">
+                        <el-input type="textarea" v-model="form.remark" :autosize="{ minRows: 4, maxRows: 6}" :readonly='role_type === "update"'></el-input>
+                </el-form-item>
+                <form-button @cancel='onCancel' @submit="onSubmit" v-if="is_admin || role_type=== 'add'"></form-button>
+                <div style='height:20px' v-else></div>
+            </el-form>
+        </el-dialog>
+        <add-role 
+          :show='add_dialog' 
+          @cancel='add_dialog = false'
+          @close='add_dialog = false' 
+          @submit="submit_add_user" 
+          :loading='dialog_loading' 
+          :all-list='all_list'
+          :user-list='user_list'>
+        </add-role>
         </div>
       </t-layout>
     </div>
@@ -172,14 +200,14 @@ import formButton from "@/components/Button/formButton";
 import littleButton from "@/components/Button/littleButton";
 import qs from "qs";
 import { mapGetters } from "vuex";
-import AddUser from "@/components/AddUser";
+import AddRole from "@/components/AddRole";
 import { generate_tree } from "@/utils";
 
 export default {
   components: {
     formButton,
     littleButton,
-    AddUser
+    AddRole
   },
   data() {
     return {
@@ -194,6 +222,7 @@ export default {
         roleName: "",
         remark: ""
       },
+      all_list: [],
       tableData: [],
       rules: {
         roleName: [
@@ -232,6 +261,7 @@ export default {
       this.get_all_resource();
       this.init(this.pageSize, this.pageNo);
     } else {
+      this.get_all_resource();
       this.get_user_tree_data();
     }
   },
@@ -249,6 +279,15 @@ export default {
   },
   methods: {
     //
+    search_user_by_part(org_id) {
+      this.$post("gwt/system/sysUserRoleOrg/getListByOrgId", {
+        org_id
+      },'json')
+        .then(res => {
+          this.all_list = res.data.sysUserList;
+        })
+        .catch(res => {});
+    },
     condition_search() {
       this.pageNo = 1;
       this.search_role_by_part(this.pageSize, 1);
@@ -270,7 +309,8 @@ export default {
         {
           userIds: res.map(res => res.ID).join(","),
           orgId: this.temp_data.id,
-          roleId: this.form_data.roleId
+          roleId: this.form_data.roleId,
+          canDel: 0
         },
         "json"
       )
@@ -340,6 +380,7 @@ export default {
     handleNodeClick(data) {
       this.current = 0;
       this.temp_data = data;
+      this.search_user_by_part(data.id);
       this.search_role_by_part(this.pageSize, this.pageNo);
     },
     //获取部门树数据
@@ -555,6 +596,10 @@ export default {
       this.role_visible = false;
     },
     add_role() {
+      this.checked_list = this.checked_list.map(res => {
+        res.checked = [];
+        return res;
+      });
       this.role_type = "add";
       this.role_visible = true;
       this.$nextTick(res => {

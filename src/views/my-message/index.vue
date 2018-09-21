@@ -137,6 +137,7 @@ export default {
               }
               for (var i = 0; i < tableData.length; i++) {
                 tableData[i].REC_STATUS = res.data.stateList[i].REC_STATUS;
+                tableData[i].NOTICE_ID = res.data.stateList[i].NOTICE_ID;
               }
               this.tableData = tableData;
             })
@@ -149,18 +150,27 @@ export default {
         });
     },
     go_desc(item) {
+      item.RECEIVE_ID = item.RECV_ID;
       this.$store.commit(SET_MESSAGE_DATA, item);
-      // if(item.TYPE_ID === 1){
-
-      // }
-      if (item.TYPE_ID === 5) {
+      if (item.TYPE_DESC === "通知") {
+        this.$router.push({
+          path: "/notice-desc/index"
+        });
+        //通知
+      } else if (item.TYPE_DESC === "材料征集") {
+        this.$router.push({
+          path: "/stuff-desc/index"
+        });
+        //材料征集
+      } else if (item.TYPE_DESC === "会议通知") {
+        this.$router.push({
+          path: "/meeting-desc/index"
+        });
+        //会议通知
+      } else if (item.TYPE_DESC === "举报") {
         this.$store.dispatch("get_report_desc", item.MSG_ID);
         this.$router.push({
           path: "/report/index"
-        });
-      } else {
-        this.$router.push({
-          path: "/notice-desc/index"
         });
       }
     },

@@ -94,7 +94,7 @@ export default {
                 return;
               }
               this.$router.push({
-                path: "/firstlogin/edit"
+                path: "/firstlogin/success"
               });
             })
             .catch(res => {

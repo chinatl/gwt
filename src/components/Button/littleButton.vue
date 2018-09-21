@@ -1,5 +1,5 @@
 <template>
-    <span  :class="'little-button ' + classTitle" @click="submit"><svg-icon :icon-class='className.iconName' v-if="className.iconName"></svg-icon>{{name}}</span>
+    <span  :class="'little-button ' + classTitle" @click.stop="submit"><svg-icon :icon-class='className.iconName' v-if="className.iconName"></svg-icon>{{name}}</span>
 </template>
 <script>
 export default {
@@ -170,6 +170,10 @@ export default {
             className: "rukediaochan"
           };
         case "公告":
+          return {
+            className: "rukediaochan"
+          };
+        case "网站信息":
           return {
             className: "rukediaochan"
           };

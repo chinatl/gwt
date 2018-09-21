@@ -25,7 +25,8 @@ const app = {
                 }
                 res.data.sysDic.unshift({
                     itemName: '全部类型',
-                    itemKey: ''
+                    itemKey: '',
+                    sn:''
                 })
                 commit(SET_MEETING_TYPE_LIST, res.data.sysDic);
             })
