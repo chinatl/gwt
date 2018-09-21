@@ -282,6 +282,7 @@ export default {
     },
     //递归取数
     go_child_file(index) {
+      this.input = ""
       if (index === this.file_nav.length) {
         return;
       }
@@ -311,14 +312,6 @@ export default {
           // console.log(this.totalCount)
         }
       });
-      // for (var i = 0; i < this.file_nav.length; i++) {
-      //   arr = arr[this.file_nav[i].index].children;
-      //   if (i === index) {
-      //     break;
-      //   }
-      // }
-      // this.tableData = arr;
-      // this.file_nav = this.file_nav.slice(0, index + 1);
     },
     //
     show_all_file() {

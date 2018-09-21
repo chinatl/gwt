@@ -335,7 +335,12 @@ export default {
       },
       //验证码
       time: 60, // 发送验证码倒计时
-      sendMsgDisabled: false
+      sendMsgDisabled: false,
+      resetform:{
+        duty:"",
+        phone:"",
+        remark:""
+      }
     };
   },
   created() {
@@ -401,6 +406,11 @@ export default {
       
     },
     resetForm(formName) {
+        // this.resetform.duty = this.userform.duty;
+        // this.resetform.phone = this.userform.phone;
+        // this.resetform.remark = this.userform.remark;
+        console.log(this.userform.duty)
+        this.$refs[formName].resetFields();
         this.isHide = true;
     },
     //获取登陆信息表格

@@ -15,7 +15,7 @@
           <div class="common-action">
               <div class="disk-cloud">
                   <upload-button icon="el-icon-upload2" @on-change="upload_img" size='medium' type="success" v-wave>上传</upload-button>
-                  <el-button type="success" icon="el-icon-plus" size='medium' v-wave @click="dialogFolderVisible = true">新建文件夹</el-button>
+                  <el-button type="success" icon="el-icon-plus" size='medium' v-wave @click="add_older">新建文件夹</el-button>
                   <el-button type="primary" icon="el-icon-download" size='medium' v-wave @click="download_file">下载</el-button>
                   <el-button type="danger" icon="el-icon-close" size='medium' v-wave @click="delete_btn">删除</el-button>
                   <el-button type="warning" icon="el-icon-close" size='medium' v-wave @click="report">举报</el-button>
@@ -63,25 +63,13 @@
               :total="totalCount">
               </el-pagination>
           </div>
-          <!-- 新建文件夹弹窗 -->
-          <el-dialog title="请输入新建文件夹名称" :visible.sync="dialogFolderVisible" center class="folder" width="30%">
-            <el-form :model="folderform" :rules="folderrules" ref="folderform" @submit.native.prevent>
-              <el-form-item prop="foldername">
-                <el-input v-model="folderform.foldername" autocomplete="off"></el-input>
-              </el-form-item>
-            </el-form>
-            <div slot="footer" class="dialog-footer">
-              <el-button @click="dialogFolderVisible = false">取 消</el-button>
-              <el-button type="primary" @click="add_older('folderform')">确 定</el-button>
-            </div>
-          </el-dialog>
           <!-- 举报弹框 -->
           <el-dialog
             title="举报信息"
             :visible.sync="reportDialogVisible"
             class="common-dialog edu"
-            width="40%">
-            <el-form ref="reportform" :model="reportform" :rules="reportrules">
+            width="40%" v-loading='loading'>
+            <el-form ref="reportform" :model="reportform" :rules="reportrules" autocomplete="off">
               <el-form-item prop="type">
                 <el-checkbox-group v-model="reportform.type">
                   <el-checkbox label="信息涉密" name="type"></el-checkbox>
@@ -154,6 +142,7 @@ export default {
       dialogFolderVisible: false,
 
       current_user: {
+        id:"",
         userId: "",
         orgId: "",
         originalName: ""
@@ -166,11 +155,6 @@ export default {
         originalName: "",
         userName: ""
       },
-      folderrules: {
-        foldername: [
-          { required: true, message: "文件名不能为空", trigger: "blur" }
-        ]
-      },
       type: "",
       dirId: "",
       fileId: "",
@@ -181,7 +165,8 @@ export default {
       temp_data: {},
       reportDialogVisible: false,
       originalName: "",
-      input: ""
+      input: "",
+      attaPath:"",
     };
   },
   computed: {
@@ -211,6 +196,7 @@ export default {
           this.$message.error(res.msg);
         }
         this.current_user = res.data.hashMap;
+        this.current_user.id = res.data.hashMap.id;
         this.current_user.userId = res.data.hashMap.userId;
         this.current_user.orgId = res.data.hashMap.orgId;
       });
@@ -238,6 +224,7 @@ export default {
         {
           originalName: this.input,
           orgId: this.temp_data.orgId,
+          userxId:this.current_user.id,
           searchFlag: this.input ? "Y" : "N",
           parentId: this.parentId
         },
@@ -257,7 +244,7 @@ export default {
     },
     //上传
     upload_img(e) {
-      console.log(e);
+      // console.log(e);
       var formData = new FormData();
       formData.append("ownerSystem", "gwt-platform");
       formData.append("ownerModule", "cloudisk");
@@ -272,8 +259,11 @@ export default {
       this.$post("gwt/uploadFile/uploadCloudisk", formData, "form")
         .then(res => {
           console.log(res);
+          this.attaPath = res.data.attachmentList[0].attaPath;
+          // console.log(res.data.attachmentList[0].attaPath)
           if (res.result === "0000") {
-            this.get_deptCloudisk();
+            this.get_deptCloudisk(this.pageSize, 1);
+            
             this.$message({
               type: "success",
               message: "上传成功"
@@ -284,16 +274,26 @@ export default {
     },
     //新建文件夹
     add_older(formName) {
-      // alert(this.folderform.foldername)
-      console.log(this.folderform);
-      this.$refs[formName].validate(valid => {
-        if (valid) {
+      this.$swal({
+        confirmButtonText: "确定",
+        showCancelButton: true,
+        cancelButtonText: "取消",
+        title: "请输入新建文件夹名称",
+        input: "text",
+        showCancelButton: true,
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        inputValidator: value => {
+          return !value && "文件夹名不能為空！";
+        }
+      }).then(res=>{
+        if(res.value){
           this.$post(
             `gwt/cloudisk/cloudiskAttaDir/addFolder`,
             {
               type: "org",
               orgId: this.temp_data.orgId,
-              name: this.folderform.foldername,
+              name: res.value,
               parentId: this.parentId
             },
             "json"
@@ -301,7 +301,7 @@ export default {
             console.log(res);
             if (res.result === "0000") {
               this.dialogFolderVisible = false;
-              this.get_deptCloudisk();
+              this.get_deptCloudisk(this.pageSize,this.pageNo);
               this.$message({
                 type: "success",
                 message: "新建成功"
@@ -309,13 +309,10 @@ export default {
             } else {
               this.$message.error(res.msg);
             }
-            // console.log(this.tableData.type)
           });
-        } else {
-          console.log("error submit!!");
-          return false;
         }
-      });
+
+      })
     },
     //下载
     download_file() {
@@ -386,7 +383,7 @@ export default {
           .then(res => {
             console.log(res);
             if (res.result === "0000") {
-              this.get_deptCloudisk();
+              this.get_deptCloudisk(this.pageSize,this.pageNo);
               this.$message({
                 type: "success",
                 message: "删除成功"
@@ -415,8 +412,7 @@ export default {
     },
     //举报信息提交
     submit_report(formName) {
-      console.log(this.reportform.type);
-      console.log(this.reportform);
+      // console.log(this.reportform.type);
       this.$refs[formName].validate(valid => {
         if (valid) {
           this.$post(
@@ -433,12 +429,13 @@ export default {
               return;
             }
             this.reportDialogVisible = false;
-            this.get_deptCloudisk();
+            this.get_deptCloudisk(this.pageSize,this.pageNo);
             this.$message({
               type: "success",
               message: "举报成功"
             });
-          });
+            // location.reload()
+          }); 
         } else {
           console.log("error submit!!");
           return false;
@@ -452,10 +449,11 @@ export default {
       // }
       this.temp_data = item;
       console.log(item);
-      this.get_deptCloudisk();
+      this.get_deptCloudisk(this.pageSize,1);
     },
     //递归取数
     go_child_file(index) {
+      this.input = ""
       if (index === this.file_nav.length) {
         return;
       }
@@ -491,6 +489,7 @@ export default {
       this.file_nav = [];
       this.parentId = "";
       this.pageNo = 1;
+      this.input = ""
       this.get_deptCloudisk(this.pageSize, 1);
     },
     file_click(index) {
@@ -505,13 +504,14 @@ export default {
         this.parentId = index.dirId;
         this.pageNo = 1;
         this.get_deptCloudisk(this.pageSize, 1);
-      }else{
+      }
         var img_src = index.originalName.substring(index.originalName.lastIndexOf("."),index.originalName.length)
         console.log(img_src)
         if(img_src !=".bmp" && img_src != ".png" && img_src != ".gif" && img_src != ".jpg" && img_src != ".jpeg"){
-          
+          return;
         }
-      }
+        window.open(`http://192.168.31.7/#/part-cloud-disk/index/${this.attaPath}/${index.originalName}`)
+      
       
     },
     //row-click
@@ -655,5 +655,7 @@ export default {
 .textarea {
   margin-top: 20px;
 }
-
+.footer_btn{
+  margin-left: 30%;
+}
 </style>
