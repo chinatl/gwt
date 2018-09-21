@@ -466,9 +466,10 @@ export default {
             if (res.result !== "0000") {
               this.$message.error(res.msg);
             } else {
-              this.$message.success(res.msg);
+              this.$message.success("密码修改成功,请重新登陆！")
               this.userform.password = this.pwdform.newpwd1.replace(/\w/g, "*");
               this.role_visible = false;
+              this.$router.push({ path: "/login" })
               // this.getUserInfo();
             }
           });
