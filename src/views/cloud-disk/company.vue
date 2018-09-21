@@ -434,6 +434,7 @@ export default {
               type: "success",
               message: "举报成功"
             });
+            this.reportform = {}
             // location.reload()
           }); 
         } else {

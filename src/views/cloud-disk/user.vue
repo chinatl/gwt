@@ -190,6 +190,7 @@ export default {
                 type: "success",
                 message: "新建成功"
               });
+              this.folderform = {}
             } else {
               this.$message.error(res.msg);
             }

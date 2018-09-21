@@ -121,7 +121,7 @@
                 <el-form-item label="验证码" prop='code'>
                     <el-input v-model="phone_first_visible_form.code" placeholder="请输入验证码"></el-input>
                 </el-form-item>
-                <el-form-item>
+                <el-form-item class="optionbtn">
                   <el-button type="primary" @click="onSubmit_second('phone_first_visible_form')">完成</el-button>
                   <el-button @click="onCancel_second('ruleForm')">取消</el-button>
                 </el-form-item>
@@ -370,6 +370,12 @@ export default {
           this.userform.mobilePhone = res.data.user.mobilePhone;
           this.userform.password = res.data.user.password.replace(/\w/g, "*");
           this.userform.pwd = res.data.user.password;
+
+          this.resetform.duty = res.data.user.sysOrgUserX.duty;
+          this.resetform.userLevelName = res.data.user.sysOrgUserX.userLevelName;
+          this.resetform.phone = res.data.user.sysOrgUserX.phone;
+          this.resetform.remark = res.data.user.sysOrgUserX.remark;
+
           this.user_img = res.data.AttrHeadId;
           this.isShow = !this.isShow;
           this.isHide = !this.isHide;
@@ -408,12 +414,14 @@ export default {
       });
     },
     resetForm(formName) {
-        // this.resetform.duty = this.userform.duty;
-        // this.resetform.phone = this.userform.phone;
-        // this.resetform.remark = this.userform.remark;
-        console.log(this.userform.duty)
-        this.$refs[formName].resetFields();
-        this.isHide = true;
+        if( this.userform.duty !== this.resetform.duty || this.userform.phone !== this.resetform.phone || this.userform.remark !== this.resetform.remark){
+          this.userform.duty = this.resetform.duty;
+          this.userform.phone = this.resetform.phone;
+          this.userform.remark = this.resetform.remark;
+          this.isHide = true
+        }else{
+          this.isHide = true
+        }
     },
     //获取登陆信息表格
     getloginTable() {
@@ -502,6 +510,7 @@ export default {
           console.log(res);
           if (res.result == "0000") {
             this.password_second_visible = true;
+            this.password_first_visible_form = {}
           } else {
             this.$message.error(res.msg);
           }
@@ -556,6 +565,7 @@ export default {
                   this.getUserInfo();
                   this.$message.success(res.msg);
                   this.password_second_visible = false;
+                  this.phone_first_visible_form = {}
                 }
               });
           } else {
@@ -694,5 +704,8 @@ export default {
 }
 .getcode {
   float: right;
+}
+.optionbtn{
+  text-align: center
 }
 </style>
