@@ -28,7 +28,7 @@
                 <el-table-column prop="originalName"  :label="file_name"  align="left"  show-overflow-tooltip> 
                     <template slot-scope="scope">
                       <div class="disk-icon" @click="file_click(scope.row)">
-                          <svg-icon :icon-class='get_svg_name(scope.row.name)'></svg-icon>
+                          <svg-icon :icon-class='get_svg_name(scope.row.suffix)'></svg-icon>
                           <span>{{scope.row.originalName}}</span>
                       </div>
                     </template>
@@ -66,6 +66,7 @@
 <script>
 import uploadButton from "@/components/Button/uploadButton";
 import qs from "qs";
+import { fileType } from "@/utils";
 export default {
   components: {
     uploadButton
@@ -329,6 +330,9 @@ export default {
     },
     //row-click
     get_svg_name(name) {
+      if(!name){
+        return '文件夹'
+      }
       if (this.doc_reg.test(name)) {
         return "doc";
       }
@@ -344,7 +348,10 @@ export default {
       if (this.pdf_reg.test(name)) {
         return "pdf";
       }
-      return "文件夹";
+      if (name.includes("txt")) {
+        return "txt";
+      }
+      return 'unknown'
     },
     handleSelectionChange(e) {
       console.log(e);

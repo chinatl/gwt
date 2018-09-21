@@ -680,6 +680,7 @@ export default {
       this.search_user_list(this.pageSize, e);
     },
     edit_user(item) {
+      console.log(JSON.stringify(item,{},4));
       this.user_visible = true;
       this.user_type = "update";
       this.form.userName = item.userName;
@@ -759,7 +760,7 @@ export default {
             mobilePhone: this.form.mobilePhone,
             realName: this.form.realName,
             sex: this.form.sex,
-            "sysOrgUserX.orgId":orgId,
+            "sysOrgUserX.orgId": orgId,
             "sysOrgUserX.id": id,
             "sysOrgUserX.userLevel": this.form.userLevel,
             roleIds: this.form.roleIds.join(","),
@@ -790,7 +791,7 @@ export default {
             this.search_user_list(this.pageSize, this.pageNo);
           })
           .catch(res => {
-            console.log(res)
+            console.log(res);
             this.dialog_loading = false;
           });
       });

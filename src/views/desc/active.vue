@@ -96,6 +96,7 @@
                     border
                     v-loading ='loading'
                     style="width: 100%">
+                    <el-table-column label="附件"></el-table-column>
                     <el-table-column
                     prop="REAL_NAME"
                     align="center"
@@ -149,6 +150,7 @@
                     border
                     v-loading ='loading'
                     style="width: 100%">
+                    <el-table-column label="已报名"></el-table-column>
                     <el-table-column
                     prop="REAL_NAME"
                     align="center"
@@ -202,6 +204,7 @@
                     border
                     v-loading ='loading'
                     style="width: 100%">
+                    <el-table-column label="已签收"></el-table-column>
                     <el-table-column
                     prop="REAL_NAME"
                     align="center"
@@ -260,6 +263,7 @@
                     border
                     v-loading ='loading'
                     style="width: 100%">
+                    <el-table-column label="已拒签"></el-table-column>
                     <el-table-column
                     prop="REAL_NAME"
                     align="center"
@@ -312,6 +316,7 @@
                     border
                     v-loading ='loading'
                     style="width: 100%">
+                    <el-table-column label="未签收"></el-table-column>
                     <el-table-column
                     prop="REAL_NAME"
                     align="center"
@@ -359,6 +364,7 @@
                     border
                     v-loading ='loading'
                     style="width: 100%">
+                    <el-table-column label="短信通知失败"></el-table-column>
                     <el-table-column
                     prop="REAL_NAME"
                     align="center"
@@ -383,142 +389,6 @@
                     prop="ORG_ALL_NAME"
                     align="center"
                     label="签收时间">
-                    </el-table-column>
-                </el-table>
-            </div>
-            <div class="common-page">
-                <el-pagination
-                @size-change="handleSizeChange"
-                @current-change="handleCurrentChange"
-                :current-page.sync="pageNo"
-                :page-sizes="$store.getters.page_list"
-                :page-size="pageSize"
-                layout="total, sizes, prev, pager, next, jumper"
-                background
-                :total="total">
-                </el-pagination>
-            </div>
-        </div>
-        <div class="meeting-div">
-            <div class="common-table">
-                <el-table
-                    :data="tableData"
-                    border
-                    v-loading ='loading'
-                    style="width: 100%">
-                    <el-table-column
-                    prop="REAL_NAME"
-                    align="center"
-                    label="姓名">
-                    </el-table-column>
-                    <el-table-column
-                    prop="appName"
-                    align="center"
-                    label="职务">
-                    </el-table-column>
-                    <el-table-column
-                    prop="MOBILE_PHONE"
-                    align="center"
-                    label="联系方式	">
-                    </el-table-column>
-                    <el-table-column
-                    prop="ORG_ALL_NAME"
-                    align="center"
-                    label="所属部门">
-                    </el-table-column>
-                    <el-table-column
-                    prop="ORG_ALL_NAME"
-                    align="center"
-                    label="拒签时间">
-                    </el-table-column>
-                    <el-table-column
-                    prop="ORG_ALL_NAME"
-                    align="center"
-                    label="拒签理由">
-                    </el-table-column>
-                </el-table>
-            </div>
-            <div class="common-page">
-                <el-pagination
-                @size-change="handleSizeChange"
-                @current-change="handleCurrentChange"
-                :current-page.sync="pageNo"
-                :page-sizes="$store.getters.page_list"
-                :page-size="pageSize"
-                layout="total, sizes, prev, pager, next, jumper"
-                background
-                :total="total">
-                </el-pagination>
-            </div>
-        </div>
-        <div class="meeting-div">
-            <div class="common-table">
-                <el-table
-                    :data="tableData"
-                    border
-                    v-loading ='loading'
-                    style="width: 100%">
-                    <el-table-column
-                    prop="REAL_NAME"
-                    align="center"
-                    label="接收方">
-                    </el-table-column>
-                    <el-table-column
-                    prop="appName"
-                    align="center"
-                    label="阅读状态">
-                    </el-table-column>
-                    <el-table-column
-                    prop="MOBILE_PHONE"
-                    align="center"
-                    label="所属部门	">
-                    </el-table-column>
-                    <el-table-column
-                    prop="ORG_ALL_NAME"
-                    align="center"
-                    label="接收人信息">
-                    </el-table-column>
-                </el-table>
-            </div>
-            <div class="common-page">
-                <el-pagination
-                @size-change="handleSizeChange"
-                @current-change="handleCurrentChange"
-                :current-page.sync="pageNo"
-                :page-sizes="$store.getters.page_list"
-                :page-size="pageSize"
-                layout="total, sizes, prev, pager, next, jumper"
-                background
-                :total="total">
-                </el-pagination>
-            </div>
-        </div>
-        <div class="meeting-div">
-            <div class="common-table">
-                <el-table
-                    :data="tableData"
-                    border
-                    v-loading ='loading'
-                    style="width: 100%">
-                    <el-table-column
-                    prop="REAL_NAME"
-                    align="center"
-                    label="姓名">
-                    </el-table-column>
-                    <el-table-column
-                    prop="appName"
-                    align="center"
-                    label="职务">
-                    </el-table-column>
-                    <el-table-column
-                    prop="MOBILE_PHONE"
-                    align="center"
-                    label="联系方式	">
-                    </el-table-column>
-                    <el-table-column
-                    prop="ORG_ALL_NAME"
-                    align="center"
-                    label="所属部门">
                     </el-table-column>
                 </el-table>
             </div>
@@ -643,7 +513,6 @@ export default {
     var pageSize = localStorage.getItem("active-desc/index/pageSize");
     this.pageSize = pageSize ? pageSize - 0 : 5;
     this.$store.dispatch("readSession", SET_MESSAGE_DATA);
-    console.log(JSON.stringify(this.message_data, {}, 4));
     this.get_meeting_data();
     this.init_file(this.message_data.NOTICE_ID);
     this.get_type_nmuber();
@@ -679,7 +548,8 @@ export default {
           if (res.result !== "0000") {
             return;
           }
-          console.log(res);
+          this.tableData = res.data.tbNoticeItemPageBean.datas;
+          this.total = res.data.tbNoticeItemPageBean.totalCount - 0;
         })
         .catch(res => {
           console.log(res);
@@ -695,13 +565,15 @@ export default {
         {
           noticeId: this.message_data.NOTICE_ID,
           dataType: 3
-        }
+        },
+        "json"
       )
         .then(res => {
           if (res.result !== "0000") {
             return;
           }
-          console.log(res);
+          this.tableData = res.data.tbNoticeItemPageBean.datas;
+          this.total = res.data.tbNoticeItemPageBean.totalCount - 0;
         })
         .catch(res => {
           console.log(res);

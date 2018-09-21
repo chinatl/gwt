@@ -71,7 +71,7 @@
             </div>
         </div>
         <div class="meeting-div"  v-show="current === 0">
-            <div style="padding-left:20px;padding-bottom:10px" v-if="isTimeOut">>
+            <div style="padding-left:20px;padding-bottom:10px" v-if="isTimeOut">
                 <el-button type="success" size="medium" icon="el-icon-plus" @click="add_user_dialog = true">部门导入</el-button>
             </div>
              <div class="common-table">

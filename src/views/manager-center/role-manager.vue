@@ -143,7 +143,7 @@
                   >
                   <template slot-scope="scope">
                       <little-button name='添加' @click="open_add_user_dialog(scope.row)"></little-button>
-                      <little-button name='查看'  @click="handleDelete(scope.row.domainId)"></little-button>
+                      <little-button name='查看' @click="look_user(scope.row)"></little-button>
                   </template>
                   </el-table-column>
               </el-table>
@@ -248,6 +248,9 @@ export default {
     }
   },
   methods: {
+    look_user(item) {
+      console.log(item);
+    },
     //
     condition_search() {
       this.pageNo = 1;
