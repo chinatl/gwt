@@ -121,7 +121,11 @@
                 <el-form-item label="验证码" prop='code'>
                     <el-input v-model="phone_first_visible_form.code" placeholder="请输入验证码"></el-input>
                 </el-form-item>
-                <form-button @cancel='onCancel_second' @submit="onSubmit_second" submit_name='完成'></form-button>
+                <el-form-item>
+                  <el-button type="primary" @click="onSubmit_second('phone_first_visible_form')">完成</el-button>
+                  <el-button @click="onCancel_second('ruleForm')">取消</el-button>
+                </el-form-item>
+                <!-- <form-button @cancel='onCancel_second' @submit="onSubmit_second('phone_first_visible_form')" submit_name='完成'></form-button> -->
             </el-form>
         </el-dialog>
         <!-- 上传图片弹框 -->
@@ -177,7 +181,7 @@
                     <el-input type="password" v-model="pwdform.oldpwd" size="small" placeholder="请输入原密码"></el-input>
                 </el-form-item>
                 <el-form-item label="新密码" prop='newpwd1'>
-                    <el-input type="password" v-model="pwdform.newpwd1" size="small" placeholder="请输入8-20位，字母与数字组合的新密码" autocomplete="off"></el-input>
+                    <el-input type="password" v-model="pwdform.newpwd1" size="small" placeholder="请输入6-12位，字母与数字组合的新密码" autocomplete="off"></el-input>
                 </el-form-item>
                 <el-form-item label="确认密码" prop='newpwd2'>
                     <el-input type="password" v-model="pwdform.newpwd2" size="small" placeholder="请再次输入密码" autocomplete="off"></el-input>
@@ -229,9 +233,9 @@ export default {
       if (value === "") {
         callback(new Error("请输入密码"));
       } else if (
-        !/^\S*([a-zA-Z]+\S*[0-9]+|[0-9]+\S*[a-zA-Z]+)\S*$/.test(value)
+        !/^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{6,12}$/.test(value)
       ) {
-        callback(new Error("密码必须是字母和数字组合，不能为纯数字或字母!"));
+        callback(new Error("请输入6-12位，字母与数字组合的新密码"));
       } else {
         if (this.pwdform.newpwd2 !== "") {
           this.$refs.pwdform.validateField("newpwd2");
@@ -327,7 +331,6 @@ export default {
         phone: [
           {
             required: true,
-            message: "请输入手机号",
             trigger: "blur",
             validator: validPhone
           }
@@ -536,22 +539,30 @@ export default {
     onCancel_second() {
       this.password_second_visible = false;
     },
-    onSubmit_second() {
-      this.$post(
-        `gwt/system/sysUserZone/changPhone`,
-        {
-          newPhoneNum: this.phone_first_visible_form.phone,
-          oldPhone: this.userform.mobilePhone
-        },
-        "json"
-      ).then(res => {
-        console.log(res);
-        if (res.result === "0000") {
-          this.getUserInfo();
-          this.$message.success(res.msg);
-          this.password_second_visible = false;
-        }
-      });
+    onSubmit_second(formName) {
+      this.$refs[formName].validate((valid) => {
+          if (valid) {
+             this.$post(
+                `gwt/system/sysUserZone/changPhone`,
+                {
+                  newPhoneNum: this.phone_first_visible_form.phone,
+                  oldPhone: this.userform.mobilePhone
+                },
+                "json"
+              ).then(res => {
+                console.log(res);
+                if (res.result === "0000") {
+                  this.getUserInfo();
+                  this.$message.success(res.msg);
+                  this.password_second_visible = false;
+                }
+              });
+          } else {
+            console.log('error submit!!');
+            return false;
+          }
+        });
+     
     },
     download(type) {
       // console.log(this.userform.id)
