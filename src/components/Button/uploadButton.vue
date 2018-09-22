@@ -32,6 +32,7 @@ export default {
   },
   methods: {
     upload_img(e) {
+      console.log(e);
       if (e.size / 1024 / 1024 > 20) {
         this.$message({
           message: "请上传20M以内的文件",

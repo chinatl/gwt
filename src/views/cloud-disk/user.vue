@@ -34,7 +34,11 @@
                       </div>
                     </template>
                 </el-table-column>
-                <el-table-column prop="attaSize"  label="大小" align="center"  width="100"></el-table-column>
+                <el-table-column prop="attaSize"  label="大小" align="center"  width="100">
+                  <template slot-scope="scope">
+                    {{scope.row.attaSize | fileSize}}
+                  </template>
+                </el-table-column>
                 <el-table-column prop="updateTime"  label="修改日期" align="center" width="200"></el-table-column>
             </el-table>
         </div>
@@ -54,7 +58,7 @@
         <el-dialog title="请输入新建文件夹名称" :visible.sync="dialogFolderVisible" center class="folder" width="30%" @submit.native.prevent>
           <el-form :model="folderform" :rules="folderrules" ref="folderform">
             <el-form-item prop="foldername">
-              <el-input v-model="folderform.foldername" autocomplete="off"></el-input>
+              <el-input v-model="folderform.foldername"></el-input>
             </el-form-item>
           </el-form>
           <div slot="footer" class="dialog-footer">
@@ -69,6 +73,8 @@
 import uploadButton from "@/components/Button/uploadButton";
 import qs from "qs";
 import { fileType } from "@/utils";
+import { Base64 } from "js-base64";
+import md5 from "js-md5";
 export default {
   components: {
     uploadButton
@@ -175,7 +181,7 @@ export default {
           this.$post(
             `gwt/cloudisk/cloudiskAttaDir/addFolder`,
             {
-              type: "org",
+              type: "user",
               orgId: this.folderform.orgId,
               name: this.folderform.foldername,
               parentId: this.dirId
@@ -190,7 +196,7 @@ export default {
                 type: "success",
                 message: "新建成功"
               });
-              this.folderform = {}
+              this.folderform = {};
             } else {
               this.$message.error(res.msg);
             }
@@ -264,27 +270,24 @@ export default {
         });
         return;
       }
-      this.$post(
-        `gwt/cloudisk/cloudiskAttachment/BatchDownload`,
-        {
-          fileIds: this.fileIds.map(res => res + "").join(","),
-          dirIds: this.dirIds.map(res => res + "").join(","),
-          orgId: this.folderform.orgId,
-          token: "03353_40c8ec12-c7e5-4926-8919-2d3cc28d2a39"
-        },
-        "json"
-      )
-        .then(res => {
-          console.log(res);
-          this.init_usercloudisk();
-        })
-        .catch(res => {
-          this.init_usercloudisk();
-        });
+      var data = {
+        fileIds: this.fileIds.map(res => res + "").join(","),
+        dirIds: this.dirIds.map(res => res + "").join(","),
+        orgId: this.folderform.orgId
+      };
+      var object = Base64.encode(JSON.stringify(data));
+      var sign = md5(object + this.$store.getters.sign);
+      window.open(
+        `gwt/cloudisk/cloudiskAttachment/BatchDownload?${qs.stringify({
+          object,
+          sign,
+          token: this.$store.getters.token
+        })}`
+      );
     },
     //递归取数
     go_child_file(index) {
-      this.input = ""
+      this.input = "";
       if (index === this.file_nav.length) {
         return;
       }
@@ -342,28 +345,7 @@ export default {
     },
     //row-click
     get_svg_name(name) {
-      if(!name){
-        return '文件夹'
-      }
-      if (this.doc_reg.test(name)) {
-        return "doc";
-      }
-      if (this.png_reg.test(name)) {
-        return "png";
-      }
-      if (this.ppt_reg.test(name)) {
-        return "ppt";
-      }
-      if (this.excel_reg.test(name)) {
-        return "excel";
-      }
-      if (this.pdf_reg.test(name)) {
-        return "pdf";
-      }
-      if (name.includes("txt")) {
-        return "txt";
-      }
-      return 'unknown'
+      return fileType(name);
     },
     handleSelectionChange(e) {
       console.log(e);

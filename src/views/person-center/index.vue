@@ -181,10 +181,10 @@
                     <el-input type="password" v-model="pwdform.oldpwd" size="small" placeholder="请输入原密码"></el-input>
                 </el-form-item>
                 <el-form-item label="新密码" prop='newpwd1'>
-                    <el-input type="password" v-model="pwdform.newpwd1" size="small" placeholder="请输入6-12位，字母与数字组合的新密码" autocomplete="off"></el-input>
+                    <el-input type="password" v-model="pwdform.newpwd1" size="small" placeholder="请输入6-12位，字母与数字组合的新密码"></el-input>
                 </el-form-item>
                 <el-form-item label="确认密码" prop='newpwd2'>
-                    <el-input type="password" v-model="pwdform.newpwd2" size="small" placeholder="请再次输入密码" autocomplete="off"></el-input>
+                    <el-input type="password" v-model="pwdform.newpwd2" size="small" placeholder="请再次输入密码"></el-input>
                 </el-form-item>
                 <form-button @cancel='onCancel' @submit="submitForm('pwdform')"></form-button>
             </el-form>

@@ -377,6 +377,9 @@ export function getFileType(name) {
   return 'unknown'
 }
 export function fileType(name) {
+  if(name + '' === 'undefined'){
+    return "文件夹"
+  }
   if (!name) {
     return 'unknown'
   }
@@ -398,11 +401,17 @@ export function fileType(name) {
   if (/\.(txt)$/.test(name)) {
     return "txt";
   }
-  if (/\.(mp4)$/.test(name)) {
+  if (/\.(mp[34])$/.test(name)) {
     return "mp4";
   }
-  if (!/\.[a-zA-z]+$/.test(name)) {
-    return "文件夹";
+  if (/\.(mp[34])$/.test(name)) {
+    return "mp4";
+  }
+  if (/\.(rar)$/.test(name)) {
+    return "rar";
+  }
+  if (/\.(rar)$/.test(name)) {
+    return "zip";
   }
   return 'unknown'
 }

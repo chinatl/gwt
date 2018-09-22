@@ -2,7 +2,7 @@
 <t-layout>
   <div slot="left">
       <div class="part-content common-temp">
-          <ul class="data-ul-list">
+          <ul class="data-ul-list scrollbar" style="height:540px;overflow: auto">
               <li :class="left_nav_data_current === index ? 'current' : '' "
               @click="change_left_nav(item,index)"
                 v-for='(item,index) in left_nav_data' :key='index'>{{item.orgAllName}}</li>
@@ -41,12 +41,16 @@
                   <el-table-column prop="originalName"  :label="file_name"  align="left"  show-overflow-tooltip> 
                       <template slot-scope="scope">
                         <div class="disk-icon" @click="file_click(scope.row)">
-                            <svg-icon :icon-class='get_svg_name(scope.row.name)'></svg-icon>
+                            <svg-icon :icon-class='get_svg_name(scope.row.suffix)'></svg-icon>
                             <span>{{scope.row.originalName}}</span>
                         </div>
                       </template>
                   </el-table-column>
-                  <el-table-column prop="attaSize"  label="大小" align="center"  width="100"></el-table-column>
+                  <el-table-column prop="attaSize"  label="大小" align="center"  width="100">
+                    <template slot-scope="scope">
+                    {{scope.row.attaSize | fileSize}}
+                  </template>
+                  </el-table-column>
                   <el-table-column prop="updateTime"  label="修改日期" align="center" width="180"></el-table-column>
                   <el-table-column prop="userName"  label="上传者" align="center" width="120"></el-table-column>
               </el-table>
@@ -56,7 +60,7 @@
               @size-change="handleSizeChange"
               @current-change="handleCurrentChange"
               :current-page="pageNo"
-              :page-sizes="[5, 10, 15, 20]"
+              :page-sizes="$store.getters.page_list"
               :page-size="pageSize"
               layout="total, sizes, prev, pager, next, jumper"
               background
@@ -69,7 +73,7 @@
             :visible.sync="reportDialogVisible"
             class="common-dialog edu"
             width="40%" v-loading='loading'>
-            <el-form ref="reportform" :model="reportform" :rules="reportrules" autocomplete="off">
+            <el-form ref="reportform" :model="reportform" :rules="reportrules">
               <el-form-item prop="type">
                 <el-checkbox-group v-model="reportform.type">
                   <el-checkbox label="信息涉密" name="type"></el-checkbox>
@@ -101,6 +105,9 @@
 <script>
 import uploadButton from "@/components/Button/uploadButton";
 import qs from "qs";
+import { fileType } from "@/utils";
+import { Base64 } from "js-base64";
+import md5 from "js-md5";
 export default {
   components: {
     uploadButton
@@ -142,7 +149,7 @@ export default {
       dialogFolderVisible: false,
 
       current_user: {
-        id:"",
+        id: "",
         userId: "",
         orgId: "",
         originalName: ""
@@ -166,7 +173,7 @@ export default {
       reportDialogVisible: false,
       originalName: "",
       input: "",
-      attaPath:"",
+      attaPath: ""
     };
   },
   computed: {
@@ -224,21 +231,22 @@ export default {
         {
           originalName: this.input,
           orgId: this.temp_data.orgId,
-          userxId:this.current_user.id,
+          userxId: this.current_user.id,
           searchFlag: this.input ? "Y" : "N",
           parentId: this.parentId
         },
         "json"
-      ).then(res => {
-        this.loading = false;
-        console.log(res);
-        if (res.result !== "0000") {
-          return;
-        }
-        this.tableData = res.data.deptCloudiskPageBean.datas;
-        this.totalCount = parseInt(res.data.deptCloudiskPageBean.totalCount);
-      })
-      .catch(res => {
+      )
+        .then(res => {
+          this.loading = false;
+          console.log(res);
+          if (res.result !== "0000") {
+            return;
+          }
+          this.tableData = res.data.deptCloudiskPageBean.datas;
+          this.totalCount = parseInt(res.data.deptCloudiskPageBean.totalCount);
+        })
+        .catch(res => {
           this.loading = false;
         });
     },
@@ -263,7 +271,7 @@ export default {
           // console.log(res.data.attachmentList[0].attaPath)
           if (res.result === "0000") {
             this.get_deptCloudisk(this.pageSize, 1);
-            
+
             this.$message({
               type: "success",
               message: "上传成功"
@@ -286,8 +294,8 @@ export default {
         inputValidator: value => {
           return !value && "文件夹名不能為空！";
         }
-      }).then(res=>{
-        if(res.value){
+      }).then(res => {
+        if (res.value) {
           this.$post(
             `gwt/cloudisk/cloudiskAttaDir/addFolder`,
             {
@@ -301,7 +309,7 @@ export default {
             console.log(res);
             if (res.result === "0000") {
               this.dialogFolderVisible = false;
-              this.get_deptCloudisk(this.pageSize,this.pageNo);
+              this.get_deptCloudisk(this.pageSize, this.pageNo);
               this.$message({
                 type: "success",
                 message: "新建成功"
@@ -311,8 +319,7 @@ export default {
             }
           });
         }
-
-      })
+      });
     },
     //下载
     download_file() {
@@ -327,22 +334,49 @@ export default {
         });
         return;
       }
-      this.$post(
-        `gwt/cloudisk/cloudiskAttachment/sigleFileDownload`,
-        {
-          fileIds: this.fileIds.map(res => res + "").join(",")
-          // dirIds: this.dirIds.map(res => res + "").join(","),
-          // orgId: this.folderform.orgId,
-          // token: "03353_40c8ec12-c7e5-4926-8919-2d3cc28d2a39"
+      var data = {
+        fileIds: this.fileIds.map(res => res + "").join(",")
+      };
+      var object = Base64.encode(JSON.stringify(data));
+      var sign = md5(object + this.$store.getters.sign);
+      window.open(
+        `gwt/cloudisk/cloudiskAttachment/BatchDownload?${qs.stringify({
+          object,
+          sign,
+          token: this.$store.getters.token
+        })}`
+      );
+
+      return;
+      this.$axios({
+        method: "post",
+        url: `gwt/cloudisk/cloudiskAttachment/BatchDownload`,
+        data: {
+          object,
+          sign
         },
-        "json"
-      )
+        headers: {
+          Authorization: this.$store.getters.token
+        },
+        responseType: "blob"
+      })
         .then(res => {
           console.log(res);
-          this.get_deptCloudisk();
+          var eleLink = document.createElement("a");
+          eleLink.download = "下载文件";
+          eleLink.style.display = "none";
+          // 字符内容转变成blob地址
+          var blob = new Blob([res.data]);
+          console.log(blob);
+          eleLink.href = URL.createObjectURL(blob);
+          // 触发点击
+          document.body.appendChild(eleLink);
+          eleLink.click();
+          // 然后移除
+          document.body.removeChild(eleLink);
         })
         .catch(res => {
-          this.get_deptCloudisk();
+          console.log(res);
         });
     },
     //删除
@@ -383,7 +417,7 @@ export default {
           .then(res => {
             console.log(res);
             if (res.result === "0000") {
-              this.get_deptCloudisk(this.pageSize,this.pageNo);
+              this.get_deptCloudisk(this.pageSize, this.pageNo);
               this.$message({
                 type: "success",
                 message: "删除成功"
@@ -408,7 +442,7 @@ export default {
         });
         return;
       }
-      this.reportDialogVisible = true
+      this.reportDialogVisible = true;
     },
     //举报信息提交
     submit_report(formName) {
@@ -425,18 +459,18 @@ export default {
             "json"
           ).then(res => {
             // console.log(res);
-            if(res.result !== "0000"){
+            if (res.result !== "0000") {
               return;
             }
             this.reportDialogVisible = false;
-            this.get_deptCloudisk(this.pageSize,this.pageNo);
+            this.get_deptCloudisk(this.pageSize, this.pageNo);
             this.$message({
               type: "success",
               message: "举报成功"
             });
-            this.reportform = {}
+            this.reportform = {};
             // location.reload()
-          }); 
+          });
         } else {
           console.log("error submit!!");
           return false;
@@ -450,11 +484,11 @@ export default {
       // }
       this.temp_data = item;
       console.log(item);
-      this.get_deptCloudisk(this.pageSize,1);
+      this.get_deptCloudisk(this.pageSize, 1);
     },
     //递归取数
     go_child_file(index) {
-      this.input = ""
+      this.input = "";
       if (index === this.file_nav.length) {
         return;
       }
@@ -490,7 +524,7 @@ export default {
       this.file_nav = [];
       this.parentId = "";
       this.pageNo = 1;
-      this.input = ""
+      this.input = "";
       this.get_deptCloudisk(this.pageSize, 1);
     },
     file_click(index) {
@@ -506,33 +540,29 @@ export default {
         this.pageNo = 1;
         this.get_deptCloudisk(this.pageSize, 1);
       }
-        var img_src = index.originalName.substring(index.originalName.lastIndexOf("."),index.originalName.length)
-        console.log(img_src)
-        if(img_src !=".bmp" && img_src != ".png" && img_src != ".gif" && img_src != ".jpg" && img_src != ".jpeg"){
-          return;
-        }
-        window.open(`http://192.168.31.7/#/part-cloud-disk/index/${this.attaPath}/${index.originalName}`)
-      
-      
+      var img_src = index.originalName.substring(
+        index.originalName.lastIndexOf("."),
+        index.originalName.length
+      );
+      console.log(img_src);
+      if (
+        img_src != ".bmp" &&
+        img_src != ".png" &&
+        img_src != ".gif" &&
+        img_src != ".jpg" &&
+        img_src != ".jpeg"
+      ) {
+        return;
+      }
+      window.open(
+        `http://192.168.31.7/#/part-cloud-disk/index/${this.attaPath}/${
+          index.originalName
+        }`
+      );
     },
     //row-click
     get_svg_name(name) {
-      if (this.doc_reg.test(name)) {
-        return "doc";
-      }
-      if (this.png_reg.test(name)) {
-        return "png";
-      }
-      if (this.ppt_reg.test(name)) {
-        return "ppt";
-      }
-      if (this.excel_reg.test(name)) {
-        return "excel";
-      }
-      if (this.pdf_reg.test(name)) {
-        return "pdf";
-      }
-      return "文件夹";
+      return fileType(name);
     },
     handleSelectionChange(e) {
       this.select_list = e;
@@ -656,7 +686,7 @@ export default {
 .textarea {
   margin-top: 20px;
 }
-.footer_btn{
+.footer_btn {
   margin-left: 30%;
 }
 </style>

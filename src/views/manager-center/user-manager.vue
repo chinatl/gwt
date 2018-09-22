@@ -45,7 +45,7 @@
                     <span class="blod">{{userAndOrgList.map(res=>{
                       return  res.REAL_NAME
                       }).join('、')}}</span>
-                      <span style="margin-left:20px"><el-button size="small" type="success" icon="el-icon-plus" @click="open_user_dialog">添加</el-button></span>
+                      <span style="margin-left:20px" v-if="temp_data.nodeType !== 'REGION'"><el-button size="small" type="success" icon="el-icon-plus" @click="open_user_dialog">添加</el-button></span>
                 </p>
                 <p>
                     <span class="span1">部门地址：</span>
@@ -431,7 +431,7 @@ export default {
       this.$post(
         "gwt/system/sysUser/saveOrgUser",
         {
-          userIds: list.map(res => res.ID).join(","),
+          userIds: list.map(res => res.USER_ID).join(","),
           orgId: this.temp_data.id
         },
         "json"
@@ -457,7 +457,7 @@ export default {
           this.$post(
             "gwt/system/sysUser/getOrgInfo",
             {
-              orgId: data.id
+              orgId: this.temp_data.id
             },
             "json"
           )
@@ -527,6 +527,8 @@ export default {
     },
     //点击左边部门
     handleNodeClick(data) {
+      console.log(data)
+      this.temp_data = data;
       if (data.id.includes("region")) {
         this.orgInfo.orgAllName = "系统管理员";
         this.orgInfo.orgTypeName = "";
@@ -535,7 +537,6 @@ export default {
         return;
       }
       this.current = 0;
-      this.temp_data = data;
       this.$post(
         "gwt/system/sysUser/getOrgInfo",
         {

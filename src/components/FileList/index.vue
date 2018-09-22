@@ -24,6 +24,9 @@
 <script>
 import { fileType, download } from "@/utils";
 import config from "@/config";
+import { Base64 } from "js-base64";
+import md5 from "js-md5";
+import qs from "qs";
 export default {
   data() {
     return {};
@@ -41,7 +44,7 @@ export default {
     preview(item) {
       console.log(item);
       window.open(item.fullAttaPath);
-      return
+      return;
       // var url = config + item.attaPath + "/" + item.storeName;
       // this.$axios({
       //   url,
@@ -70,6 +73,19 @@ export default {
     },
     //点击下载
     download_file(item) {
+      var data = {
+        id: item.id
+      };
+      var object = Base64.encode(JSON.stringify(data));
+      var sign = md5(object + this.$store.getters.sign);
+      window.open(
+        `gwt/uploadFile/download?${qs.stringify({
+          object,
+          sign,
+          token: this.$store.getters.token
+        })}`
+      );
+      return;
       var url = config + item.attaPath + "/" + item.storeName;
       this.$axios({
         url,
@@ -79,6 +95,7 @@ export default {
         responseType: "blob"
       })
         .then(res => {
+          console.log(res.data);
           // 创建隐藏的可下载链接
           var eleLink = document.createElement("a");
           eleLink.download = item.originalName;

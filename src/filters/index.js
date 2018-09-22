@@ -42,6 +42,9 @@ export function toThousandslsFilter(num) {
 }
 /* 计算文件大小 */
 export function fileSize(num, level = 'K') {
+  if(!num){
+    return ''
+  }
   var number = (num / 1024).toFixed(2);
   if (number < 1000) {
     return number + ' KB'

@@ -305,7 +305,7 @@ export default {
         return;
       }
       this.$post(
-        "gwt/system/sysDomain/sysgroup/sort",
+        "gwt/system/sysDomain/sortOrg",
         {
           pk: "domainId",
           sortType,
