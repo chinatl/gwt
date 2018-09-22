@@ -45,10 +45,12 @@ export function validateTime(rule, value, callback) {
   }
 }
 export function validateEndTime(rule, value, callback) {
+  console.log(+value, rule)
   if (!value) {
     callback(new Error('请输入开始时间'));
   } else {
     var _now_date = Date.now();
+    console.log(+value)
     if (+value - _now_date > 1000 * 60 * 10) {
       callback();
     } else {

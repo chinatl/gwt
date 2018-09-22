@@ -67,6 +67,7 @@ export default {
     },
     addViewTags() {
       const route = this.generateRoute();
+      console.log(route)
       if(!route.meta){
         return false
       }
@@ -111,7 +112,7 @@ export default {
       })
     },
     closeAllTags() {
-      this.$store.dispatch('delAllViews')
+      this.$store.dispatch('delAllViews');
       this.$router.push('/')
     },
     openMenu(tag, e) {

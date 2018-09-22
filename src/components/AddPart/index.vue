@@ -8,7 +8,7 @@
                     <i slot="suffix" class="el-input__icon el-icon-search"></i>
                 </el-input>
             </div>
-            <div class="select-part-bottom common-temp">
+            <div class="select-part-bottom common-temp scrollbar" style="overflow:auto">
                 <el-tree
                 :data="$store.getters.tree_data"
                 show-checkbox
@@ -28,7 +28,7 @@
                 <span>已选({{has_checked_item.length}})</span>
                 <el-button size="mini" v-wave @click="remove_all"><span class="span">清空</span></el-button>
             </div>
-            <div class="has-yield-list">
+            <div class="has-yield-list scrollbar" style="overflow:auto">
                 <ul>
                     <li v-for='(item,index) in has_checked_item' :key="index">
                         <div>
@@ -94,7 +94,6 @@ export default {
   },
   created() {
     this.$store.dispatch("get_all_tree_data");
-  
   },
   methods: {
     filterNode(value, data) {

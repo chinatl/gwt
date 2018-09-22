@@ -33,7 +33,10 @@
                         <el-input type="textarea" v-model="form.noticeProfile" :autosize="{ minRows: 6, maxRows: 10}"></el-input>
                     </el-form-item>
                     <el-form-item label="附件">
+                      <div class="flex">
                         <upload-button  @on-change="upload_img">添加附件</upload-button>
+                        <span style="margin-left:20px" v-if="file_list.length">{{file_list.length}} 个附件，共{{file_list | folderSize}} </span>
+                      </div>
                         <file-list :list='file_list' @delete='delete_file'></file-list>
                     </el-form-item>
                     <el-form-item align='left'>
@@ -51,6 +54,7 @@
         <add-user 
         :show='dialog' @close='dialog = false' 
         :user-list='has_select_user_list'
+        @cancel='dialog = false'
         @submit="submit_user_dialog"></add-user>
     </div>
 </template>
@@ -129,6 +133,13 @@ export default {
         });
     },
     upload_img(e) {
+      if (this.file_list.length === 10) {
+        this.$message({
+          message: "最多只能上传十份附件！",
+          type: "warning"
+        });
+        return;
+      }
       var formData = new FormData();
       formData.append("selectFile", e.raw);
       formData.append("ownerSystem", "gwt-platform");
@@ -148,7 +159,17 @@ export default {
         });
     },
     onSubmit() {
-       if (!this.form.checked) {
+      if (
+        !this.has_select_user_list.length &&
+        !this.has_select_part_list.length
+      ) {
+        this.$message({
+          message: "请选择一个接收人或接受部门",
+          type: "warning"
+        });
+        return;
+      }
+      if (!this.form.checked) {
         this.$message({
           message: "请确认该通知不含涉密信息！",
           type: "warning"
@@ -204,7 +225,7 @@ export default {
                     ),
                     endTime: "",
                     selectedUsers: this.has_select_user_list
-                      .map(res => res.USER_ID)
+                      .map(res => res.ID)
                       .join(","),
                     attrArray: this.file_list.map(res => res.id).join(","),
                     orgArray: this.has_select_part_list
@@ -249,7 +270,7 @@ export default {
           startTime: parseTime(this.form.startTime, "{y}-{m}-{d} {h}:{i}:{s}"),
           endTime: "",
           selectedUsers: this.has_select_user_list
-            .map(res => res.USER_ID)
+            .map(res => res.ID)
             .join(","),
           attrArray: this.file_list.map(res => res.id).join(","),
           orgArray: this.has_select_part_list
@@ -259,7 +280,7 @@ export default {
         "json"
       )
         .then(res => {
-          if (action_fail(res, "保存为草稿成功！",)) return;
+          if (action_fail(res, "保存为草稿成功！")) return;
           this.$router.push({
             path: "/drafts/index"
           });

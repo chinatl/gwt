@@ -49,7 +49,7 @@
                 width="240"
                 label="保存时间">
                      <template slot-scope="scope">
-                        <span class="href">{{scope.row.createTime}}</span>
+                        <span class="href">{{scope.row.updateTime}}</span>
                     </template>
                 </el-table-column>
                 <el-table-column
@@ -149,8 +149,8 @@ export default {
           noticeTitle: this.noticeTitle,
           receiveNoticeType: "",
           noticeStatus: 1001,
-          endendTime,
-          beginendTime
+          beginupdateTime: endendTime,
+          endupdateTime: beginendTime,
         },
         "json"
       )

@@ -31,6 +31,7 @@ export default {
       }
     };
     return {
+      loading: false,
       form: {
         phone: ""
       },
@@ -51,6 +52,9 @@ export default {
     };
   },
   created() {
+    var phone = sessionStorage.getItem("forgetpwd/phone");
+    this.form.phone = phone;
+
     var isSend = sessionStorage.getItem("forget-phone-isSend");
     this.isSend = isSend === "true" ? true : false;
     var send_message = sessionStorage.getItem("forget-phone-message");
@@ -67,7 +71,7 @@ export default {
         if (a == 60) {
           this.send_message = "获取验证码";
           this.isSend = false;
-          clearInterval(this.timer);
+          clearInterval(timer);
           var isSend = sessionStorage.setItem("forget-phone-isSend", "false");
           sessionStorage.setItem("forget-phone-message", this.send_message);
         }
@@ -87,10 +91,15 @@ export default {
         return;
       }
       this.loading = true;
-      this.$post("gwt/getPhoneValidateCode", {
-        phone: this.form.phone
-      },'json')
+      this.$post(
+        "gwt/getPhoneValidateCode",
+        {
+          phone: this.form.phone
+        },
+        "json"
+      )
         .then(res => {
+          this.loading = false;
           if (res.result !== "0000") {
             this.$swal({
               title: "操作失败！",
@@ -100,6 +109,7 @@ export default {
             });
             return;
           }
+          sessionStorage.setItem("forgetpwd/phone", this.form.phone);
           clearInterval(this.timer);
           this.loading = false;
           this.isSendPhone = true;
@@ -157,6 +167,7 @@ export default {
             this.$router.push({ path: "/forgetpwd/identity" });
             this.send_message = "获取验证码";
             this.isSend = false;
+            clearInterval(this.timer);
             var isSend = sessionStorage.setItem("forget-phone-isSend", "false");
             sessionStorage.setItem("forget-phone-message", this.send_message);
             sessionStorage.setItem("login-user-phone", this.form.phone);

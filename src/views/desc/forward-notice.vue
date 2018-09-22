@@ -30,6 +30,7 @@
         <add-user 
         :show='dialog' @close='dialog = false' 
         :user-list='has_select_user_list'
+        @cancel='dialog = false'
         @submit="submit_user_dialog"></add-user>
     </div>
 </template>

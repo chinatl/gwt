@@ -24,16 +24,16 @@
                 v-loading ='loading'
                 style="width: 100%">
                 <el-table-column
-                  prop="name"
-                  align="center"
-                  width="100"
-                  v-if="!is_admin"
-                  label="选择">
-                      <template slot-scope="scope">
-                        <el-checkbox v-model="scope.row.checked"
-                         @change="change_table_checked($event,scope.$index)"></el-checkbox>
-                      </template>
-                  </el-table-column>
+                prop="name"
+                align="center"
+                width="100"
+                v-if="!is_admin"
+                label="选择">
+                    <template slot-scope="scope">
+                      <el-checkbox v-model="scope.row.checked"
+                        @change="change_table_checked($event,scope.$index)"></el-checkbox>
+                    </template>
+                </el-table-column>
                 <el-table-column
                 prop="name"
                 align="center"

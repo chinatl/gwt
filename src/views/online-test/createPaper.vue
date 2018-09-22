@@ -44,7 +44,7 @@
             </el-form>
         </div>
         <add-yield :show="yield_dialog" @ok='yield_dialog = false' @close='yield_dialog = false'></add-yield>
-        <add-user :show='dialog' @close='dialog = false'></add-user>
+        <add-user :show='dialog' @close='dialog = false' @cancel='dialog = false'></add-user>
     </div>
 </template>
 <script>

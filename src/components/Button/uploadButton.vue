@@ -11,6 +11,7 @@
     </el-upload>
 </template>
 <script>
+import { fileType } from "@/utils";
 export default {
   data() {
     return {};
@@ -31,6 +32,20 @@ export default {
   },
   methods: {
     upload_img(e) {
+      if (e.size / 1024 / 1024 > 20) {
+        this.$message({
+          message: "请上传20M以内的文件",
+          type: "error"
+        });
+        return;
+      }
+      if (fileType(e.name) === "unknown") {
+        this.$message({
+          message: "不支持的文件类型",
+          type: "error"
+        });
+        return;
+      }
       this.$emit("on-change", e);
     },
     beforeAvatarUpload(file) {

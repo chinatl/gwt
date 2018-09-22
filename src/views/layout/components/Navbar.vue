@@ -11,7 +11,7 @@
           <span>当前部门：</span>
           <el-dropdown>
             <span class="el-dropdown-link">
-              <span class="value">超级管理员机构</span>
+              <span class="value">{{user_info.sysOrgUserX.orgName}}</span>
               <svg-icon icon-class="刷新" />
             </span>
             <el-dropdown-menu slot="dropdown">
@@ -62,7 +62,7 @@ export default {
     };
   },
   computed: {
-    ...mapGetters(["sidebar", "avatar", "visitedViews","user_info"])
+    ...mapGetters(["sidebar", "avatar", "visitedViews", "user_info"])
   },
   watch: {
     visible(value) {
@@ -80,9 +80,7 @@ export default {
           path: "/person-center/index"
         });
       } else {
-        this.$router.push({
-          path: "/login"
-        });
+        this.logout();
       }
     },
     generateRoute() {
@@ -113,7 +111,15 @@ export default {
     },
     logout() {
       this.$store.dispatch("LogOut").then(() => {
-        location.reload(); // 为了重新实例化vue-router对象 避免bug
+        this.$message({
+          message: "退出登录成功！",
+          type: "success"
+        });
+        this.$router.push({
+          path: "/login"
+        });
+        this.$store.commit("DEL_ALL_VIEWS");
+        // location.reload(); // 为了重新实例化vue-router对象 避免bug
       });
     }
   }

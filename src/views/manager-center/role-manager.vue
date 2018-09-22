@@ -280,9 +280,13 @@ export default {
   methods: {
     //
     search_user_by_part(org_id) {
-      this.$post("gwt/system/sysUserRoleOrg/getListByOrgId", {
-        org_id
-      },'json')
+      this.$post(
+        "gwt/system/sysUserRoleOrg/getListByOrgId",
+        {
+          org_id
+        },
+        "json"
+      )
         .then(res => {
           this.all_list = res.data.sysUserList;
         })
@@ -299,7 +303,6 @@ export default {
         res.ID = res.id;
         return res;
       });
-      console.log(row.sysUserList);
       this.add_dialog = true;
     },
     submit_add_user(res) {
@@ -433,10 +436,10 @@ export default {
       this.$post(
         `gwt/system/sysRole/list?${qs.stringify({
           currentPage: pageNo,
-          pageSize: pageSize
+          pageSize: pageSize,
+          Q_roleName_SL: this.Q_name_SL
         })}`,
         {
-          roleName: this.Q_name_SL,
           normal: true
           // orderField: "role_id",
           // orderSeq: "2"

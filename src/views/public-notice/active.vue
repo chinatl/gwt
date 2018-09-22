@@ -121,6 +121,11 @@ export default {
   methods: {
     //获取详情
     get_active_desc(item) {
+      this.$message({
+        message: "正在开发，请稍后",
+        type: "info"
+      });
+      return;
       this.$store.commit(SET_MESSAGE_DATA, item);
       this.$router.push({
         path: "/active-desc/index"

@@ -358,7 +358,6 @@ export default {
     },
     //查询用户管理部门配置
     get_user_tree() {
-      this.is_admin;
       var url = "gwt/system/sysOrg/getAreaOrgTreeData";
       if (!this.is_admin) {
         url = "gwt/system/sysOrg/getOrgTreeData";

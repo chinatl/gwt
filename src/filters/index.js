@@ -52,3 +52,10 @@ export function fileSize(num, level = 'K') {
   };
   return (num / 1024 / 1024 / 1024).toFixed(2) + ' G';
 }
+export function folderSize(arr) {
+  var index = 0;
+  for (var i = 0; i < arr.length; i++) {
+    index += arr[i].attaSize
+  }
+  return fileSize(index)
+}

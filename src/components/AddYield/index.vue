@@ -3,7 +3,7 @@
     <div class="select-user-container">
         <div class="select-left">
             <div class="select-part-top">
-                <el-input v-model="input" size="small" placeholder="请选择部门名称">
+                <el-input v-model="filterText" size="small" placeholder="请选择部门名称">
                     <i slot="suffix" class="el-input__icon el-icon-search"></i>
                 </el-input>
             </div>
@@ -21,6 +21,8 @@
                   :data="data" :props="defaultProps"
                   :default-expanded-keys="expanded_keys"
                   :default-checked-keys='checked_keys'
+                  :filter-node-method="filterNode"
+                  :check-strictly='true'
                   @check="handleNodeClick"  show-checkbox  node-key="id"></el-tree>
                 </div>
             </div>
@@ -68,7 +70,8 @@ export default {
         label: "name"
       },
       expanded_keys: [],
-      has_select_arr: []
+      has_select_arr: [],
+      filterText: ""
     };
   },
   props: {
@@ -82,9 +85,13 @@ export default {
       required: false
     }
   },
+
   watch: {
     show(res) {
       this.has_select_arr = this.userList;
+    },
+    filterText(val) {
+      this.$refs.tree.filter(val);
     }
   },
   computed: {
@@ -118,6 +125,11 @@ export default {
       }
       this.field_list = generate_tree(res.data.nodes);
       for (var i = 0; i < this.field_list.length; i++) {
+        if (this.field_list[i].name === "常用联系人") {
+          this.field_list.splice(i, 1);
+        }
+      }
+      for (var i = 0; i < this.field_list.length; i++) {
         this.field_list[i].checkedNodes = [];
         this.field_list[i].checkedKeys = [];
       }
@@ -130,15 +142,12 @@ export default {
     });
   },
   methods: {
+    filterNode(value, data) {
+      if (!value) return true;
+      return data.name.indexOf(value) !== -1;
+    },
     //删除一个
     del_item(item, index) {
-      if (item.childrens && item.childrens.length) {
-        this.$message({
-          message: "所选部门有子部门，不可删除",
-          type: "error"
-        });
-        return;
-      }
       this.has_select_arr.splice(index, 1);
       for (
         var i = 0;
@@ -146,7 +155,7 @@ export default {
         i++
       ) {
         if (this.field_list[this.current].checkedKeys[i] === item.id) {
-          this.$refs.tree.setChecked(id, false);
+          this.$refs.tree.setChecked(item.id, false);
           this.field_list[this.current].checkedNodes.splice(i, 1);
           this.field_list[this.current].checkedKeys.splice(i, 1);
         }
@@ -161,6 +170,7 @@ export default {
       this.$refs.tree.setCheckedKeys([]);
     },
     check_field_part(index) {
+      this.filterText = "";
       this.current = index;
       this.data = this.field_list[index].childrens;
       if (this.data.length) {
@@ -168,6 +178,9 @@ export default {
       }
     },
     handleNodeClick(node, { checkedNodes, checkedKeys }) {
+      if (node.nodeType === "DOMAIN_GROUP") {
+        return;
+      }
       this.field_list[this.current].checkedNodes = checkedNodes;
       this.field_list[this.current].checkedKeys = checkedKeys;
       var arr = [];

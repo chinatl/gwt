@@ -9,6 +9,7 @@ const tagsView = {
         return
       };
       if (state.visitedViews.some(v => v.path === view.path)) { return }
+      console.log(view)
       state.visitedViews.push({
         name: view.name,
         meta: view.meta,

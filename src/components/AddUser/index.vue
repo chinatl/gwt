@@ -8,14 +8,16 @@
                     <el-option :value="1" label="部门"></el-option>
                     <el-option :value="0" label="姓名"></el-option>
                 </el-select>
-                <el-input v-model="input" size="small">
+                <el-input v-model="filterText" size="small">
                     <i slot="suffix" class="el-input__icon el-icon-search"></i>
                 </el-input>
             </div>
             <div class="select-part-bottom scrollbar">
-                <div v-if="part">
-                    <div class="select-part-tree common-temp">
-                        <el-tree :data="part_tree" :props="defaultProps" @node-click="handleNodeClick"></el-tree>
+                <div v-show="part">
+                    <div class="select-part-tree common-temp scrollbar" style="overflow-y:auto;overflow-x: hidden">
+                        <el-tree :data="part_tree"
+                        :filter-node-method="filterNode"
+                        :props="defaultProps" @node-click="handleNodeClick" ref='tree'></el-tree>
                     </div>
                     <div class="select-part-checkbox">
                         <div class="all-checked">
@@ -23,20 +25,20 @@
                         </div>
                         <div class="one-checked scrollbar" style="overflow:auto;height:335px">
                             <ul>
-                                <li v-for='(item,index) in user_list' :key='index'>
+                                <li v-for='(item,index) in user_list' :key='index' >
                                     <el-checkbox v-model="item.checked" @change="select_checkbox($event,index,item.ID)">{{item.REAL_NAME}}</el-checkbox>
                                 </li>
                             </ul>
                         </div>
                     </div>
                 </div>
-                <div v-else class="all-user-css">
+                <div v-show='!part' class="all-user-css">
                     <div class="all-checked">
                         <el-checkbox v-model="user_all_checked" @change="all_user_box">全选</el-checkbox>
                     </div>
                     <div class="one-checked scrollbar">
                         <ul>
-                            <li v-for='(item,index) in has_user_data' :key='index'>
+                            <li v-for='(item,index) in has_user_data' :key='index' v-show="item.REAL_NAME.includes(filterText)">
                                 <el-checkbox v-model="item.checked" @change="user_select_checkbox($event,index,item.ID)">
                                     <span style="width:80px;display:inline-block">{{item.REAL_NAME}}</span>
                                     {{item.ORG_ALL_NAME}}
@@ -78,21 +80,23 @@
 <script>
 import { SET_PART_TREE, SET_USER_LIST } from "@/store/mutations";
 import { mapGetters } from "vuex";
+import { generate_tree } from "@/utils";
 export default {
   data() {
     return {
       part: 1,
       defaultProps: {
         children: "childrens",
-        label: "allName"
+        label: "name"
       },
       checked: false,
-      input: "",
+      filterText: "",
       has_select_user: [],
       all_checked: false,
       user_all_checked: false,
       has_user_data: [],
-      user_list: []
+      user_list: [],
+      part_tree: []
     };
   },
   props: {
@@ -107,9 +111,15 @@ export default {
     userList: {
       // type: Array,
       default: []
+    },
+    address: {
+      default: false
     }
   },
   watch: {
+    filterText(val) {
+      this.$refs.tree.filter(val);
+    },
     show(res) {
       if (res) {
         this.has_select_user = this.userList;
@@ -119,6 +129,27 @@ export default {
   created() {
     this.$store.dispatch("readSession", SET_PART_TREE);
     this.$store.dispatch("readSession", SET_USER_LIST);
+    var addressBookUserFlag;
+    if (!this.address) {
+      addressBookUserFlag = "Y";
+    }
+    this.$post(
+      "gwt/system/sysOrg/getOrgTreeData",
+      {
+        defaultTopOrg: "",
+        addressBookUserFlag
+      },
+      "json"
+    )
+      .then(res => {
+        if (res.result !== "0000") {
+          return;
+        }
+        this.part_tree = generate_tree(res.data.nodes);
+      })
+      .catch(res => {
+        console.log(res);
+      });
   },
   computed: {
     dialog: {
@@ -129,9 +160,16 @@ export default {
         this.$emit("close");
       }
     },
-    ...mapGetters(["part_tree", "part_user_list"])
+    ...mapGetters(["part_user_list"])
   },
   methods: {
+    show_item(REAL_NAME) {
+      return REAL_NAME.includes(this.filterText);
+    },
+    filterNode(value, data) {
+      if (!value) return true;
+      return data.name.indexOf(value) !== -1;
+    },
     //切换筛选条件
     checkout_type(e) {
       if (e) {
@@ -181,7 +219,7 @@ export default {
     },
     //清空按钮
     clear_all_user() {
-      this.has_select_user.length = 0;
+      this.has_select_user = [];
       //part 用来区分部门和用户
       if (this.part) {
         this.all_checked = false;
@@ -301,6 +339,7 @@ export default {
         });
     },
     onSubmit() {
+      console.log( this.has_select_user)
       this.$emit("submit", this.has_select_user);
     },
     save_message() {

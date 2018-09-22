@@ -25,7 +25,8 @@
           @close='add_dialog = false' 
           :loading='user_dialog_loading' 
           @submit="submit_add_user" 
-          :user-list='userAndOrgList'>
+          :address='true'
+          :user-list='user_and_orgList'>
         </add-user>
         <div class="part-top">
             <t-title>用户管理</t-title>
@@ -34,6 +35,10 @@
                 <p>
                     <span class="span1">部门类型：</span>
                     <span class="blod"> {{orgInfo.orgTypeName}}</span>
+                </p>
+                <p v-if="orgInfo.orgParentName">
+                    <span class="span1">上级部门</span>
+                    <span class="blod"> {{orgInfo.orgParentName}}</span>
                 </p>
                 <p>
                     <span class="span1">部门管理员：</span>
@@ -282,6 +287,7 @@ import qs from "qs";
 import { validatePhone } from "@/utils/validate";
 import { generate_tree } from "@/utils";
 import AddUser from "@/components/AddUser";
+import { mapGetters } from "vuex";
 export default {
   components: {
     littleButton,
@@ -355,6 +361,7 @@ export default {
         orgAddr: ""
       },
       userAndOrgList: [],
+      user_and_orgList: [],
       select_arr: ["用户管理", "停用用户"],
       current: 0
     };
@@ -367,27 +374,59 @@ export default {
   created() {
     //查询所有人员级别
     this.get_user_level();
-    this.$post("gwt/system/sysOrg/getOrgTreeData", {}, "json")
-      .then(res => {
-        this.tree_data = generate_tree(res.data.nodes);
-        if (this.tree_data.length) {
-          this.temp_data = this.tree_data[0];
-          this.handleNodeClick(this.tree_data[0]);
-        }
-      })
-      .catch(res => {
-        console.log(res);
-      });
-    // this.get_user_tree();
+    this.get_tree_data();
     var pageSize = localStorage.getItem("user-manager/user/pageSize");
     this.pageSize = pageSize ? pageSize - 0 : 5;
   },
+  computed: {
+    ...mapGetters(["is_admin"])
+  },
   methods: {
-    open_user_dialog(){
-      this.add_dialog =  true;
-      console.log(this.add_dialog)
+    //查询用户管理部门配置
+
+    get_tree_data() {
+      var url = "gwt/system/sysOrg/getAreaOrgTreeData";
+      if (!this.is_admin) {
+        url = "gwt/system/sysOrg/getOrgTreeData";
+      }
+      this.$post(
+        url,
+        {
+          showAllOrgFlag: "Y"
+        },
+        "json"
+      )
+        .then(res => {
+          if (res.result !== "0000") {
+            return;
+          }
+          if (this.is_admin) {
+            this.tree_data = res.data.nodes;
+          } else {
+            this.tree_data = generate_tree(res.data.nodes);
+          }
+          if (this.tree_data.length) {
+            this.temp_data = this.tree_data[0];
+            this.handleNodeClick(this.tree_data[0]);
+          }
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
+    open_user_dialog() {
+      this.user_and_orgList = [...this.userAndOrgList];
+      this.add_dialog = true;
+      console.log(this.add_dialog);
     },
     submit_add_user(list) {
+      if (list.length === 0) {
+        this.$message({
+          message: "部门管理员不能为空！",
+          type: "error"
+        });
+        return;
+      }
       this.user_dialog_loading = true;
       this.$post(
         "gwt/system/sysUser/saveOrgUser",
@@ -442,25 +481,6 @@ export default {
     condition_search() {
       this.pageNo = 1;
       this.search_user_list(this.pageSize, 1);
-    },
-    //查询用户管理部门配置
-    get_user_tree() {
-      this.$post(
-        "gwt/system/sysOrg/getAreaOrgTreeData",
-        {
-          showAllOrgFlag: "Y"
-        },
-        "json"
-      )
-        .then(res => {
-          if (res.result !== "0000") {
-            return;
-          }
-          this.tree_data = res.data.nodes;
-        })
-        .catch(res => {
-          console.log(res);
-        });
     },
     //查询该人员可以选的角色
     get_now_part_role(orgId) {

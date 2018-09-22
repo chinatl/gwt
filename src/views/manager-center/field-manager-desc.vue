@@ -2,7 +2,7 @@
     <div>
         <div class="field-desc">
             <div class="common-title">{{field_manager_data.name}}
-                <el-button size='medium' type='success' icon="el-icon-edit-outline" @click="edit_role">编辑域</el-button>
+                <el-button size='medium' type='success' icon="el-icon-edit-outline" @click="edit_role" v-if="is_admin">编辑域</el-button>
             </div>
             <div class="field-con">
                 <h3>已授权应用</h3>
@@ -11,7 +11,7 @@
                         <img :src="require('@/assets/imgs/yingyong.png')" alt="">
                         <p>{{item.appName}}</p>
                     </li>
-                    <li @click="go_field_auth">
+                    <li @click="go_field_auth" v-if="is_admin">
                         <img :src="require('@/assets/imgs/add-1.png')" alt="">
                         <p>授权应用</p>
                     </li>
@@ -24,7 +24,7 @@
               <el-button type="success" icon="el-icon-plus" style="width:100%" @click="add_group">新增分组</el-button>
             </div>
             <div class="desc-action-content">
-              <ul class="common-table-bar">
+              <ul class="common-table-bar scrollbar" style="height:540px">
                 <li  @click="change_group(-1)" :class="current == -1 ? 'current':''">默认分组</li>
                 <li v-for="(item,index) in category"
                   @click="change_group(index)"
@@ -33,26 +33,31 @@
             </div>
           </div>
           <div slot="right">
-            <div class="desc-group">
+            <div class="desc-group" v-if="is_admin" style="height:31px">
               <i class="el-icon-caret-right"></i>
               <el-breadcrumb separator-class="el-icon-arrow-right">
                 <el-breadcrumb-item>{{select_name}}</el-breadcrumb-item>
               </el-breadcrumb>
-              <span class="rename" @click="update_grounp">
+              <span class="rename" @click="update_grounp"  v-if="current !== -1">
                 <i class="el-icon-edit-outline"></i>重命名
               </span>
-              <span class="delete" @click="delete_group">
+              <span class="delete" @click="delete_group"  v-if="current !== -1">
                 <i class="el-icon-close"></i>删除
               </span>
             </div>
             <div class="common-action">
                 <div>
-                    <el-input v-model="input" placeholder="请输入部门名称" style="width:200px" size='small'></el-input>
-                    <el-button type="primary" icon="el-icon-search" size='small'>搜索</el-button>
+                    <el-input v-model="orgName" placeholder="请输入部门名称" style="width:200px" size='small' @keyup.native.enter="condition"></el-input>
+                    <el-button type="primary" icon="el-icon-search" size='small' @click="condition">搜索</el-button>
                 </div>
                 <div>
-                    <arrow-button></arrow-button>
-                    <el-button type="success" icon="el-icon-plus" size='small' @click="add_part" style="margin-left:10px">添加部门</el-button>
+                    <arrow-button 
+                      @setTop='setTop'
+                      @top='goTop'
+                      @bottom='goBottom'
+                      @setBottom='setBottom'>
+                    </arrow-button>
+                    <el-button type="success" icon="el-icon-plus" size='small' @click="add_part" style="margin-left:10px"  v-if="is_admin">添加部门</el-button>
                 </div>
             </div>
             <div class="common-table">
@@ -63,11 +68,12 @@
                     <el-table-column
                     prop="name"
                     align="center"
-                    width="80"
+                    width="100"
                     label="选择">
-                       <template slot-scope="scope">
-                          <el-checkbox v-model="scope.row.checked"></el-checkbox>
-                       </template>
+                        <template slot-scope="scope">
+                          <el-checkbox v-model="scope.row.checked"
+                            @change="change_table_checked($event,scope.$index)"></el-checkbox>
+                        </template>
                     </el-table-column>
                     <el-table-column
                     prop="orgName"
@@ -84,6 +90,7 @@
                     label="操作"
                     align="center"
                     width="120"
+                    v-if="is_admin"
                     >
                     <template slot-scope="scope">
                         <el-button
@@ -144,6 +151,8 @@ import formButton from "@/components/Button/formButton";
 import arrowButton from "@/components/Button/arrowButton";
 import AddPart from "@/components/AddPart";
 import { SET_TREE_DATE } from "@/store/mutations";
+import qs from "qs";
+import { delete_item, action_fail } from "@/utils/user";
 export default {
   components: {
     formButton,
@@ -177,11 +186,13 @@ export default {
         name: ""
       },
       category: [], //目录
-      current: -1
+      current: -1,
+      temp_data: {},
+      orgName: ""
     };
   },
   computed: {
-    ...mapGetters(["field_manager_data", "field_app_list"]),
+    ...mapGetters(["field_manager_data", "field_app_list", "is_admin"]),
     app_list() {
       return this.field_app_list.filter(res => {
         return res.isShow === "1";
@@ -200,9 +211,117 @@ export default {
     this.pageSize = pageSize ? pageSize - 0 : 5;
     this.$store.dispatch("get_all_app_list", this.field_manager_data.domainId);
     this.search_all_group();
-    this.search_group_part(-1);
+    this.init(this.pageSize, this.pageNo);
   },
   methods: {
+    change_table_checked(event, index) {
+      if (event) {
+        this.tableData = this.tableData.map((res, i) => {
+          if (i === index) {
+            res.checked = true;
+          } else {
+            res.checked = false;
+          }
+          return res;
+        });
+        this.$set(this.tableData, index, this.tableData[index]);
+      } else {
+        this.$set(this.tableData, index, this.tableData[index]);
+      }
+    },
+    condition() {
+      this.pageNo = 1;
+      this.init(this.pageSize, 1);
+    },
+    handleSizeChange(e) {
+      localStorage.setItem("user-manager/field-desc/pageSize", e);
+      this.pageNo = 1;
+      this.pageSize = e;
+      this.init(e, 1);
+    },
+    handleCurrentChange(e) {
+      sessionStorage.setItem("user-manager/field-desc/pageNo", e);
+      this.pageNo = e;
+      this.init(this.pageSize, e);
+    },
+    init(pageSize, currentPage) {
+      var groupId = "";
+      if (this.current !== -1) {
+        groupId = this.temp_data.id;
+      }
+      this.$post(
+        `gwt/system/sysDomain/getOrgByDomainIdPage?${qs.stringify({
+          pageSize,
+          currentPage
+        })}`,
+        {
+          domainId: this.field_manager_data.domainId,
+          groupId,
+          orgName: this.orgName
+        },
+        "json"
+      )
+        .then(res => {
+          if (res.result !== "0000") {
+            this.tableData = [];
+            this.total = 0;
+            return;
+          }
+          this.tableData = res.data.sysOrgPageBean.datas.map((res, i) => {
+            res.checked = false;
+            return res;
+          });
+          this.total = res.data.sysOrgPageBean.totalCount - 0;
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
+    //描述
+    setTop() {
+      this.sort_fn("top");
+    },
+    goTop() {
+      this.sort_fn("previous");
+    },
+    goBottom() {
+      this.sort_fn("next");
+    },
+    setBottom() {
+      this.sort_fn("bottom");
+    },
+    sort_fn(sortType) {
+      var data = {};
+      for (var i = 0; i < this.tableData.length; i++) {
+        if (this.tableData[i].checked) {
+          data = this.tableData[i];
+        }
+      }
+      if (!data.orgId) {
+        this.$message({
+          message: "请选择一条记录进行排序！",
+          type: "warning"
+        });
+        return;
+      }
+      this.$post(
+        "gwt/system/sysDomain/sysgroup/sort",
+        {
+          pk: "domainId",
+          sortType,
+          domainId: this.field_manager_data.domainId,
+          orgId: data.orgId
+        },
+        "json"
+      )
+        .then(res => {
+          if (action_fail(res)) return;
+          this.init(this.pageSize, this.pageNo);
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
     //查询所有分组
     search_all_group() {
       this.$post(
@@ -234,7 +353,6 @@ export default {
         this.$refs.group_form.resetFields();
       });
     },
-
     update_grounp() {
       if (!this.category.length) {
         return;
@@ -259,33 +377,21 @@ export default {
       this.$refs.form.validate(res => {
         if (!res) return;
         this.form_loading = true;
-        this.$post("gwt/system/sysDomain/save", {
-          name: this.form.name,
-          domainId: this.field_manager_data.domainId
-        })
+        this.$post(
+          "gwt/system/sysDomain/save",
+          {
+            name: this.form.name,
+            domainId: this.field_manager_data.domainId
+          },
+          "json"
+        )
           .then(res => {
             this.form_loading = false;
-            if (res.result !== "0000") {
-              this.$swal({
-                title: "操作失败！",
-                text: res.msg,
-                type: "error",
-                confirmButtonColor: "#DD6B55",
-                confirmButtonText: "确定",
-                showConfirmButton: true
-              });
-              return;
-            }
+            if (action_fail(res, "编辑域操作成功")) return;
             this.$store.commit("SET_FIELD_MANAGER_DATA_VALUE", this.form.name);
-            this.$message({
-              type: "success",
-              message: "编辑域操作成功"
-            });
             this.role_visible = false;
-            this.init(this.pageSize, this.pageNo);
           })
           .catch(res => {
-            console.log(res);
             this.form_loading = false;
           });
       });
@@ -293,94 +399,23 @@ export default {
     change_group(index) {
       this.current = index;
       if (index === -1) {
-        this.search_group_part(-1);
       } else {
-        this.search_group_part(this.category[index].id);
+        this.temp_data = this.category[this.current];
       }
-    },
-    handleSizeChange(e) {
-      localStorage.setItem("user-manager/field-desc/pageSize", e);
-      this.pageNo = 1;
-      this.pageSize = e;
-      if (this.current === -1) {
-        this.search_group_part(-1);
-      } else {
-        this.search_group_part(this.category[this.current].id);
-      }
-    },
-    handleCurrentChange(e) {
-      sessionStorage.setItem("user-manager/field-desc/pageNo", e);
-      this.pageNo = e;
-      if (this.current === -1) {
-        this.search_group_part(-1);
-      } else {
-        this.search_group_part(this.category[this.current].id);
-      }
-    },
-    //查询分组所带的部门
-    search_group_part(groupId) {
-      this.$post(
-        "gwt/system/sysDomain/getOrgByDomainIdPage",
-        {
-          domainId: this.field_manager_data.domainId,
-          groupId,
-          Q_orgName_SL: this.Q_orgName_SL,
-          currentPage: this.pageNo,
-          pageSize: this.pageSize
-        },
-        "json"
-      )
-        .then(res => {
-          if (res.result !== "0000") {
-            this.tableData = [];
-            return;
-          }
-          this.tableData = res.data.sysOrgPageBean.datas;
-          this.total = res.data.sysOrgPageBean.totalCount - 0;
-        })
-        .catch(res => {});
+      this.init();
     },
     //删除添加分组
     delete_group() {
-      this.$swal({
+      delete_item({
         title: "您确定要删除这条分组吗？",
         text: "删除后将无法恢复，请谨慎操作！",
-        type: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#DD6B55",
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        confirmButtonClass: "btn btn-success"
-      }).then(res => {
-        if (res.value) {
-          this.$post(
-            `gwt/system/sysDomain/sysgroup/del`,
-            {
-              id: this.category[this.current].id
-            },
-            "json"
-          )
-            .then(res => {
-              if (res.result !== "0000") {
-                this.$swal({
-                  title: "操作失败！",
-                  text: res.msg,
-                  type: "error",
-                  confirmButtonColor: "#DD6B55",
-                  confirmButtonText: "确定",
-                  showConfirmButton: true
-                });
-                return;
-              }
-              this.search_all_group();
-              this.$message({
-                type: "success",
-                message: "删除分组成功"
-              });
-            })
-            .catch(res => {
-              console.log(res);
-            });
+        url: `gwt/system/sysDomain/sysgroup/del`,
+        data: {
+          id: this.category[this.current].id
+        },
+        success: res => {
+          if (action_fail(res)) return;
+          this.search_all_group();
         }
       });
     },
@@ -407,26 +442,11 @@ export default {
         )
           .then(res => {
             this.group_loading = false;
-            if (res.result !== "0000") {
-              this.$swal({
-                title: "操作失败！",
-                text: res.msg,
-                type: "error",
-                confirmButtonColor: "#DD6B55",
-                confirmButtonText: "确定",
-                showConfirmButton: true
-              });
-              return;
-            }
-            this.$message({
-              type: "success",
-              message
-            });
+            if (action_fail(res, message)) return;
             this.search_all_group();
             this.group_visible = false;
           })
           .catch(res => {
-            console.log(res);
             this.group_loading = false;
           });
       });
@@ -443,12 +463,12 @@ export default {
     //提交 添加部门
     submit_part(checkedKeys) {
       this.loading = true;
+      // gwt/system/sysDomain/sysgroup/addOrg
       var url = "gwt/system/sysDomain/addOrg";
       var groupId = "";
-      if (this.current === -1) {
-      } else {
-        url = "gwt/system/sysDomain/sysgroup/addDomain";
+      if (this.current !== -1) {
         groupId = this.category[this.current].id;
+        url = "gwt/system/sysDomain/sysgroup/addOrg";
       }
       this.$post(
         url,
@@ -465,26 +485,8 @@ export default {
       )
         .then(res => {
           this.loading = false;
-          if (res.result !== "0000") {
-            this.$swal({
-              title: "操作失败！",
-              text: res.msg,
-              type: "error",
-              confirmButtonColor: "#DD6B55",
-              confirmButtonText: "确定",
-              showConfirmButton: true
-            });
-            return;
-          }
-          this.$message({
-            type: "success",
-            message: "添加部门成功"
-          });
-          if (this.current === -1) {
-            this.search_group_part(-1);
-          } else {
-            this.search_group_part(this.category[this.current].id);
-          }
+          if (action_fail(res, "添加部门成功")) return;
+          this.init();
           this.part_visible = false;
         })
         .catch(res => {
@@ -495,7 +497,6 @@ export default {
   }
 };
 </script>
-
 
 <style rel="stylesheet/scss" lang="scss">
 .field-desc {

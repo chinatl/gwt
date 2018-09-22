@@ -64,9 +64,7 @@ const user = {
     LogOut({ commit, state }) {
       return new Promise((resolve, reject) => {
         logout(state.token).then(() => {
-          commit('SET_TOKEN', '')
-          commit('SET_ROLES', [])
-          removeToken()
+          // commit('SET_TOKEN', '')
           resolve()
         }).catch(error => {
           reject(error)
@@ -78,7 +76,6 @@ const user = {
     FedLogOut({ commit }) {
       return new Promise(resolve => {
         commit('SET_TOKEN', '')
-        removeToken()
         resolve()
       })
     }
