@@ -295,15 +295,6 @@ export default {
     AddUser
   },
   data() {
-    var validatePass = (rule, value, callback) => {
-      if (!value) {
-        callback(new Error("请输入手机号"));
-      } else if (!validatePhone(value)) {
-        callback(new Error("手机格式不合法"));
-      } else {
-        callback();
-      }
-    };
     return {
       add_dialog: false,
       user_dialog_loading: false,
@@ -337,7 +328,7 @@ export default {
           {
             required: true,
             trigger: "blur",
-            validator: validatePass
+            validator: validatePhone
           }
         ],
         realName: [{ required: true, message: "请输入姓名", trigger: "blur" }],

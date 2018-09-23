@@ -12,15 +12,16 @@
                 <div class="all-checked">
                     <el-checkbox v-model="user_all_checked" @change="all_user_box">全选</el-checkbox>
                 </div>
-                <div class="one-checked scrollbar">
-                    <ul>
-                        <li v-for='(item,index) in allList' :key='index'>
-                            <el-checkbox v-model="item.checked" @change="user_select_checkbox($event,index,item.ID)">
-                                <span style="width:80px;display:inline-block">{{item.REAL_NAME}}</span>
+                <div class="role-checked scrollbar">
+                    <ul  v-if="allList.length">
+                        <li v-for='(item,index) in allList' :key='index' v-if="item.realName.includes(input)">
+                            <el-checkbox v-model="item.checked" @change="user_select_checkbox($event,index,item.userId)">
+                                <span style="width:80px;display:inline-block">{{item.realName}}</span>
                                 {{item.ORG_ALL_NAME}}
                             </el-checkbox>
                         </li>
                     </ul>
+                    <p v-else style="padding:20px">暂无人员!</p>
                 </div>
             </div>
         </div>
@@ -34,11 +35,10 @@
                     <li v-for='(item,index) in has_select_user' :key="index">
                         <div>
                             <svg-icon icon-class='user'></svg-icon>
-                            <span class="user-name">{{item.REAL_NAME}}</span>
+                            <span class="user-name">{{item.realName}}</span>
                         </div>
                         <div>
-                            <span class="part-name">{{item.ORG_NAME}}</span>
-                            <i class="el-icon-close" @click="delete_user(index,item.ID)"></i>
+                            <i class="el-icon-close" @click="delete_user(index,item.userId)"></i>
                         </div>
                     </li>
                 </ul>
@@ -92,6 +92,20 @@ export default {
     show(res) {
       if (res) {
         this.has_select_user = this.userList;
+        var arr = this.userList.map(res => res.userId);
+        var index = 0;
+        for (var i = 0; i < this.allList.length; i++) {
+          if (arr.includes(this.allList[i].userId)) {
+            index++;
+            this.allList[i].checked = true;
+          }
+        }
+        if (index === this.allList.length && index) {
+          this.user_all_checked = true;
+        } else {
+          this.user_all_checked = false;
+        }
+        this.all_list = [...this.allList];
       }
     }
   },
@@ -119,7 +133,9 @@ export default {
         for (var j = 0; j < this.part_user_list.length; j++) {
           this.part_user_list[j].checked = false;
           for (var i = 0; i < this.has_select_user.length; i++) {
-            if (this.has_select_user[i].ID === this.part_user_list[j].ID) {
+            if (
+              this.has_select_user[i].userId === this.part_user_list[j].userId
+            ) {
               this.part_user_list[j].checked = true;
             }
           }
@@ -128,12 +144,12 @@ export default {
       }
     },
     //用户查询单点选择框
-    user_select_checkbox(e, index, ID) {
+    user_select_checkbox(e, index, userId) {
       if (e) {
         this.has_select_user.push(this.allList[index]);
       } else {
         for (var i = 0; i < this.has_select_user.length; i++) {
-          if (this.has_select_user[i].ID === ID) {
+          if (this.has_select_user[i].userId === userId) {
             this.has_select_user.splice(i, 1);
           }
         }
@@ -151,7 +167,7 @@ export default {
         for (var j = 0; j < this.allList.length; j++) {
           this.allList[j].checked = false;
           for (var i = 0; i < this.has_select_user.length; i++) {
-            if (this.has_select_user[i].ID === this.allList[j].ID) {
+            if (this.has_select_user[i].userId === this.allList[j].userId) {
               this.has_select_user.splice(i, 1);
             }
           }
@@ -160,34 +176,19 @@ export default {
     },
     //清空按钮
     clear_all_user() {
-      this.has_select_user.length = 0;
+      this.has_select_user = [];
       //part 用来区分部门和用户
-      if (this.part) {
-        this.all_checked = false;
-        for (var i = 0; i < this.user_list.length; i++) {
-          this.user_list[i].checked = false;
-        }
-      } else {
-        this.user_all_checked = false;
-        for (var i = 0; i < this.allList.length; i++) {
-          this.allList[i].checked = false;
-        }
+      this.user_all_checked = false;
+      for (var i = 0; i < this.allList.length; i++) {
+        this.allList[i].checked = false;
       }
     },
     //删除一个选择的用户
-    delete_user(index, ID) {
+    delete_user(index, userId) {
       this.has_select_user.splice(index, 1);
-      if (this.part) {
-        for (var i = 0; i < this.user_list.length; i++) {
-          if (this.user_list[i].ID === ID) {
-            this.user_list[i].checked = false;
-          }
-        }
-      } else {
-        for (var i = 0; i < this.allList.length; i++) {
-          if (this.allList[i].ID === ID) {
-            this.allList[i].checked = false;
-          }
+      for (var i = 0; i < this.allList.length; i++) {
+        if (this.allList[i].userId === userId) {
+          this.allList[i].checked = false;
         }
       }
       this.change_all_checked();
@@ -203,7 +204,7 @@ export default {
         for (var j = 0; j < this.user_list.length; j++) {
           this.user_list[j].checked = false;
           for (var i = 0; i < this.has_select_user.length; i++) {
-            if (this.has_select_user[i].ID === this.user_list[j].ID) {
+            if (this.has_select_user[i].userId === this.user_list[j].userId) {
               this.has_select_user.splice(i, 1);
             }
           }
@@ -213,71 +214,29 @@ export default {
     //动态改变 all-checked
     change_all_checked() {
       var index = 0;
-      if (this.part) {
-        for (var i = 0; i < this.user_list.length; i++) {
-          if (this.user_list[i].checked) {
-            index++;
-          }
+      for (var i = 0; i < this.allList.length; i++) {
+        if (this.allList[i].checked) {
+          index++;
         }
-        if (index === this.user_list.length) {
-          this.all_checked = true;
-        } else {
-          this.all_checked = false;
-        }
+      }
+      if (index === this.allList.length) {
+        this.user_all_checked = true;
       } else {
-        for (var i = 0; i < this.allList.length; i++) {
-          if (this.allList[i].checked) {
-            index++;
-          }
-        }
-        if (index === this.allList.length) {
-          this.user_all_checked = true;
-        } else {
-          this.user_all_checked = false;
-        }
+        this.user_all_checked = false;
       }
     },
     //选择一个用户
-    select_checkbox(e, index, ID) {
+    select_checkbox(e, index, userId) {
       if (e) {
         this.has_select_user.push(this.user_list[index]);
       } else {
         for (var i = 0; i < this.has_select_user.length; i++) {
-          if (this.has_select_user[i].ID === ID) {
+          if (this.has_select_user[i].userId === userId) {
             this.has_select_user.splice(i, 1);
           }
         }
       }
       this.change_all_checked();
-    },
-    //点击部门事件
-    handleNodeClick(data) {
-      this.$post(
-        "gwt/system/sysUser/loadOrgUser",
-        {
-          orgId: data.id,
-          fromCommon: "Y"
-        },
-        "json"
-      )
-        .then(res => {
-          if (res.result !== "0000") {
-            return;
-          }
-          for (var j = 0; j < res.data.userOrgs.length; j++) {
-            res.data.userOrgs[j].checked = false;
-            for (var i = 0; i < this.has_select_user.length; i++) {
-              if (res.data.userOrgs[j].ID === this.has_select_user[i].ID) {
-                res.data.userOrgs[j].checked = true;
-              }
-            }
-          }
-          this.user_list = [...res.data.userOrgs];
-          this.change_all_checked();
-        })
-        .catch(res => {
-          console.log(res);
-        });
     },
     onSubmit() {
       this.$emit("submit", this.has_select_user);
@@ -325,29 +284,22 @@ export default {
           padding: 10px 8px 10px 8px;
           background-color: #f8f9fb;
           overflow: hidden;
-          .all-user-css {
+
+          .all-checked {
+            border-bottom: 1px solid #cfcfcf;
+            padding-bottom: 6px;
+          }
+          .role-checked {
+            overflow: auto;
+            overflow-x: hidden;
             width: 100%;
-            float: left;
-            border: 1px solid #e7eaec;
-            padding: 12px;
-            height: 375px;
-            background-color: #fff;
-            .all-checked {
-              border-bottom: 1px solid #cfcfcf;
-              padding-bottom: 6px;
-            }
-            .one-checked {
-              overflow: auto;
-              overflow-x: hidden;
-              width: 100%;
-              height: 335px;
-              ul {
-                li {
-                  height: 32px;
-                  line-height: 32px;
-                  .el-checkbox {
-                    width: 100%;
-                  }
+            height: 349px;
+            ul {
+              li {
+                height: 32px;
+                line-height: 32px;
+                .el-checkbox {
+                  width: 100%;
                 }
               }
             }
@@ -376,7 +328,7 @@ export default {
                 letter-spacing: 6px;
               }
             }
-            .one-checked {
+            .role-checked {
               ul {
                 li {
                   height: 32px;
@@ -430,12 +382,14 @@ export default {
                 color: #2e88e7;
               }
               .user-name {
+                height: 20px;
                 font-size: 14px;
                 color: #2e88e7;
                 white-space: nowrap;
                 text-overflow: ellipsis;
                 overflow: hidden;
-                max-width: 80px;
+                width: 160px;
+                display: inline-block;
               }
               .part-name {
                 width: 110px;

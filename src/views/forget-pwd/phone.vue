@@ -21,22 +21,13 @@
 import { validatePhone } from "@/utils/validate";
 export default {
   data() {
-    var validatePass = (rule, value, callback) => {
-      if (!value) {
-        callback(new Error("请输入手机号"));
-      } else if (!validatePhone(value)) {
-        callback(new Error("手机格式不合法"));
-      } else {
-        callback();
-      }
-    };
     return {
       loading: false,
       form: {
         phone: ""
       },
       rules: {
-        phone: [{ validator: validatePass, tigger: "change" }],
+        phone: [{ validator: validatePhone, tigger: "change" }],
         userCode: [
           {
             required: true,

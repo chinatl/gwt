@@ -181,13 +181,43 @@ export default {
       if (node.nodeType === "DOMAIN_GROUP") {
         return;
       }
-      this.field_list[this.current].checkedNodes = checkedNodes;
-      this.field_list[this.current].checkedKeys = checkedKeys;
-      var arr = [];
-      for (var i = 0; i < this.field_list.length; i++) {
-        [].push.apply(arr, this.field_list[i].checkedNodes);
+      var index = 1;
+      if ("/create-meeting/index" === this.$route.path) {
+        index = 1;
+      } else if ("/create-notice/index" === this.$route.path) {
+        index = 2;
+      } else {
+        index = 3;
       }
-      this.has_select_arr = arr;
+      this.$post(
+        "gwt/notice/tbNoticeRecePermission/getAllReceByOrgId",
+        {
+          getAllFlag: "N",
+          receiveNoticeType: index,
+          orgId: node.id.replace(/.*\D/, "")
+        },
+        "json"
+      )
+        .then(res => {
+          if (res.data.sysUserPageBean.totalCount - 0 === 0) {
+            this.$refs.tree.setChecked(node.id, false);
+            this.$message({
+              message: "该部门无接收人！",
+              type: "info"
+            });
+            return;
+          }
+          this.field_list[this.current].checkedNodes = checkedNodes;
+          this.field_list[this.current].checkedKeys = checkedKeys;
+          var arr = [];
+          for (var i = 0; i < this.field_list.length; i++) {
+            [].push.apply(arr, this.field_list[i].checkedNodes);
+          }
+          this.has_select_arr = arr;
+        })
+        .catch(res => {
+          console.log(res);
+        });
     },
     onSubmit() {
       this.$emit("submit", this.has_select_arr);

@@ -200,17 +200,6 @@ import littleButton from "@/components/Button/littleButton";
 import { validatePhone } from "@/utils/validate";
 import { mapGetters } from "vuex";
 import { delete_item } from "@/utils/user";
-//定义一个全局的变量
-var validPhone = (rule, value, callback) => {
-  if (!value) {
-    callback(new Error("请输入电话号码"));
-  } else if (!validatePhone(value)) {
-    callback(new Error("请输入正确的11位手机号码"));
-  } else {
-    callback();
-  }
-};
-
 export default {
   components: {
     panThumb,
@@ -310,7 +299,7 @@ export default {
           { required: true, message: "请输入职务", trigger: "blur" },
           { min: 2, max: 5, message: "长度在 2 到 5 个字符", trigger: "blur" }
         ],
-        phone: [{ required: true, trigger: "blur", validator: validPhone }],
+        phone: [{ required: true, trigger: "blur", validator: validatePhone }],
         remark: [
           { required: true, message: "请输入备注", trigger: "blur" },
           { min: 3, max: 8, message: "长度在 3 到 8 个字符", trigger: "blur" }
@@ -332,7 +321,7 @@ export default {
           {
             required: true,
             trigger: "blur",
-            validator: validPhone
+            validator: validatePhone
           }
         ]
       },

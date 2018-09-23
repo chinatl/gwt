@@ -57,11 +57,11 @@
             <div class="has-user-list scrollbar">
                 <ul>
                     <li v-for='(item,index) in has_select_user' :key="index">
-                        <div>
+                        <div style="width:200px">
                             <svg-icon icon-class='user'></svg-icon>
                             <span class="user-name">{{item.REAL_NAME}}</span>
                         </div>
-                        <div>
+                        <div class="flex">
                             <span class="part-name">{{item.ORG_NAME}}</span>
                             <i class="el-icon-close" @click="delete_user(index,item.ID)"></i>
                         </div>
@@ -339,7 +339,7 @@ export default {
         });
     },
     onSubmit() {
-      console.log( this.has_select_user)
+      console.log(this.has_select_user);
       this.$emit("submit", this.has_select_user);
     },
     save_message() {
@@ -495,20 +495,24 @@ export default {
                 white-space: nowrap;
                 text-overflow: ellipsis;
                 overflow: hidden;
-                max-width: 80px;
+                width: 100px;
+                display: inline-block;
+                height: 20px;
               }
               .part-name {
-                width: 110px;
+                width: 80px;
                 white-space: nowrap;
                 text-overflow: ellipsis;
                 overflow: hidden;
                 display: inline-block;
                 padding-right: 4px;
+                height: 20px;
               }
               .el-icon-close {
+                vertical-align: sub;
+                height: 20px;
                 cursor: pointer;
                 color: #2e88e7;
-                float: right;
                 margin-right: 4px;
                 margin-top: 6px;
               }

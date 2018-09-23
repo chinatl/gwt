@@ -297,20 +297,25 @@ export default {
       this.search_role_by_part(this.pageSize, 1);
     },
     open_add_user_dialog(row) {
+      this.user_list = [...row.sysUserList];
       this.form_data = row;
-      this.user_list = row.sysUserList.map(res => {
-        res.REAL_NAME = res.realName;
-        res.ID = res.id;
-        return res;
-      });
+      // this.user_list = row.sysUserList.map(res => {
+      //   res.REAL_NAME = res.realName;
+      //   res.ID = res.id;
+      //   return res;
+      // });
       this.add_dialog = true;
     },
     submit_add_user(res) {
+      if (!res.length) {
+        this.add_dialog = false;
+        return;
+      }
       this.dialog_loading = true;
       this.$post(
         "gwt/system/sysUserRoleOrg/saveUserForSysUserRoleOrg",
         {
-          userIds: res.map(res => res.ID).join(","),
+          userIds: res.map(res => res.userId).join(","),
           orgId: this.temp_data.id,
           roleId: this.form_data.roleId,
           canDel: 0
@@ -338,7 +343,6 @@ export default {
           this.search_role_by_part(this.pageSize, this.pageNo);
         })
         .catch(res => {
-          console.log(res);
           this.dialog_loading = false;
         });
     },
@@ -384,7 +388,8 @@ export default {
       this.current = 0;
       this.temp_data = data;
       this.search_user_by_part(data.id);
-      this.search_role_by_part(this.pageSize, this.pageNo);
+      this.pageNo = 1;
+      this.search_role_by_part(this.pageSize, 1);
     },
     //获取部门树数据
     get_user_tree_data() {
@@ -394,6 +399,10 @@ export default {
             return;
           }
           this.tree_data = generate_tree(res.data.nodes);
+          if (this.tree_data.length) {
+            this.temp_data = this.tree_data[0];
+            this.search_role_by_part(this.pageSize, this.pageNo);
+          }
         })
         .catch(res => {
           console.log(res);
@@ -531,7 +540,7 @@ export default {
       });
     },
     onSubmit() {
-      var arr = this.checked_list.map(res => {
+      var arr = this.checked_list.filter(res => res.checked.length).map(res => {
         return res.checked.join(",");
       });
       if (arr.length === 0) {
@@ -561,7 +570,7 @@ export default {
             roleName: this.form.roleName,
             remark: this.form.remark,
             roleId,
-            belongDept: "",
+            belongDept: this.temp_data.id,
             resId: arr
               .filter(res => {
                 return res;
@@ -588,7 +597,11 @@ export default {
               message
             });
             this.role_visible = false;
-            this.init(this.pageSize, this.pageNo);
+            if (this.is_admin) {
+              this.init(this.pageSize, this.pageNo);
+            } else {
+              this.search_role_by_part(this.pageSize, this.pageNo);
+            }
           })
           .catch(res => {
             this.form_loading = false;

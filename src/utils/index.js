@@ -377,7 +377,7 @@ export function getFileType(name) {
   return 'unknown'
 }
 export function fileType(name) {
-  if(name + '' === 'undefined'){
+  if (name + '' === 'undefined') {
     return "文件夹"
   }
   if (!name) {
@@ -431,12 +431,12 @@ export function resolve_tree(arr) {
   getChild(arr)
   return newArr
 };
-export function generate_tree(arr) {
+export function generate_tree1(arr) {//效率高 但是返回数据是反着的
   var newArr = [];
   for (var i = arr.length - 1; i >= 0; i--) {
     if (arr[i].nodeType === 'USER_GROUP' || arr[i].nodeType === 'ORG_GROUP' || arr[i].nodeType === 'DOMAIN'
-    || arr[i].nodeType === 'REGION' 
-    || arr[i].pId.includes('region_')) {
+      || arr[i].nodeType === 'REGION'
+      || arr[i].pId.includes('region_')) {
       newArr.push(arr.splice(i, 1)[0]);
     }
   }
@@ -458,3 +458,29 @@ export function generate_tree(arr) {
   return newArr
 }
 
+export function generate_tree(arr) {//效率比上面的算法慢一点 因为是根据 arr.length 长度遍历 ，上面的每加一个会减少一次遍历
+  var newArr = [];
+  for (var i = 0; i < arr.length; i++) {
+    if (arr[i].nodeType === 'USER_GROUP' || arr[i].nodeType === 'ORG_GROUP' || arr[i].nodeType === 'DOMAIN'
+      || arr[i].nodeType === 'REGION'
+      || arr[i].pId.includes('region_')) {
+      newArr.push(arr[i]);
+    }
+  }
+  getTree(newArr);
+  function getTree(generate_arr) {
+    if (!generate_arr) return
+    if (!generate_arr.length) return
+    for (var k = 0, generate_arr_length = generate_arr.length; k < generate_arr_length; k++) {
+      generate_arr[k].childrens = [];
+      for (var j = 0, arr_lenth = arr.length; j < arr_lenth; j++) {
+        if (arr[j].pId === generate_arr[k].id) {
+          generate_arr[k].childrens.push(arr[j]);
+        }
+      }
+      getTree(generate_arr[k].childrens)
+    }
+  };
+  console.log(newArr)
+  return newArr
+}

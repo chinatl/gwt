@@ -27,10 +27,10 @@ export function validatAlphabets(str) {
   return reg.test(str)
 }
 /* 最新手机号正则*/
-export function validatePhone(str) {
-  const reg = /^((13[0-9])|(14[5,7])|(15[0-3,5-9])|(17[0,3,5-8])|(18[0-9])|166|198|199|(147))\d{8}$/
-  return reg.test(str)
-}
+// export function validatePhone(str) {
+//   const reg = /^((13[0-9])|(14[5,7])|(15[0-3,5-9])|(17[0,3,5-8])|(18[0-9])|166|198|199|(147))\d{8}$/
+//   return reg.test(str)
+// }
 
 export function validateTime(rule, value, callback) {
   if (!value) {
@@ -50,11 +50,22 @@ export function validateEndTime(rule, value, callback) {
     callback(new Error('请输入开始时间'));
   } else {
     var _now_date = Date.now();
-    console.log(+value)
     if (+value - _now_date > 1000 * 60 * 10) {
       callback();
     } else {
       callback('距离结束时间不得小于10分钟');
+    }
+  }
+}
+export function validatePhone(rule, value, callback) {
+  const reg = /^((13[0-9])|(14[5,7])|(15[0-3,5-9])|(17[0,3,5-8])|(18[0-9])|166|198|199|(147))\d{8}$/;
+  if (!value) {
+    callback(new Error('请输入手机号'));
+  } else {
+    if (!reg.test(value)) {
+      callback(new Error('手机号不合法'));
+    } else {
+      callback();
     }
   }
 }

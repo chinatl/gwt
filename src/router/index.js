@@ -713,54 +713,6 @@ export const constantRouterMap = [
   //   ]
   // },
   // {
-  //   path: '/user-manager',
-  //   component: Layout,
-  //   redirect: '/user-manager/field',
-  //   name: '用户管理',
-  //   meta: { title: '用户管理', icon: '用户' },
-  //   children: [
-  //     {
-  //       path: 'field',
-  //       name: '域管理',
-  //       component: () => import('@/views/user-manager/field'),
-  //       meta: { title: '域管理' },
-  //     },
-  //     {
-  //       path: 'part',
-  //       name: '部门管理',
-  //       component: () => import('@/views/user-manager/part'),
-  //       meta: { title: '部门管理' }
-  //     },
-  //     {
-  //       path: 'role',
-  //       name: '角色管理',
-  //       component: () => import('@/views/user-manager/role'),
-  //       meta: { title: '角色管理' }
-  //     },
-  //     {
-  //       path: 'user',
-  //       name: '用户管理-用户管理',
-  //       component: () => import('@/views/user-manager/user'),
-  //       meta: { title: '用户管理' }
-  //     },
-  //     {
-  //       path: 'field-desc',
-  //       name: '域管理-子列表',
-  //       component: () => import('@/views/user-manager/fieldDesc'),
-  //       meta: { title: store.getters.field_manager_data.name, hidden: true, temp: true, up: true },
-  //       hidden: true,
-  //     },
-  //     {
-  //       path: 'field-auth',
-  //       name: '域管理-授权管理',
-  //       component: () => import('@/views/user-manager/fieldAuth.vue'),
-  //       meta: { title: '授权管理', hidden: true, up: true },
-  //       hidden: true,
-  //     }
-  //   ]
-  // },
-
-  // {
   //   path: '/public-notice',
   //   component: Layout,
   //   redirect: '/public-notice/meeting',
