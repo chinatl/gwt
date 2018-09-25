@@ -167,7 +167,8 @@ export default {
           {
             messageId: item.MSG_ID,
             recvId: item.RECV_ID,
-            receOrgId: ""
+            receOrgId: "",
+            ORG_ID: item.ORG_ID
           },
           "json"
         ).then(res => {

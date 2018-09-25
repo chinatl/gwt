@@ -171,7 +171,7 @@
                         <template slot-scope="scope">
                             <div class="file-list">
                                 <p v-for="(item,index) in scope.row.ATTA_INFOS" :key='index'>
-                                <svg-icon :icon-class='fileType(item.type)'></svg-icon> {{item.originalName}}
+                                <svg-icon :icon-class='fileType(item.suffix)'></svg-icon> {{item.originalName}}
                                 </p>
                             </div>
                         </template>

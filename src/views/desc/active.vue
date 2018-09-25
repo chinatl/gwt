@@ -36,14 +36,13 @@
                 :key="index">{{item.value}}（{{tabCounts[item.name]}}）</span>
             </div>
         </div>
-        <div class="meeting-div">
+        <div class="meeting-div" v-show="dataType === 0">
             <div class="common-table">
                 <el-table
                     :data="tableData"
                     border
                     v-loading ='loading'
                     style="width: 100%">
-                    <el-table-column label="附件"></el-table-column>
                     <el-table-column
                     prop="REAL_NAME"
                     align="center"
@@ -70,10 +69,17 @@
                     label="附件列表">
                         <template slot-scope="scope">
                             <div class="file-list">
-                                <p v-for="(item,index) in scope.row.ATTA_INFOS" :key='index'>
-                                <svg-icon :icon-class='fileType(item.type)'></svg-icon> {{item.originalName}}
+                                <p v-for="(item,index) in scope.row.ATTA_INFOS" :key='index' @click="one_file_download(item.id)">
+                                <svg-icon :icon-class='fileType(item.suffix)'></svg-icon> {{item.originalName}}
                                 </p>
                             </div>
+                        </template>
+                    </el-table-column>
+                    <el-table-column
+                    align="center"
+                    label="批量下载">
+                        <template slot-scope="scope">
+                          <little-button name='批量下载' @click.native="download_file(scope.row)"></little-button>
                         </template>
                     </el-table-column>
                 </el-table>
@@ -91,14 +97,13 @@
                 </el-pagination>
             </div>
         </div>
-        <div class="meeting-div">
+        <div class="meeting-div" v-show="dataType === 1">
             <div class="common-table">
                 <el-table
                     :data="tableData"
                     border
                     v-loading ='loading'
                     style="width: 100%">
-                    <el-table-column label="已报名"></el-table-column>
                     <el-table-column
                     prop="REAL_NAME"
                     align="center"
@@ -145,15 +150,21 @@
                 :total="total">
                 </el-pagination>
             </div>
+            <div class="common-action">
+              <div>
+                <el-button type="success" 
+                @click="export_sign_user"
+                :disabled="!tableData.length" size="small" icon="el-icon-printer" style="font-size:14px">导出报名名单</el-button>
+              </div>
+            </div>
         </div>
-        <div class="meeting-div">
+        <div class="meeting-div" v-show="dataType === 2">
             <div class="common-table">
                 <el-table
                     :data="tableData"
                     border
                     v-loading ='loading'
                     style="width: 100%">
-                    <el-table-column label="已签收"></el-table-column>
                     <el-table-column
                     prop="REAL_NAME"
                     align="center"
@@ -194,15 +205,15 @@
                 :total="total">
                 </el-pagination>
             </div>
+          
         </div>
-        <div class="meeting-div">
+        <div class="meeting-div" v-show="dataType === 3">
             <div class="common-table">
                 <el-table
                     :data="tableData"
                     border
                     v-loading ='loading'
                     style="width: 100%">
-                    <el-table-column label="已拒签"></el-table-column>
                     <el-table-column
                     prop="REAL_NAME"
                     align="center"
@@ -249,14 +260,13 @@
                 </el-pagination>
             </div>
         </div>
-        <div class="meeting-div">
+        <div class="meeting-div" v-show="dataType === 4">
             <div class="common-table">
                 <el-table
                     :data="tableData"
                     border
                     v-loading ='loading'
                     style="width: 100%">
-                    <el-table-column label="未签收"></el-table-column>
                     <el-table-column
                     prop="RECEIVE_NAME"
                     align="center"
@@ -297,15 +307,21 @@
                 :total="total">
                 </el-pagination>
             </div>
+             <div class="common-action">
+              <div>
+                <el-button type="success" 
+                @click="re_tip_user"
+                :disabled="!tableData.length" size="small" icon="el-icon-message" style="font-size:14px">再次提醒</el-button>
+              </div>
+            </div>
         </div>
-        <div class="meeting-div">
+        <div class="meeting-div" v-show="dataType === 5">
             <div class="common-table">
                 <el-table
                     :data="tableData"
                     border
                     v-loading ='loading'
                     style="width: 100%">
-                    <el-table-column label="短信通知失败"></el-table-column>
                     <el-table-column
                     prop="REAL_NAME"
                     align="center"
@@ -356,10 +372,13 @@ import { mapGetters } from "vuex";
 import { action_fail, delete_item } from "@/utils/user";
 import { fileType } from "@/utils";
 import qs from "qs";
-
+import littleButton from "@/components/Button/littleButton";
+import { Base64 } from "js-base64";
+import md5 from "js-md5";
 export default {
   components: {
-    fileList
+    fileList,
+    littleButton
   },
   data() {
     return {
@@ -453,25 +472,212 @@ export default {
     var pageSize = localStorage.getItem("active-desc/index/pageSize");
     this.pageSize = pageSize ? pageSize - 0 : 5;
     this.$store.dispatch("readSession", SET_MESSAGE_DATA);
+    this.status = this.message_data.REC_STATUS;
+
+    console.log(this.message_data.NOTICE_TYPE);
     this.get_meeting_data();
     this.init_file(this.message_data.NOTICE_ID);
     this.get_type_nmuber();
-    this.status = this.message_data.REC_STATUS;
+    this.get_file_list();
   },
   computed: {
     ...mapGetters(["message_data", "user_info"])
   },
   methods: {
+    //再次提醒用户
+    re_tip_user() {
+      this.$post(
+        "gwt/notice/tbNotice/smsRemind",
+        {
+          noticeId: this.message_data.NOTICE_ID
+        },
+        "json"
+      )
+        .then(res => {
+          console.log(res);
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
+    //导出报名名单
+    export_sign_user() {
+      var data = {
+        noticeId: this.message_data.NOTICE_ID
+      };
+      var object = Base64.encode(JSON.stringify(data));
+      var sign = md5(object + this.$store.getters.sign);
+      window.open(
+        `gwt/notice/tbNoticeRegister/exportRegistList?${qs.stringify({
+          object,
+          sign,
+          token: this.$store.getters.token
+        })}`
+      );
+    },
+    filter_nav() {
+      if (this.message_data.NOTICE_TYPE === 1) {
+        this.receive_type = [
+          {
+            name: "attachment",
+            value: "附件",
+            dataType: 0
+          },
+          {
+            name: "registUsers",
+            value: "已报名",
+            dataType: 1
+          },
+          {
+            name: "signUsers",
+            value: "已签收",
+            dataType: 2
+          },
+          {
+            name: "refuseUsers",
+            value: "已拒签",
+            dataType: 3
+          },
+          {
+            name: "unSignUsers",
+            value: "未签收",
+            dataType: 4
+          },
+          {
+            name: "smsNoticeFailedUsers",
+            value: "短信通知失败",
+            dataType: 5
+          }
+        ];
+      } else if (this.message_data.NOTICE_TYPE === 2) {
+        this.receive_type = [
+          {
+            name: "signUsers",
+            value: "已签收",
+            dataType: 2
+          },
+          {
+            name: "refuseUsers",
+            value: "已拒签",
+            dataType: 3
+          },
+          {
+            name: "unSignUsers",
+            value: "未签收",
+            dataType: 4
+          },
+          {
+            name: "smsNoticeFailedUsers",
+            value: "短信通知失败",
+            dataType: 5
+          }
+        ];
+      } else if (this.message_data.NOTICE_TYPE === 3) {
+        this.receive_type = [
+          {
+            name: "attachment",
+            value: "附件",
+            dataType: 0
+          },
+          {
+            name: "signUsers",
+            value: "已签收",
+            dataType: 2
+          },
+          {
+            name: "refuseUsers",
+            value: "已拒签",
+            dataType: 3
+          },
+          {
+            name: "unSignUsers",
+            value: "未签收",
+            dataType: 4
+          },
+          {
+            name: "smsNoticeFailedUsers",
+            value: "短信通知失败",
+            dataType: 5
+          }
+        ];
+      }
+    },
+    one_file_download(item) {
+      var data = {
+        id: item.id
+      };
+      var object = Base64.encode(JSON.stringify(data));
+      var sign = md5(object + this.$store.getters.sign);
+      window.open(
+        `gwt/uploadFile/download?${qs.stringify({
+          object,
+          sign,
+          token: this.$store.getters.token
+        })}`
+      );
+    },
+    //批量下载
+    download_file(item) {
+      var data = {
+        fileIds: this.fileIds.map(res => res + "").join(","),
+        dirIds: this.dirIds.map(res => res + "").join(","),
+        orgId: this.folderform.orgId
+      };
+      var object = Base64.encode(JSON.stringify(data));
+      var sign = md5(object + this.$store.getters.sign);
+      window.open(
+        `gwt/cloudisk/cloudiskAttachment/BatchDownload?${qs.stringify({
+          object,
+          sign,
+          token: this.$store.getters.token
+        })}`
+      );
+      this.$post(
+        "gwt/system/tbNoticeAttachment/batchDownload",
+        {
+          inIdAry: item.ATTA_INFOS.map(res => {
+            return res.id;
+          }).join(",")
+        },
+        "json"
+      ).then(res => {
+        console.log(res);
+      });
+    },
+    fileType(name) {
+      return fileType(name);
+    },
     select_nav(item, index) {
       this.current = index;
       this.dataType = item.dataType;
       this.pageNo = 1;
       if (item.dataType === 0) {
+        this.get_file_list();
       } else if (item.dataType === 5) {
         this.search_message_fail(this.pageSize, 1);
       } else {
         this.init(this.pageSize, 1);
       }
+    },
+    get_file_list() {
+      this.$post(
+        `gwt/system/tbNoticeAttachment/attachmentList`,
+        {
+          noticeId: this.message_data.NOTICE_ID,
+          attaUploadNode: 2
+        },
+        "json"
+      )
+        .then(res => {
+          if (res.result !== "0000") {
+            return;
+          }
+          this.tableData = res.data.tbNoticeAttachmentPageBean;
+          this.total = res.data.totalCount;
+        })
+        .catch(res => {
+          console.log(res);
+        });
     },
     search_message_fail(pageSize, currentPage) {
       this.$post(
@@ -578,6 +784,7 @@ export default {
           this.loading = false;
         });
     },
+
     init_file(noticeId) {
       this.$post(
         "gwt/system/tbNoticeAttachment/attachmentList",
@@ -611,6 +818,9 @@ export default {
 };
 </script>
 <style rel="stylesheet/scss" lang="scss" scoped>
+.meeting-div {
+  min-height: 300px;
+}
 .file-list {
   width: 60%;
   text-overflow: ellipsis;
@@ -618,6 +828,12 @@ export default {
   font-size: 12px;
   margin: 0 auto;
   text-align: left;
+  p {
+    cursor: pointer;
+    &:hover {
+      color: #3ba4f5;
+    }
+  }
   .svg-icon {
     font-size: 16px;
   }

@@ -196,6 +196,10 @@ export default {
             className: "rukediaochan",
             iconName: "眼睛"
           };
+        case "批量下载":
+          return {
+            className: "shangjia",
+          };
         default:
           return {
             className: ""
