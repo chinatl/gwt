@@ -38,9 +38,9 @@
         </div>
         <p style="text-align:right" class="notice-desc-button">
           <el-button type="warning" size="medium" @click="report_notice" ><svg-icon icon-class='警察'></svg-icon>举报</el-button>
-          <el-button type="danger" size="medium"  @click="refuse"  v-if='status === "1000"'><svg-icon icon-class='拒签'></svg-icon>拒签</el-button>
-          <el-button type="primary" size="medium" @click="reveive_report" v-if='status === "1000"'><svg-icon icon-class='签收'></svg-icon>签收</el-button>
-          <el-button type="success" size="medium" @click="forward_report" v-if='status === "1001"'><svg-icon icon-class='转发'></svg-icon>转发</el-button>
+          <el-button type="danger" size="medium"  @click="refuse"  v-if='status === "1000" && isTimeOut'><svg-icon icon-class='拒签'></svg-icon>拒签</el-button>
+          <el-button type="primary" size="medium" @click="reveive_report" v-if='status === "1000" && isTimeOut'><svg-icon icon-class='签收'></svg-icon>签收</el-button>
+          <el-button type="success" size="medium" @click="forward_report" v-if='status === "1001" && isTimeOut'><svg-icon icon-class='转发'></svg-icon>转发</el-button>
         </p>
         <el-dialog :close-on-click-modal='false'
             title="举报信息"

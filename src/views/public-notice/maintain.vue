@@ -86,12 +86,12 @@ export default {
       date: "",
       Q_noticeTitle_SL: "",
       tableData: [],
-      is_org:"",
-      totalCount:"",
-      userid:"",
-      is_ndel:true,
-      is_ydel:false,
-      delCount:""//删除总条数
+      is_org: "",
+      totalCount: "",
+      userid: "",
+      is_ndel: true,
+      is_ydel: false,
+      delCount: "" //删除总条数
     };
   },
   created() {
@@ -103,37 +103,35 @@ export default {
     var pageSize = localStorage.getItem("public-notice/maintain/pageSize");
     this.pageSize = pageSize ? pageSize - 0 : 10;
     this.is_currentorg();
-    this.init_user()
+    this.init_user();
     this.init(this.pageSize, this.pageNo);
   },
   computed: {
     ...mapGetters(["meeting_type_list"])
   },
-  
+
   methods: {
     condition() {
-        this.pageNo = 1;
-        sessionStorage.setItem("public-notice/maintain/pageNo", 1);
-        this.init(this.pageSize, 1);
+      this.pageNo = 1;
+      sessionStorage.setItem("public-notice/maintain/pageNo", 1);
+      this.init(this.pageSize, 1);
     },
-    init_user(){
-        this.$post(`gwt/getCurrentOrgUser`,{},"json")
-        .then(res=>{
-            if(res.result !== "0000"){
-                return;
-            }
-            this.userid = res.data.hashMap.id
-        })
+    init_user() {
+      this.$post(`gwt/getCurrentOrgUser`, {}, "json").then(res => {
+        if (res.result !== "0000") {
+          return;
+        }
+        this.userid = res.data.hashMap.id;
+      });
     },
-    is_currentorg(){
-        this.$post(`gwt/isCurrentOrgManager`,{},"json")
-        .then(res=>{
-            console.log(res)
-            if(res.result !== "0000"){
-                return;
-            }
-            this.is_org = res.data.hashMap
-        })
+    is_currentorg() {
+      this.$post(`gwt/isCurrentOrgManager`, {}, "json").then(res => {
+        console.log(res);
+        if (res.result !== "0000") {
+          return;
+        }
+        this.is_org = res.data.hashMap;
+      });
     },
 
     //初始化数据列表
@@ -154,12 +152,12 @@ export default {
         "json"
       )
         .then(res => {
-          console.log(res)
+          console.log(res);
           this.loading = false;
           if (res.result !== "0000") {
             return;
           }
-          this.tableData = res.data.tbNoticeMaintenancePageBean.datas;
+          this.tableData = res.data.tbNoticeMaintenancePageBean.datas || [];
           sessionStorage.setItem(
             "public-notice/maintain/total",
             res.data.tbNoticeMaintenancePageBean.totalCount
@@ -188,14 +186,13 @@ export default {
         "json"
       )
         .then(res => {
-          console.log(res)
+          console.log(res);
           this.loading = false;
           if (res.result !== "0000") {
             return;
           }
           this.tableData = res.data.noticeDeletePageBean.datas;
-          this.delCount = res.data.noticeDeletePageBean.totalCount + 0
-          
+          this.delCount = res.data.noticeDeletePageBean.totalCount + 0;
         })
         .catch(res => {
           this.loading = false;
@@ -203,7 +200,7 @@ export default {
         });
     },
     handleSizeChange(e) {
-        console.log(e)
+      console.log(e);
       localStorage.setItem("public-notice/maintain/pageSize", e);
       this.pageNo = 1;
       this.pageSize = e;
@@ -216,65 +213,65 @@ export default {
     },
     handleEdit(index, item) {},
     handleDelete(row) {
-        
-        console.log(row)
-        if(this.is_org !== true){
-            this.$swal({
-                title: "提示信息！",
-                text: "您无权删除通知！",
-                type: "warning",
-                confirmButtonColor: "#DD6B55",
-                confirmButtonText: "确定",
-                showConfirmButton: true
-            });
-            // return;
-        }
+      console.log(row);
+      if (this.is_org !== true) {
         this.$swal({
-            confirmButtonText: "确定",
-            showCancelButton: true,
-            cancelButtonText: "取消",
-            title: "请输入删除原因",
-            input: "text",
-            showCancelButton: true,
-            confirmButtonText: "确定",
-            cancelButtonText: "取消",
-            inputValidator: value => {
-            return !value && "请输入删除原因，此为必填项！";
+          title: "提示信息！",
+          text: "您无权删除通知！",
+          type: "warning",
+          confirmButtonColor: "#DD6B55",
+          confirmButtonText: "确定",
+          showConfirmButton: true
+        });
+        // return;
+      }
+      this.$swal({
+        confirmButtonText: "确定",
+        showCancelButton: true,
+        cancelButtonText: "取消",
+        title: "请输入删除原因",
+        input: "text",
+        showCancelButton: true,
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        inputValidator: value => {
+          return !value && "请输入删除原因，此为必填项！";
+        }
+      }).then(res => {
+        console.log(res);
+        if (res.value) {
+          this.$post(
+            `gwt/notice/tbNoticeMaintenance/del`,
+            {
+              noticeId: row.noticeId,
+              deleteReason: res.value,
+              nowUser: this.userid
+            },
+            "json"
+          ).then(res => {
+            console.log(res);
+            if (res.result !== "0000") {
+              return;
             }
-        })  
-        .then(res=>{
-            console.log(res)
-            if (res.value) {
-                this.$post(`gwt/notice/tbNoticeMaintenance/del`,
-                {
-                    noticeId: row.noticeId,
-                    deleteReason: res.value,
-                    nowUser: this.userid,
-                },"json")
-                .then(res=>{
-                    console.log(res)
-                    if(res.result !== "0000"){
-                        return;
-                    }
-                    this.$message({
-                        type: "success",
-                        message: "删除成功"
-                    })
-                    this.init(this.pageSize, 1);
-                })
-            }
-        })
+            this.$message({
+              type: "success",
+              message: "删除成功"
+            });
+            this.init(this.pageSize, 1);
+          });
+        }
+      });
     },
     //删除通知列表
-    ndel_list(){
-        this.is_ndel = !this.is_ndel;
-        this.is_ydel = !this.is_ydel
-        this.get_delNotice(this.pageSize,1)
+    ndel_list() {
+      this.is_ndel = !this.is_ndel;
+      this.is_ydel = !this.is_ydel;
+      this.get_delNotice(this.pageSize, 1);
     },
-    ydel_list(){
-        this.is_ndel = !this.is_ndel;
-        this.is_ydel = !this.is_ydel;
-        this.init(this.pageSize,1)
+    ydel_list() {
+      this.is_ndel = !this.is_ndel;
+      this.is_ydel = !this.is_ydel;
+      this.init(this.pageSize, 1);
     },
     pickerOptions(e) {
       console.log(e);

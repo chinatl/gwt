@@ -16,9 +16,10 @@
                     range-separator="至"
                     start-placeholder="开始日期"
                     end-placeholder="结束日期"
+                    @change="condition"
                    >
                 </el-date-picker>
-                <el-input v-model="Q_noticeTitle_SL" placeholder="请输入域名称" style="width:200px" size='medium'></el-input>
+                <el-input v-model="Q_noticeTitle_SL" placeholder="请输入名称" style="width:200px" size='medium' @keyup.native.enter="condition"></el-input>
                 <el-button type="primary" icon="el-icon-search" size='medium' v-wave @click="condition">搜索</el-button>
             </div>
         </div>
@@ -49,6 +50,7 @@ import { SET_MEETING_TYPE_LIST, SET_MESSAGE_DATA } from "@/store/mutations";
 import { mapGetters } from "vuex";
 import NoticeItem from "@/components/NoticeItem";
 import qs from "qs";
+import { parseTime } from "@/utils";
 export default {
   components: {
     NoticeItem
@@ -60,7 +62,7 @@ export default {
       total: 0,
       loading: false,
       noticeType: "",
-      date: "0",
+      date: "",
       Q_noticeTitle_SL: "",
       tableData: []
     };
@@ -79,6 +81,9 @@ export default {
   },
   computed: {
     ...mapGetters(["meeting_type_list"])
+  },
+   beforeDestroy() {
+    // this.$store.commit("DEL_VIEW_BY_NAME", "材料征集");
   },
   methods: {
     condition() {
@@ -104,13 +109,21 @@ export default {
         //材料征集
       } else if (item.NOTICE_TYPE === 1) {
         this.$router.push({
-          path:'/meeting-desc/index'
-        })
+          path: "/meeting-desc/index"
+        });
         //会议通知
       }
     },
     init(pageSize, pageNo) {
+      console.log(this.date);
       this.loading = true;
+      var begincreateTime = "";
+      var endcreateTime = "";
+      if (this.date) {
+        console.log(this.date, "-------------");
+        begincreateTime = parseTime(this.date[0], "{y}-{m}-{d} {h}:{i}:{s}");
+        endcreateTime = parseTime(this.date[1], "{y}-{m}-{d} {h}:{i}:{s}");
+      }
       this.$post(
         `gwt/notice/tbNotice/getUserReceiveNoticeList?${qs.stringify({
           currentPage: pageNo,
@@ -118,8 +131,8 @@ export default {
         })}`,
         {
           noticeType: this.noticeType,
-          begincreateTime: "",
-          endcreateTime: "",
+          begincreateTime,
+          endcreateTime,
           noticeTitle: this.Q_noticeTitle_SL
         },
         "json"
@@ -130,6 +143,7 @@ export default {
             return;
           }
           this.tableData = res.data.tbNoticePageBean.datas;
+          this.total = res.data.tbNoticePageBean.totalCount - 0;
           sessionStorage.setItem(
             "public-notice/signin/total",
             res.data.tbNoticePageBean.totalCount

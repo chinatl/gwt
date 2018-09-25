@@ -25,7 +25,7 @@
         <div class="article-main">
             <div class="artive-address">
                 <p v-if='status === "1002"'>拒签理由：<span>{{tbNoticeRefuse.REFUSE_REASON}}</span></p>
-                <p v-if='data.startTime'>开始时间：<span>{{data.startTime}}</span></p>
+                <p v-if='data.endTime'>结束时间：<span>{{data.endTime}}</span></p>
                 <p v-if='data.noticeAdress'>会议地点：<span>{{data.noticeAdress}}</span></p>
             </div>
             <div class="active-content">
@@ -38,9 +38,9 @@
         </div>
         <p style="text-align:right" class="notice-desc-button">
           <el-button type="warning" size="medium" @click="report_notice" ><svg-icon icon-class='警察'></svg-icon>举报</el-button>
-          <el-button type="danger" size="medium"  @click="refuse"  v-if='status == "1000"'><svg-icon icon-class='拒签'></svg-icon>拒签</el-button>
-          <el-button type="primary" size="medium" @click="reveive_report" v-if='status == "1000"'><svg-icon icon-class='签收'></svg-icon>签收</el-button>
-          <el-button type="success" size="medium" @click="forward_report" v-if='status == "1001"'><svg-icon icon-class='转发'></svg-icon>转发</el-button>
+          <el-button type="danger" size="medium"  @click="refuse"  v-if='status == "1000" && !isTimeOut'><svg-icon icon-class='拒签'></svg-icon>拒签</el-button>
+          <el-button type="primary" size="medium" @click="reveive_report" v-if='status == "1000" && !isTimeOut'><svg-icon icon-class='签收'></svg-icon>签收</el-button>
+          <el-button type="success" size="medium" @click="forward_report" v-if='status == "1001" && !isTimeOut'><svg-icon icon-class='转发'></svg-icon>转发</el-button>
         </p>
         <el-dialog :close-on-click-modal='false'
             title="举报信息"
@@ -120,11 +120,11 @@
             :total="total">
             </el-pagination>
         </div>
-        <div class="common-action">
+        <div class="common-action" v-if="!isTimeOut">
             <upload-button  @on-change="upload_img">添加附件</upload-button>
             <file-list :list='user_upload_list' @delete='delete_user_file'></file-list>
         </div>
-        <div class="stuff-footer" v-show="is_upload">
+        <div class="stuff-footer" v-show="is_upload" v-if="!isTimeOut">
             <p class="tips">附件上传完成后，需确认才能提交</p>
             <p class="stuff-button"><el-button type="primary" size="medium" @click="submit_upload">确认提交</el-button></p>
         </div>
@@ -186,7 +186,8 @@ export default {
       pageSize: 5,
       pageNo: 1,
       total: 0,
-      is_upload: false
+      is_upload: false,
+      isTimeOut: true
     };
   },
   beforeDestroy(e) {
@@ -202,7 +203,6 @@ export default {
     var pageSize = localStorage.getItem("stuff-desc/index/pageSize");
     this.pageSize = pageSize ? pageSize - 0 : 5;
     this.$store.dispatch("readSession", SET_MESSAGE_DATA);
-    console.log(JSON.stringify(this.message_data, {}, 4));
     this.get_meeting_data();
     this.init_file(this.message_data.NOTICE_ID);
     this.status = this.message_data.REC_STATUS;
@@ -443,6 +443,8 @@ export default {
           if (this.status == 1001) {
             this.get_user_sign_table(this.pageSize, this.pageNo);
           }
+          this.isTimeOut =
+            +new Date(res.data.tbNotice.endTime) - Date.now() < 0;
         })
         .catch(res => {
           this.loading = false;

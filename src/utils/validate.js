@@ -59,10 +59,11 @@ export function validateEndTime(rule, value, callback) {
 }
 export function validatePhone(rule, value, callback) {
   const reg = /^((13[0-9])|(14[5,7])|(15[0-3,5-9])|(17[0,3,5-8])|(18[0-9])|166|198|199|(147))\d{8}$/;
+  const reg1 = /^\d{3,4}-\d{7,8}$/;
   if (!value) {
     callback(new Error('请输入手机号'));
   } else {
-    if (!reg.test(value)) {
+    if (!reg.test(value) && !reg1.test(value)) {
       callback(new Error('手机号不合法'));
     } else {
       callback();

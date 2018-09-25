@@ -121,12 +121,33 @@ export default {
           }
           this.form.noticeTitle = res.data.tbNotice.noticeTitle;
           this.form.noticeAdress = res.data.tbNotice.noticeAdress;
-          this.form.startTime = new Date(res.data.tbNotice.startTime);
-          this.form.endTime = new Date(res.data.tbNotice.endTime);
           this.form.name = res.data.receiveUserNames.join("、");
           this.form.part = res.data.receiveOrgNames.join("、");
           this.form.noticeProfile = res.data.tbNotice.noticeProfile;
           this.file_list = res.data.attrIds;
+
+          if (res.data.tbNotice.startTime) {
+            this.form.startTime = new Date(res.data.tbNotice.startTime);
+          }
+          if (res.data.tbNotice.endTime) {
+            this.form.endTime = new Date(res.data.tbNotice.endTime);
+          }
+          var id_arr = res.data.tbNoticeDraft.draftOrgId.split(",");
+          this.has_select_part_list = [];
+          for (var i = 0; i < res.data.receiveOrgNames.length; i++) {
+            this.has_select_part_list.push({
+              name: res.data.receiveOrgNames[i],
+              id: id_arr[i]
+            });
+          }
+          this.has_select_user_list = [];
+          var user_arr_id = res.data.tbNoticeDraft.draftUserId.split(",");
+          for (var i = 0; i < res.data.receiveUserNames.length; i++) {
+            this.has_select_user_list.push({
+              REAL_NAME: res.data.receiveUserNames[i],
+              ID: user_arr_id[i]
+            });
+          }
         })
         .catch(res => {
           console.log(res);
@@ -185,6 +206,7 @@ export default {
         });
     },
     onSubmit() {
+      console.log(this.file_list)
       if (!this.form.checked) {
         this.$message({
           message: "请确认该通知不含涉密信息！",
@@ -230,7 +252,7 @@ export default {
                 this.$post(
                   "gwt/notice/tbNotice/save",
                   {
-                    noticeId: '',
+                    noticeId: "",
                     noticeTitle: this.form.noticeTitle,
                     noticeType: this.notice_data.NOTICE_TYPE, //会议 2//通知 3//材料
                     noticeAdress: this.form.noticeAdress,
@@ -239,7 +261,11 @@ export default {
                       this.form.startTime,
                       "{y}-{m}-{d} {h}:{i}:{s}"
                     ),
-                    endTime: "",
+                    endTime: parseTime(
+                      this.form.endTime,
+                      "{y}-{m}-{d} {h}:{i}:{s}"
+                    ),
+                    changeType: 'change',
                     selectedUsers: this.has_select_user_list
                       .map(res => res.ID)
                       .join(","),

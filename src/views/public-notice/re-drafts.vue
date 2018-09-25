@@ -144,8 +144,12 @@ export default {
           }
           this.form.noticeTitle = res.data.tbNotice.noticeTitle;
           this.form.noticeAdress = res.data.tbNotice.noticeAdress;
-          this.form.startTime = new Date(res.data.tbNotice.startTime);
-          this.form.endTime = new Date(res.data.tbNotice.endTime);
+          if (res.data.tbNotice.startTime) {
+            this.form.startTime = new Date(res.data.tbNotice.startTime);
+          }
+          if (res.data.tbNotice.endTime) {
+            this.form.endTime = new Date(res.data.tbNotice.endTime);
+          }
           this.form.name = res.data.receiveUserNames.join("、");
           this.form.part = res.data.receiveOrgNames.join("、");
           this.form.noticeProfile = res.data.tbNotice.noticeProfile;

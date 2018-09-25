@@ -4,12 +4,18 @@ const tagsView = {
     cachedViews: []
   },
   mutations: {
+    DEL_VIEW_BY_NAME: (state, name) => {
+      for (var i = 0; i < state.visitedViews.length; i++) {
+        if (state.visitedViews[i].name === name) {
+          state.visitedViews.splice(i, 1)
+        }
+      }
+    },
     ADD_VISITED_VIEWS: (state, view) => {
       if (view.meta.hidden) {
         return
       };
       if (state.visitedViews.some(v => v.path === view.path)) { return }
-      console.log(view)
       state.visitedViews.push({
         name: view.name,
         meta: view.meta,
