@@ -332,17 +332,30 @@ export default {
         duty:"",
         phone:"",
         remark:""
-      }
+      },
+      attachId:""
     };
   },
   created() {
     this.getUserInfo();
     this.getloginTable();
+    this.get_head()
   },
   computed: {
     ...mapGetters(["user_info"])
   },
   methods: {
+    //获取头像
+    get_head(){
+      this.$post(`gwt/cloudisk/attachment/list`,
+      {
+        inIdAry: this.attachId
+      },
+      "json")
+      .then(res=>{
+        console.log(res)
+      })
+    },
     //获取用户基本信息
     getUserInfo() {
       this.$post(`gwt/system/sysUserZone/getUserInfo`).then(res => {
@@ -365,6 +378,7 @@ export default {
           this.resetform.phone = res.data.user.sysOrgUserX.phone;
           this.resetform.remark = res.data.user.sysOrgUserX.remark;
 
+          this.attachId = res.data.AttrHeadId[0].attachId;
           this.user_img = res.data.AttrHeadId;
           this.isShow = !this.isShow;
           this.isHide = !this.isHide;
@@ -570,12 +584,13 @@ export default {
         });
      
     },
+    //上传头像
     download(type) {
-      // console.log(this.userform.id)
+      console.log(this.userform.id)
       this.$refs.cropper.getCropData(data => {
-        console.log(data);
+        // console.log(data);
         this.$post(
-          `gwt-web-cloudisk/uploadFile/uploadHead`,
+          `gwt/uploadFile/uploadHead`,
           {
             selectHeadFile: data,
             ownerSystem: "gwt-platform",
@@ -583,21 +598,22 @@ export default {
             ownerAperation: "",
             userId: this.userform.id
           },
-          "json"
+          "form"
         ).then(res => {
-          if (res.result !== "0000") {
-            this.$swal({
-              title: "操作失败！",
-              text: res.msg,
-              type: "error",
-              confirmButtonColor: "#DD6B55",
-              confirmButtonText: "确定",
-              showConfirmButton: true
-            });
-            return;
-          }
-          this.user_img = data;
-          this.upload_img_dialog = false;
+          console.log(res)
+          // if (res.result !== "0000") {
+          //   this.$swal({
+          //     title: "操作失败！",
+          //     text: res.msg,
+          //     type: "error",
+          //     confirmButtonColor: "#DD6B55",
+          //     confirmButtonText: "确定",
+          //     showConfirmButton: true
+          //   });
+          //   return;
+          // }
+          // this.user_img = data;
+          // this.upload_img_dialog = false;
         });
         // test.location.href = data
       });
