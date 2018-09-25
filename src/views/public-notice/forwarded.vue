@@ -16,35 +16,23 @@
                     range-separator="至"
                     start-placeholder="开始日期"
                     end-placeholder="结束日期"
+                    format="yyyy 年 MM 月 dd 日"
+                    value-format="yyyy-MM-dd"
                    >
                 </el-date-picker>
                 <el-input v-model="Q_noticeTitle_SL" placeholder="请输入标题" style="width:200px" size='medium'></el-input>
                 <el-button type="primary" icon="el-icon-search" size='medium' v-wave @click="condition">搜索</el-button>
             </div>
         </div>
-        <!-- <div class="common-table" v-loading='loading' style="min-height:500px;padding:0 20px">
+        <div class="common-table" v-loading='loading' style="min-height:500px;padding:0 20px">
            <notice-item 
               v-for="(item,index) in tableData" 
               :data='item'
               :key='index'
               @click="go_desc(item)"
               ></notice-item>
-        </div> -->
-        <ul class="message-list" v-loading ='loading'>
-            <li v-for="(item,index) in tableData" :key="index" @click="get_active_desc(item)">
-              <div class="message-area">
-                  <img :src="require('@/assets/imgs/message.png')">
-              </div>
-              <div class="message-info">
-                  <div class="h3">
-                    {{item.NOTICE_TITLE}}
-                  </div>
-                  <div class="caozuo">
-                      <span class="reportColor">{{item.ITEM_NAME}}</span>
-                  </div>
-              </div>
-            </li>
-        </ul>
+        </div>
+        
         <div class="common-page">
             <el-pagination
             @size-change="handleSizeChange"
@@ -103,6 +91,7 @@ export default {
       return;
     },
     init(pageSize, pageNo) {
+      console.log(this.date)
       this.loading = true;
       this.$post(
         `gwt/notice/tbNoticeForward/list?${qs.stringify({
@@ -112,21 +101,22 @@ export default {
         {
           account: this.noticeType == 0 ? 0 : this.noticeType,
           noticeType: this.noticeType,
-          begincreateTime: this.date[0],
+          begincreateTime: "" ,
           endcreateTime: this.date[1],
           noticeTitle: this.Q_noticeTitle_SL
         },
         "json"
       )
         .then(res => {
+          console.log(res)
           this.loading = false;
           if (res.result !== "0000") {
             return;
           }
-          this.tableData = res.data.tbNoticePageBean.datas;
+          this.tableData = res.data.tbNoticeForwardPageBean.datas;
           sessionStorage.setItem(
             "public-notice/forwarded/total",
-            res.data.tbNoticePageBean.totalCount
+            res.data.tbNoticeForwardPageBean.totalCount
           );
         })
         .catch(res => {

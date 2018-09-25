@@ -16,6 +16,8 @@
                     range-separator="至"
                     start-placeholder="开始日期"
                     end-placeholder="结束日期"
+                    format="yyyy 年 MM 月 dd 日"
+                    value-format="yyyy-MM-dd"
                    >
                 </el-date-picker>
                 <el-input v-model="Q_noticeTitle_SL" placeholder="请输入标题" style="width:200px" size='medium'></el-input>
@@ -55,7 +57,7 @@
                 
             </el-table>
         </div>
-        <div class="common-page">
+        <div class="common-page" v-show="is_ndel">
             <el-pagination
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
@@ -64,9 +66,22 @@
             :page-size="pageSize"
             layout="total, sizes, prev, pager, next, jumper"
             background
-            :total="total"  >
+            :total="total">
             </el-pagination>
-            
+         
+        </div>
+        <div class="common-page" v-show="is_ydel">
+            <el-pagination
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page="pageNo"
+            :page-sizes="[10, 20, 30, 40]"
+            :page-size="pageSize"
+            layout="total, sizes, prev, pager, next, jumper"
+            background
+            :total="delCount">
+            </el-pagination>
+         
         </div>
     </div>
 </template>
@@ -86,12 +101,12 @@ export default {
       date: "",
       Q_noticeTitle_SL: "",
       tableData: [],
-      is_org: "",
-      totalCount: "",
-      userid: "",
-      is_ndel: true,
-      is_ydel: false,
-      delCount: "" //删除总条数
+      is_org:"",
+      totalCount:"",
+      userid:"",
+      is_ndel:true,
+      is_ydel:false,
+      delCount:0//删除总条数
     };
   },
   created() {
@@ -139,8 +154,8 @@ export default {
       this.loading = true;
       this.$post(
         `gwt/notice/tbNoticeMaintenance/list?${qs.stringify({
-          currentPage: 1,
-          pageSize: 5
+          currentPage: pageNo,
+          pageSize: pageSize
         })}`,
         {
           account: this.noticeType == 0 ? 0 : this.noticeType,
@@ -174,7 +189,7 @@ export default {
       this.$post(
         `gwt/notice/tbNoticeMaintenance/getNoticeDeleteList?${qs.stringify({
           currentPage: 1,
-          pageSize: 5
+          pageSize: 10
         })}`,
         {
           account: this.noticeType == 0 ? 0 : this.noticeType,
@@ -192,7 +207,13 @@ export default {
             return;
           }
           this.tableData = res.data.noticeDeletePageBean.datas;
-          this.delCount = res.data.noticeDeletePageBean.totalCount + 0;
+        //   sessionStorage.setItem(
+        //     "public-notice/maintain/total",
+        //     res.data.tbNoticeMaintenancePageBean.totalCount
+        //   );
+          this.delCount = parseInt(res.data.noticeDeletePageBean.totalCount)
+          console.log(this.delCount)
+          
         })
         .catch(res => {
           this.loading = false;
@@ -205,11 +226,13 @@ export default {
       this.pageNo = 1;
       this.pageSize = e;
       this.init(e, 1);
+      this.get_delNotice(e,1)
     },
     handleCurrentChange(e) {
       sessionStorage.setItem("public-notice/maintain/pageNo", e);
       this.pageNo = e;
       this.init(this.pageSize, e);
+      this.get_delNotice(e,1)
     },
     handleEdit(index, item) {},
     handleDelete(row) {
