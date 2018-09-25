@@ -1,6 +1,6 @@
 <template>
 <div>
-    <div class="notice-desc" v-loading='loading'>
+    <div class="notice-desc" v-loading='desc_loading'>
         <div class="article-title">
             <h3>{{data.noticeTitle}}</h3>
             <p>
@@ -328,7 +328,7 @@
                     label="姓名">
                     </el-table-column>
                     <el-table-column
-                    prop="appName"
+                    prop="DUTY"
                     align="center"
                     label="职务">
                     </el-table-column>
@@ -341,11 +341,6 @@
                     prop="ORG_ALL_NAME"
                     align="center"
                     label="所属部门">
-                    </el-table-column>
-                    <el-table-column
-                    prop="ORG_ALL_NAME"
-                    align="center"
-                    label="签收时间">
                     </el-table-column>
                 </el-table>
             </div>
@@ -433,7 +428,6 @@ export default {
       form_loading: {},
       role_visible: false,
       form_loading: false,
-      loading: false,
       rules: {
         cause: [{ required: true, tigger: "blur", message: "请输入举报原因" }],
         arrayContentType: [
@@ -455,8 +449,9 @@ export default {
       has_select_user_list: [],
       add_user_loading: false,
       add_form: {},
-      isTimeOut: true,
-      tabCounts: {}
+      tabCounts: {},
+      loading: false,
+      desc_loading: false
     };
   },
   beforeDestroy(e) {
@@ -474,16 +469,56 @@ export default {
     this.$store.dispatch("readSession", SET_MESSAGE_DATA);
     this.status = this.message_data.REC_STATUS;
 
-    console.log(this.message_data.NOTICE_TYPE);
     this.get_meeting_data();
     this.init_file(this.message_data.NOTICE_ID);
     this.get_type_nmuber();
-    this.get_file_list();
+    this.filter_nav();
+    this.init();
   },
   computed: {
     ...mapGetters(["message_data", "user_info"])
   },
   methods: {
+    init(pageSize, currentPage) {
+      var url = "";
+      var data = {
+        noticeId: this.message_data.NOTICE_ID,
+        dataType: this.dataType,
+        attaUploadNode: undefined
+      };
+      if (this.dataType === 0) {
+        url = `gwt/system/tbNoticeAttachment/attachmentList`;
+        data.attaUploadNode = 2;
+      } else if (this.dataType === 5) {
+        url = `gwt/notice/tbNotice/smsNoticeFailedList`;
+        data.dataType = 4;
+      } else {
+        url = `gwt/notice/tbNotice/itemList`;
+      }
+      this.$post(
+        `${url}?${qs.stringify({
+          currentPage,
+          pageSize
+        })}`,
+        data,
+        "json"
+      ).then(res => {
+        if (res.result !== "0000") {
+          return;
+        }
+        if (this.dataType === 0) {
+          this.tableData = res.data.tbNoticeAttachmentPageBean;
+          this.total = res.data.totalCount;
+        } else if (this.dataType === 5) {
+          this.tableData = res.data.tbNoticeSmsNoticeFailedPageBean.datas;
+          this.total = res.data.tbNoticeSmsNoticeFailedPageBean.totalCount - 0;
+        } else {
+          this.tableData = res.data.tbNoticeItemPageBean.datas;
+          this.total = res.data.tbNoticeItemPageBean.totalCount - 0;
+        }
+        console.log(res);
+      });
+    },
     //再次提醒用户
     re_tip_user() {
       this.$post(
@@ -601,6 +636,7 @@ export default {
           }
         ];
       }
+      this.dataType = this.receive_type[0].dataType;
     },
     one_file_download(item) {
       var data = {
@@ -651,80 +687,7 @@ export default {
       this.current = index;
       this.dataType = item.dataType;
       this.pageNo = 1;
-      if (item.dataType === 0) {
-        this.get_file_list();
-      } else if (item.dataType === 5) {
-        this.search_message_fail(this.pageSize, 1);
-      } else {
-        this.init(this.pageSize, 1);
-      }
-    },
-    get_file_list() {
-      this.$post(
-        `gwt/system/tbNoticeAttachment/attachmentList`,
-        {
-          noticeId: this.message_data.NOTICE_ID,
-          attaUploadNode: 2
-        },
-        "json"
-      )
-        .then(res => {
-          if (res.result !== "0000") {
-            return;
-          }
-          this.tableData = res.data.tbNoticeAttachmentPageBean;
-          this.total = res.data.totalCount;
-        })
-        .catch(res => {
-          console.log(res);
-        });
-    },
-    search_message_fail(pageSize, currentPage) {
-      this.$post(
-        `gwt/notice/tbNotice/smsNoticeFailedList?${qs.stringify({
-          currentPage,
-          pageSize
-        })}`,
-        {
-          noticeId: this.message_data.NOTICE_ID,
-          dataType: 4
-        },
-        "json"
-      )
-        .then(res => {
-          if (res.result !== "0000") {
-            return;
-          }
-          this.tableData = res.data.tbNoticeItemPageBean.datas;
-          this.total = res.data.tbNoticeItemPageBean.totalCount - 0;
-        })
-        .catch(res => {
-          console.log(res);
-        });
-    },
-    //查询状态
-    init(pageSize, currentPage) {
-      this.$post(
-        `gwt/notice/tbNotice/itemList?${qs.stringify({
-          currentPage,
-          pageSize
-        })}`,
-        {
-          noticeId: this.message_data.NOTICE_ID,
-          dataType: this.dataType
-        },
-        "json"
-      )
-        .then(res => {
-          if (res.result !== "0000") {
-            return;
-          }
-          this.tableData = res.data.tbNoticeItemPageBean.datas;
-          this.total = res.data.tbNoticeItemPageBean.totalCount - 0;
-        })
-        .catch(res => {
-          console.log(res);
-        });
+      this.init(this.pageSize, 1);
     },
     //查看类型数量
     get_type_nmuber() {
@@ -761,6 +724,7 @@ export default {
     },
     //获取 init 数据
     get_meeting_data() {
+      this.loading = true;
       this.$post(
         "gwt/notice/tbNotice/get",
         {

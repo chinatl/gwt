@@ -38,9 +38,9 @@
         </div>
         <p style="text-align:right" class="notice-desc-button">
           <el-button type="warning" size="medium" @click="report_notice" ><svg-icon icon-class='警察'></svg-icon>举报</el-button>
-          <el-button type="danger" size="medium"  @click="refuse"  v-if='status == "1000"'><svg-icon icon-class='拒签'></svg-icon>拒签</el-button>
-          <el-button type="primary" size="medium" @click="reveive_report" v-if='status == "1000"'><svg-icon icon-class='签收'></svg-icon>签收</el-button>
-          <el-button type="success" size="medium" @click="forward_report" v-if='status == "1001"'><svg-icon icon-class='转发'></svg-icon>转发</el-button>
+          <el-button type="danger" size="medium"  @click="refuse"  v-if='status == "1000" && isTimeOut'><svg-icon icon-class='拒签'></svg-icon>拒签</el-button>
+          <el-button type="primary" size="medium" @click="reveive_report" v-if='status == "1000" && isTimeOut '><svg-icon icon-class='签收'></svg-icon>签收</el-button>
+          <el-button type="success" size="medium" @click="forward_report" v-if='status == "1001" && isTimeOut'><svg-icon icon-class='转发'></svg-icon>转发</el-button>
         </p>
         <el-dialog :close-on-click-modal='false'
             title="举报信息"
@@ -126,16 +126,23 @@
                 </el-pagination>
             </div>
             <div class="common-action" v-if="isTimeOut">
-                <div>
-                    <el-input v-model='add_form.name' size="small" placeholder="请输入姓名（必填）"></el-input>
-                    <el-input v-model='add_form.orgName' size="small" placeholder="请输入部门（必填）"></el-input>
-                    <el-input v-model='add_form.duty' size="small" placeholder="请输入职务（必填）"></el-input>
-                    <el-input v-model='add_form.telephone' size="small" placeholder="请输入联系方式（必填）"></el-input>
-                    <el-button type="success" size="small" 
-                    style="height:32px"
-                    @click="add_new_user"
-                    icon="el-icon-plus">添加</el-button>
-                </div>
+              <el-form ref='add_form' :inline="true" :model="add_form" :rules="add_form_rules">
+                <el-form-item label="姓名" prop="name">
+                  <el-input v-model="add_form.name" size="small" placeholder="请输入姓名（必填）"></el-input>
+                </el-form-item>
+                <el-form-item label="部门"  prop="orgName">
+                     <el-input v-model="add_form.orgName" size="small" placeholder="请输入部门（必填）"></el-input>
+                </el-form-item>
+                <el-form-item label="职务" prop="duty">
+                     <el-input v-model="add_form.duty" size="small" placeholder="请输入职务（必填）"></el-input>
+                </el-form-item>
+                <el-form-item label="联系方式" prop="telephone">
+                     <el-input v-model="add_form.telephone" size="small" placeholder="请输入联系方式（必填）"></el-input>
+                </el-form-item>
+                <el-form-item>
+                  <el-button type="success" @click="add_new_user" icon="el-icon-plus" size="small">添加</el-button>
+                </el-form-item>
+              </el-form>
             </div>
         </div>
         <div class="meeting-div" v-show="current === 1">
@@ -204,6 +211,7 @@
     :show='add_user_dialog' @close='add_user_dialog = false' 
     :loading = 'add_user_loading'
     :user-list='has_select_user_list'
+    @cancel='add_user_dialog = false'
     @submit="submit_user_dialog"></add-user>
 </div>
 </template>
@@ -217,6 +225,7 @@ import uploadButton from "@/components/Button/uploadButton";
 import { action_fail, delete_item } from "@/utils/user";
 import { fileType } from "@/utils";
 import qs from "qs";
+import { validatePhone } from "@/utils/validate";
 
 export default {
   components: {
@@ -227,6 +236,20 @@ export default {
   },
   data() {
     return {
+      add_form: {
+        name: "",
+        orgName: "",
+        duty: "",
+        telephone: ""
+      },
+      add_form_rules: {
+        name: [{ required: true, tigger: "blur", message: "请输入姓名" }],
+        orgName: [{ required: true, tigger: "blur", message: "请输入部门" }],
+        duty: [{ required: true, tigger: "blur", message: "请输入职务" }],
+        telephone: [
+          { required: true, tigger: "blur", validator: validatePhone }
+        ]
+      },
       add_user_dialog: false,
       dialog: false,
       current: 0,
@@ -294,59 +317,34 @@ export default {
   },
   methods: {
     add_new_user() {
-      if (!this.add_form.name) {
-        this.$message({
-          message: "请输入姓名",
-          type: "warning"
-        });
-        return;
-      }
-      if (!this.add_form.orgName) {
-        this.$message({
-          message: "请输入部门",
-          type: "warning"
-        });
-        return;
-      }
-      if (!this.add_form.duty) {
-        this.$message({
-          message: "请输入职务",
-          type: "warning"
-        });
-        return;
-      }
-      if (!this.add_form.telephone) {
-        this.$message({
-          message: "请输入电话",
-          type: "warning"
-        });
-        return;
-      }
-      this.$post(
-        "gwt/notice/tbNoticeRegister/batchSave",
-        {
-          tbNoticeRegisters: [
-            {
-              noticeId: this.message_data.NOTICE_ID,
-              forwardId: "",
-              receId: this.message_data.RECEIVE_ID,
-              name: this.add_form.name,
-              orgName: this.add_form.orgName,
-              duty: this.add_form.duty,
-              telephone: this.add_form.telephone
-            }
-          ]
-        },
-        "json"
-      )
-        .then(res => {
-          if (action_fail(res)) return;
-          this.add_form = {};
-          this.get_register(this.pageSize, this.pageNo);
-        })
-        .catch(res => {
-          console.log(res);
-        });
+      this.$refs.add_form.validate(res => {
+        if (!res) return;
+        this.$post(
+          "gwt/notice/tbNoticeRegister/batchSave",
+          {
+            tbNoticeRegisters: [
+              {
+                noticeId: this.message_data.NOTICE_ID,
+                forwardId: "",
+                receId: this.message_data.RECEIVE_ID,
+                name: this.add_form.name,
+                orgName: this.add_form.orgName,
+                duty: this.add_form.duty,
+                telephone: this.add_form.telephone
+              }
+            ]
+          },
+          "json"
+        )
+          .then(res => {
+            if (action_fail(res)) return;
+            this.$refs.add_form.resetFields();
+            this.get_register(this.pageSize, this.pageNo);
+          })
+          .catch(res => {
+            console.log(res);
+          });
+      });
     },
     //提交选择的用户
     submit_user_dialog(list) {
@@ -355,7 +353,7 @@ export default {
       this.$post(
         "gwt/notice/tbNoticeRegister/batchAddRegisterByXId",
         {
-          userXIds: list.map(res => res.USER_ID).join(","),
+          userXIds: list.map(res => res.ID).join(","),
           noticeId: this.message_data.NOTICE_ID,
           forwardId: "",
           receId: this.message_data.RECEIVE_ID
@@ -674,7 +672,7 @@ export default {
           this.tbNoticeSign = res.data.tbNoticeSign;
           this.tbNoticeRefuse = res.data.tbNoticeRefuse;
           this.status = res.data.tbNoticeReceive.recStatus;
-          
+
           this.isTimeOut =
             +new Date(res.data.tbNotice.startTime) - Date.now() > 0;
           if (

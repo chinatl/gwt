@@ -93,7 +93,9 @@ export default {
       dialog: false
     };
   },
-  created() {},
+  beforeDestroy() {
+    this.$store.commit("DEL_VIEW_BY_NAME", "创建通知");
+  },
   methods: {
     submit_yield(list) {
       this.yield_dialog = false;

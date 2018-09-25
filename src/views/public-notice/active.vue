@@ -18,7 +18,7 @@
                     end-placeholder="结束日期"
                     @change="condition">
                 </el-date-picker>
-                <el-input v-model="noticeTitle" placeholder="请输入标题名称" style="width:200px" size='medium'></el-input>
+                <el-input v-model="noticeTitle" placeholder="请输入标题名称" style="width:200px" size='medium' @keyup.native.enter="condition"></el-input>
                 <el-button type="primary" icon="el-icon-search" size='medium' v-wave @click="condition">搜索</el-button>
             </div>
         </div>
@@ -88,6 +88,10 @@ export default {
       noticeTitle: ""
     };
   },
+  beforeDestroy() {
+    sessionStorage.removeItem("public-notice/active/pageNo");
+    sessionStorage.removeItem("public-notice/active/total");
+  },
   created() {
     this.$store.dispatch("readSession", SET_MEETING_TYPE_LIST);
     var total = sessionStorage.getItem("public-notice/active/total");
@@ -112,6 +116,13 @@ export default {
     },
     //通知变更
     change_notice(item) {
+      if (+new Date(item.CREATE_TIME) > Date.now() - 1000 * 60 * 2) {
+        this.$message({
+          message: "通知发送不到2分钟，不能变更，请使用撤销功能",
+          type: "warning"
+        });
+        return;
+      }
       this.$store.commit(SET_NOTICE_DATA, item);
       this.$router.push({
         path: "/notice-change/index"
@@ -218,11 +229,11 @@ export default {
           console.log(res);
         });
     },
- 
+
     handleClose(e) {
       console.log(e);
     },
-  
+
     pickerOptions() {}
   }
 };

@@ -101,7 +101,9 @@ export default {
       dialog: false
     };
   },
-  created() {},
+  beforeDestroy() {
+    this.$store.commit("DEL_VIEW_BY_NAME", "材料征集");
+  },
   methods: {
     submit_yield(list) {
       this.yield_dialog = false;
@@ -276,9 +278,7 @@ export default {
           noticeProfile: this.form.noticeProfile,
           endTime: parseTime(this.form.endTime, "{y}-{m}-{d} {h}:{i}:{s}"),
           startTime: "",
-          selectedUsers: this.has_select_user_list
-            .map(res => res.ID)
-            .join(","),
+          selectedUsers: this.has_select_user_list.map(res => res.ID).join(","),
           attrArray: this.file_list.map(res => res.id).join(","),
           orgArray: this.has_select_part_list
             .map(res => res.id.replace(/\D*/g, ""))

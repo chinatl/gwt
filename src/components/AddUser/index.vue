@@ -1,7 +1,7 @@
 <template>
 <el-dialog :visible.sync="dialog" title='添加联系人' class="select-user-dialog" v-drag :close-on-click-modal='false'>
 <div v-loading='loading'>
-    <div class="select-user-container">
+    <div class="add-user-container">
         <div class="select-left">
             <div class="select-part-top">
                 <el-select v-model="part" size="small" style="width:100px" @change="checkout_type">
@@ -365,7 +365,7 @@ export default {
   .el-dialog__body {
     padding: 20px 20px;
     padding-bottom: 16px;
-    .select-user-container {
+    .add-user-container {
       overflow: hidden;
       .select-left {
         width: 400px;
