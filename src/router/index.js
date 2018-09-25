@@ -420,7 +420,7 @@ export const constantRouterMap = [
       {
         path: 'index',
         name: '权限维护',
-        component: () => import('@/views/public-notice/forwarded'),
+        component: () => import('@/views/public-notice/role'),
         meta: { title: '权限维护' }
       }
     ]
@@ -516,7 +516,7 @@ export const constantRouterMap = [
       {
         path: 'index',
         name: '网站信息-权限维护',
-        component: () => import('@/views/public-notice/forwarded'),
+        component: () => import('@/views/public-notice/role'),
         meta: { title: '权限维护' }
       }
     ]

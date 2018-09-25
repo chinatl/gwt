@@ -58,7 +58,7 @@ export function fileSize(num, level = 'K') {
 export function folderSize(arr) {
   var index = 0;
   for (var i = 0; i < arr.length; i++) {
-    index += arr[i].attaSize
+    index += arr[i].attaSize - 0
   }
   return fileSize(index)
 }

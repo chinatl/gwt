@@ -56,21 +56,7 @@
             :total="total">
             </el-pagination>
         </div>
-        <!-- 删除弹窗 -->
-        <el-dialog :close-on-click-modal='false'
-        :visible.sync="del_dialog"
-        width="40%"
-        v-drag
-        :before-close="handleClose">
-            <div class="dialog-content">
-                <h3>您确定要删除的信息吗?</h3>
-                <p>删除后将无法恢复，请谨慎操作！</p>
-                <div class="foot-dialog">
-                    <el-button type="danger" @click="agree">确定</el-button>
-                    <el-button type="info" @click="cancel">取消</el-button>
-                </div>
-            </div>
-        </el-dialog>
+
     </div>
 </template>
 <script>
@@ -94,7 +80,6 @@ export default {
       pageSize: 5,
       total: 0,
       loading: false,
-      del_dialog: false,
       daterange: "",
       input: "",
       date: null,
@@ -112,7 +97,6 @@ export default {
     //页数存到localstorage里面
     var pageSize = localStorage.getItem("public-notice/active/pageSize");
     this.pageSize = pageSize ? pageSize - 0 : 5;
-
     this.init(this.pageSize, this.pageNo);
   },
   computed: {
@@ -121,11 +105,6 @@ export default {
   methods: {
     //获取详情
     get_active_desc(item) {
-      this.$message({
-        message: "正在开发，请稍后",
-        type: "info"
-      });
-      return;
       this.$store.commit(SET_MESSAGE_DATA, item);
       this.$router.push({
         path: "/active-desc/index"
@@ -239,26 +218,11 @@ export default {
           console.log(res);
         });
     },
-    del_one_list(index) {
-      this.del_dialog = true;
-    },
+ 
     handleClose(e) {
       console.log(e);
     },
-    agree() {
-      this.del_dialog = false;
-      this.$message({
-        message: "删除成功",
-        type: "success"
-      });
-    },
-    cancel() {
-      this.$message({
-        message: "已取消删除",
-        type: "info"
-      });
-      this.del_dialog = false;
-    },
+  
     pickerOptions() {}
   }
 };

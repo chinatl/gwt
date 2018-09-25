@@ -346,38 +346,6 @@ export default {
           token: this.$store.getters.token
         })}`
       );
-
-      return;
-      this.$axios({
-        method: "post",
-        url: `gwt/cloudisk/cloudiskAttachment/BatchDownload`,
-        data: {
-          object,
-          sign
-        },
-        headers: {
-          Authorization: this.$store.getters.token
-        },
-        responseType: "blob"
-      })
-        .then(res => {
-          console.log(res);
-          var eleLink = document.createElement("a");
-          eleLink.download = "下载文件";
-          eleLink.style.display = "none";
-          // 字符内容转变成blob地址
-          var blob = new Blob([res.data]);
-          console.log(blob);
-          eleLink.href = URL.createObjectURL(blob);
-          // 触发点击
-          document.body.appendChild(eleLink);
-          eleLink.click();
-          // 然后移除
-          document.body.removeChild(eleLink);
-        })
-        .catch(res => {
-          console.log(res);
-        });
     },
     //删除
     delete_btn() {

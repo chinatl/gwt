@@ -6,7 +6,7 @@
                     <el-form-item label="标题" prop='noticeTitle'>
                         <el-input v-model="form.noticeTitle" size="small" maxlength="50"></el-input>
                     </el-form-item>
-                    <el-form-item label="会议地点" prop="noticeAdress" v-if="notice_data.noticeType === '1'">
+                    <el-form-item label="会议地点" v-if="notice_data.noticeType === '1'">
                         <el-input v-model="form.noticeAdress" size="small" maxlength="20"></el-input>
                     </el-form-item>
                     <el-form-item label="开始时间" prop='startTime' v-if="notice_data.noticeType === '1'">
@@ -149,7 +149,7 @@ export default {
           this.form.name = res.data.receiveUserNames.join("、");
           this.form.part = res.data.receiveOrgNames.join("、");
           this.form.noticeProfile = res.data.tbNotice.noticeProfile;
-
+          this.file_list = res.data.attrIds;
           var id_arr = res.data.tbNoticeDraft.draftOrgId.split(",");
           this.has_select_part_list = [];
           for (var i = 0; i < res.data.receiveOrgNames.length; i++) {
@@ -198,7 +198,7 @@ export default {
         });
     },
     upload_img(e) {
-      if (this.file_list.length === 10) {
+      if (this.file_list.length >= 10) {
         this.$message({
           message: "最多只能上传十份附件！",
           type: "warning"
@@ -224,7 +224,6 @@ export default {
         });
     },
     onSubmit() {
-      console.log(this.has_select_user_list)
       if (
         !this.has_select_user_list.length &&
         !this.has_select_part_list.length
@@ -280,7 +279,7 @@ export default {
                 this.$post(
                   "gwt/notice/tbNotice/save",
                   {
-                    noticeId: this.notice_data.noticeId,
+                    noticeId: "",
                     noticeTitle: this.form.noticeTitle,
                     noticeType: this.notice_data.noticeType, //会议 2//通知 3//材料
                     noticeAdress: this.form.noticeAdress,
@@ -318,10 +317,20 @@ export default {
       });
     },
     save_message() {
-      if (!this.form.noticeTitle) {
+      if (
+        !(
+          this.form.noticeTitle ||
+          this.form.startTime ||
+          this.file_list.length ||
+          this.form.noticeProfile ||
+          this.has_select_part_list.length ||
+          this.has_select_user_list.length ||
+          this.form.endTime
+        )
+      ) {
         this.$message({
-          message: "请输入标题后保存到草稿箱",
-          type: "warning"
+          type: "warning",
+          message: "至少填写一项信息!"
         });
         return;
       }
@@ -329,7 +338,7 @@ export default {
       this.$post(
         "gwt/notice/tbNoticeDraft/save",
         {
-          noticeId: this.notice_data.noticeId,
+          noticeId: "",
           noticeTitle: this.form.noticeTitle,
           noticeType: this.notice_data.noticeType, //会议 2//通知 3//材料
           noticeAdress: this.form.noticeAdress,

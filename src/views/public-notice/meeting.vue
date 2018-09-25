@@ -6,7 +6,7 @@
                     <el-form-item label="标题" prop='noticeTitle'>
                         <el-input v-model="form.noticeTitle" size="small" maxlength="50"></el-input>
                     </el-form-item>
-                    <el-form-item label="会议地点" prop="noticeAdress">
+                    <el-form-item label="会议地点">
                         <el-input v-model="form.noticeAdress" size="small" maxlength="20"></el-input>
                     </el-form-item>
                     <el-form-item label="开始时间" prop='startTime'>
@@ -133,7 +133,7 @@ export default {
         });
     },
     upload_img(e) {
-      if (this.file_list.length === 10) {
+      if (this.file_list.length >= 10) {
         this.$message({
           message: "最多只能上传十份附件！",
           type: "warning"
@@ -252,10 +252,20 @@ export default {
       });
     },
     save_message() {
-      if (!this.form.noticeTitle) {
+      if (
+        !(
+          this.form.noticeTitle ||
+          this.form.startTime ||
+          this.file_list.length ||
+          this.form.noticeProfile ||
+          this.has_select_part_list.length ||
+          this.has_select_user_list.length ||
+          this.form.endTime
+        )
+      ) {
         this.$message({
-          message: "请输入标题后保存到草稿箱",
-          type: "warning"
+          type: "warning",
+          message: "至少填写一项信息!"
         });
         return;
       }
@@ -269,9 +279,7 @@ export default {
           noticeProfile: this.form.noticeProfile,
           startTime: parseTime(this.form.startTime, "{y}-{m}-{d} {h}:{i}:{s}"),
           endTime: "",
-          selectedUsers: this.has_select_user_list
-            .map(res => res.ID)
-            .join(","),
+          selectedUsers: this.has_select_user_list.map(res => res.ID).join(","),
           attrArray: this.file_list.map(res => res.id).join(","),
           orgArray: this.has_select_part_list
             .map(res => res.id.replace(/\D*/g, ""))

@@ -32,7 +32,7 @@
                 {{data.noticeProfile}}
             </div>
             <div class="file-info" v-if="file_length">
-                附件： <span>{{file_length}} 个附件，共 {{file_size | fileSize}}</span>
+                附件： <span>{{file_length}} 个附件，共 {{file_list | folderSize}}</span>
             </div>
             <file-list :list='file_list' @delete='delete_file' :remove='true'></file-list>
         </div>
@@ -190,7 +190,7 @@
                 :total="total">
                 </el-pagination>
             </div>
-            <div class="common-action" v-if="isTimeOut">>
+            <div class="common-action" v-if="isTimeOut">
                 <upload-button  @on-change="upload_img">添加附件</upload-button>
                 <file-list :list='user_upload_list' @delete='delete_user_file'></file-list>
             </div>

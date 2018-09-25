@@ -41,7 +41,7 @@
                 show-overflow-tooltip
                 label="通知标题">
                   <template slot-scope='scope'>
-                    <span  class="href"  @click="go_drafts(scope.row)">{{scope.row.noticeTitle}}</span>
+                    <span  class="href"  @click="go_drafts(scope.row)">{{scope.row.noticeTitle || '无标题通知'}}</span>
                   </template>
                 </el-table-column>
                 <el-table-column

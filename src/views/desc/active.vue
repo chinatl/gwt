@@ -20,7 +20,7 @@
                 {{data.noticeProfile}}
             </div>
             <div class="file-info" v-if="file_length">
-                附件： <span>{{file_length}} 个附件，共 {{file_size | fileSize}}</span>
+                附件： <span>{{file_length}} 个附件，共{{file_list | folderSize}}</span>
             </div>
             <file-list :list='file_list' @delete='delete_file' :remove='true'></file-list>
         </div>
@@ -34,59 +34,6 @@
                 @click="select_nav(item,index)"
                 :class="current === index ? 'current':''"
                 :key="index">{{item.value}}（{{tabCounts[item.name]}}）</span>
-            </div>
-        </div>
-        <div class="meeting-div">
-             <div class="common-table">
-                <el-table
-                    :data="register_tableData"
-                    border
-                    v-loading ='loading'
-                    style="width: 100%">
-                    <el-table-column
-                    prop="name"
-                    align="center"
-                    label="姓名">
-                    </el-table-column>
-                    <el-table-column
-                    prop="duty"
-                    align="center"
-                    label="职务">
-                    </el-table-column>
-                    <el-table-column
-                    prop="telephone"
-                    align="center"
-                    label="联系方式	">
-                    </el-table-column>
-                    <el-table-column
-                    prop="orgName"
-                    align="center"
-                    label="所属部门">
-                    </el-table-column>
-                    <el-table-column
-                    align="center"
-                    label="操作">
-                        <template slot-scope="scope">
-                            <el-button
-                            size="mini"
-                            type="danger"
-                            icon="el-icon-delete"
-                            @click="handleDelete(scope.row)" v-wave>删除</el-button>
-                        </template>
-                    </el-table-column>
-                </el-table>
-            </div>
-            <div class="common-page">
-            <el-pagination
-                @size-change="handleSizeChange"
-                @current-change="handleCurrentChange"
-                :current-page.sync="pageNo"
-                :page-sizes="$store.getters.page_list"
-                :page-size="pageSize"
-                layout="total, sizes, prev, pager, next, jumper"
-                background
-                :total="total">
-                </el-pagination>
             </div>
         </div>
         <div class="meeting-div">
@@ -115,6 +62,7 @@
                     <el-table-column
                     prop="ORG_ALL_NAME"
                     align="center"
+                    show-overflow-tooltip
                     label="所属部门">
                     </el-table-column>
                     <el-table-column
@@ -157,7 +105,7 @@
                     label="姓名">
                     </el-table-column>
                     <el-table-column
-                    prop="appName"
+                    prop="DUTY"
                     align="center"
                     label="职务">
                     </el-table-column>
@@ -169,18 +117,19 @@
                     <el-table-column
                     prop="ORG_ALL_NAME"
                     align="center"
+                    show-overflow-tooltip
                     label="所属部门">
                     </el-table-column>
                     <el-table-column
+                    prop="CREATE_USER_NAME"
                     align="center"
-                    label="附件列表">
-                        <template slot-scope="scope">
-                            <div class="file-list">
-                                <p v-for="(item,index) in scope.row.ATTA_INFOS" :key='index'>
-                                <svg-icon :icon-class='fileType(item.type)'></svg-icon> {{item.originalName}}
-                                </p>
-                            </div>
-                        </template>
+                    show-overflow-tooltip
+                    label="报名人员">
+                    </el-table-column>
+                    <el-table-column
+                    prop="CREATE_TIME"
+                    align="center"
+                    label="报名时间">
                     </el-table-column>
                 </el-table>
             </div>
@@ -211,7 +160,7 @@
                     label="姓名">
                     </el-table-column>
                     <el-table-column
-                    prop="appName"
+                    prop="DUTY"
                     align="center"
                     label="职务">
                     </el-table-column>
@@ -223,23 +172,13 @@
                     <el-table-column
                     prop="ORG_ALL_NAME"
                     align="center"
+                    show-overflow-tooltip
                     label="所属部门">
                     </el-table-column>
                     <el-table-column
+                    prop="SIGN_TIME"
                     align="center"
-                    label="附件列表">
-                        <template slot-scope="scope">
-                            <div class="file-list">
-                                <p v-for="(item,index) in scope.row.ATTA_INFOS" :key='index'>
-                                <svg-icon :icon-class='fileType(item.type)'></svg-icon> {{item.originalName}}
-                                </p>
-                            </div>
-                        </template>
-                    </el-table-column>
-                    <el-table-column
-                    prop="ORG_ALL_NAME"
-                    align="center"
-                    label="下载">
+                    label="签收时间">
                     </el-table-column>
                 </el-table>
             </div>
@@ -282,6 +221,7 @@
                     <el-table-column
                     prop="ORG_ALL_NAME"
                     align="center"
+                    show-overflow-tooltip
                     label="所属部门">
                     </el-table-column>
                     <el-table-column
@@ -318,29 +258,30 @@
                     style="width: 100%">
                     <el-table-column label="未签收"></el-table-column>
                     <el-table-column
-                    prop="REAL_NAME"
+                    prop="RECEIVE_NAME"
                     align="center"
-                    label="姓名">
+                    label="接收方">
                     </el-table-column>
                     <el-table-column
-                    prop="appName"
+                    prop="READ_FLAG"
                     align="center"
-                    label="职务">
+                    label="阅读状态">
+                    </el-table-column>
+                    <el-table-column
+                    prop="ORG_ALL_NAME"
+                    align="center"
+                    show-overflow-tooltip
+                    label="所属部门	">
+                    </el-table-column>
+                    <el-table-column
+                    prop="RECEIVE_NAME"
+                    align="center"
+                    label="接收人姓名">
                     </el-table-column>
                     <el-table-column
                     prop="MOBILE_PHONE"
                     align="center"
-                    label="联系方式	">
-                    </el-table-column>
-                    <el-table-column
-                    prop="ORG_ALL_NAME"
-                    align="center"
-                    label="所属部门">
-                    </el-table-column>
-                    <el-table-column
-                    prop="ORG_ALL_NAME"
-                    align="center"
-                    label="签收时间">
+                    label="电话">
                     </el-table-column>
                 </el-table>
             </div>
@@ -465,7 +406,6 @@ export default {
       data: {},
       tbNoticeReceive: {},
       file_length: 0,
-      file_size: 0,
       status: "",
       form: {
         arrayContentType: [],
@@ -533,7 +473,7 @@ export default {
         this.init(this.pageSize, 1);
       }
     },
-    search_message_fail() {
+    search_message_fail(pageSize, currentPage) {
       this.$post(
         `gwt/notice/tbNotice/smsNoticeFailedList?${qs.stringify({
           currentPage,
@@ -542,7 +482,8 @@ export default {
         {
           noticeId: this.message_data.NOTICE_ID,
           dataType: 4
-        }
+        },
+        "json"
       )
         .then(res => {
           if (res.result !== "0000") {
@@ -556,7 +497,7 @@ export default {
         });
     },
     //查询状态
-    init(currentPage, pageSize) {
+    init(pageSize, currentPage) {
       this.$post(
         `gwt/notice/tbNotice/itemList?${qs.stringify({
           currentPage,
@@ -564,7 +505,7 @@ export default {
         })}`,
         {
           noticeId: this.message_data.NOTICE_ID,
-          dataType: 3
+          dataType: this.dataType
         },
         "json"
       )
@@ -655,14 +596,11 @@ export default {
           }
           this.file_length =
             res.data.tbNoticeAttachmentPageBean[0].ATTA_INFOS.length;
-          var num = 0;
           var file_list = res.data.tbNoticeAttachmentPageBean[0].ATTA_INFOS;
           for (var i = 0; i < file_list.length; i++) {
-            num += file_list[i].attaSize;
             file_list[i].url =
               "/" + file_list[i].attaPath + "/" + file_list[i].smallImgName;
           }
-          this.file_size = num;
           this.file_list = file_list;
         })
         .catch(res => {

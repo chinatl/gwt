@@ -18,7 +18,7 @@
                 {{data.noticeProfile}}
             </div>
             <div class="file-info">
-                附件： <span>{{file_length}} 个附件，共{{file_size | fileSize}}</span>
+                附件： <span>{{file_length}} 个附件，共{{file_list | folderSize}}</span>
             </div>
             <file-list :list='file_list' @delete='delete_file'></file-list>
         </div>

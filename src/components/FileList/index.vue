@@ -42,30 +42,7 @@ export default {
   },
   methods: {
     preview(item) {
-      console.log(item);
       window.open(item.fullAttaPath);
-      return;
-      // var url = config + item.attaPath + "/" + item.storeName;
-      // this.$axios({
-      //   url,
-      //   headers: {
-      //     Authorization: this.$store.getters.token
-      //   },
-      //   responseType: "blob"
-      // })
-      //   .then(res => {
-      //     var eleLink = document.createElement("a");
-      //     eleLink.style.display = "none";
-      //     // 字符内容转变成blob地址
-      //     var blob = new Blob([res.data]);
-      //     eleLink.href = URL.createObjectURL(blob);
-      //     eleLink.target = "_blank";
-      //     // 触发点击
-      //     eleLink.click();
-      //   })
-      //   .catch(res => {
-      //     console.log(res);
-      //   });
     },
     //删除文件
     delete_file(index) {
@@ -86,32 +63,6 @@ export default {
         })}`
       );
       return;
-      var url = config + item.attaPath + "/" + item.storeName;
-      this.$axios({
-        url,
-        headers: {
-          Authorization: this.$store.getters.token
-        },
-        responseType: "blob"
-      })
-        .then(res => {
-          console.log(res.data);
-          // 创建隐藏的可下载链接
-          var eleLink = document.createElement("a");
-          eleLink.download = item.originalName;
-          eleLink.style.display = "none";
-          // 字符内容转变成blob地址
-          var blob = new Blob([res.data]);
-          eleLink.href = URL.createObjectURL(blob);
-          // 触发点击
-          document.body.appendChild(eleLink);
-          eleLink.click();
-          // 然后移除
-          document.body.removeChild(eleLink);
-        })
-        .catch(res => {
-          console.log(res);
-        });
     },
     //  获取文件类型
     get_svg_name(name) {

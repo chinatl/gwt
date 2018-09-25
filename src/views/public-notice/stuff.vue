@@ -130,7 +130,7 @@ export default {
         });
     },
     upload_img(e) {
-      if (this.file_list.length === 10) {
+      if (this.file_list.length >= 10) {
         this.$message({
           message: "最多只能上传十份附件！",
           type: "warning"
@@ -156,7 +156,10 @@ export default {
         });
     },
     onSubmit() {
-       if (!this.has_select_user_list.length && !this.has_select_part_list.length) {
+      if (
+        !this.has_select_user_list.length &&
+        !this.has_select_part_list.length
+      ) {
         this.$message({
           message: "请选择一个接收人或接受部门",
           type: "warning"
@@ -246,10 +249,20 @@ export default {
       });
     },
     save_message() {
-      if (!this.form.noticeTitle) {
+      if (
+        !(
+          this.form.noticeTitle ||
+          this.form.startTime ||
+          this.file_list.length ||
+          this.form.noticeProfile ||
+          this.has_select_part_list.length ||
+          this.has_select_user_list.length ||
+          this.form.endTime
+        )
+      ) {
         this.$message({
-          message: "请输入标题后保存到草稿箱",
-          type: "warning"
+          type: "warning",
+          message: "至少填写一项信息!"
         });
         return;
       }
@@ -264,7 +277,7 @@ export default {
           endTime: parseTime(this.form.endTime, "{y}-{m}-{d} {h}:{i}:{s}"),
           startTime: "",
           selectedUsers: this.has_select_user_list
-            .map(res => res.USER_ID)
+            .map(res => res.ID)
             .join(","),
           attrArray: this.file_list.map(res => res.id).join(","),
           orgArray: this.has_select_part_list

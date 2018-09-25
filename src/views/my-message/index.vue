@@ -150,27 +150,49 @@ export default {
         });
     },
     go_desc(item) {
-      item.RECEIVE_ID = item.RECV_ID;
-      this.$store.commit(SET_MESSAGE_DATA, item);
-      if (item.TYPE_DESC === "通知") {
-        this.$router.push({
-          path: "/notice-desc/index"
-        });
-        //通知
-      } else if (item.TYPE_DESC === "材料征集") {
-        this.$router.push({
-          path: "/stuff-desc/index"
-        });
-        //材料征集
-      } else if (item.TYPE_DESC === "会议通知") {
-        this.$router.push({
-          path: "/meeting-desc/index"
-        });
-        //会议通知
-      } else if (item.TYPE_DESC === "举报") {
+      console.log(JSON.stringify(item, {}, 4));
+      if (item.TYPE_DESC === "举报") {
         this.$store.dispatch("get_report_desc", item.MSG_ID);
         this.$router.push({
           path: "/report/index"
+        });
+      }
+      if (
+        item.TYPE_DESC === "材料征集" ||
+        item.TYPE_DESC === "会议通知" ||
+        item.TYPE_DESC === "通知"
+      ) {
+        this.$post(
+          "gwt/notice/tbNotice/getNoticeInfoByMessageId",
+          {
+            messageId: item.MSG_ID,
+            recvId: item.RECV_ID,
+            receOrgId: ""
+          },
+          "json"
+        ).then(res => {
+          if (res.result !== "0000") {
+            return;
+          }
+          console.log(res.data.tbNoticeReceive.id);
+          item.RECEIVE_ID = res.data.tbNoticeReceive.id;
+          this.$store.commit(SET_MESSAGE_DATA, item);
+          if (item.TYPE_DESC === "通知") {
+            this.$router.push({
+              path: "/notice-desc/index"
+            });
+            //通知
+          } else if (item.TYPE_DESC === "材料征集") {
+            this.$router.push({
+              path: "/stuff-desc/index"
+            });
+            //材料征集
+          } else if (item.TYPE_DESC === "会议通知") {
+            this.$router.push({
+              path: "/meeting-desc/index"
+            });
+            //会议通知
+          }
         });
       }
     },
