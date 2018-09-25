@@ -523,15 +523,21 @@ export default {
         if (res.result !== "0000") {
           this.$message.error(res.msg);
         } else {
-          let me = this;
-          me.sendMsgDisabled = true;
-          let interval = window.setInterval(function() {
-            if (me.time-- <= 0) {
-              me.time = 60;
-              me.sendMsgDisabled = false;
-              window.clearInterval(interval);
-            }
-          }, 1000);
+          var myreg = /^[1][3,4,5,7,8][0-9]{9}$/;
+          if(!myreg.test(this.phone_first_visible_form.phone)){
+            return false;
+          }else{
+            let me = this;
+            me.sendMsgDisabled = true;
+            let interval = window.setInterval(function() {
+              if (me.time-- <= 0) {
+                me.time = 60;
+                me.sendMsgDisabled = false;
+                window.clearInterval(interval);
+              }
+            }, 1000);
+          }
+          
         }
       });
     },
