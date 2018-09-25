@@ -113,7 +113,8 @@ export default {
       dirIds: [],
       fileIds: [],
       parentId: "",
-      loading: false
+      loading: false,
+      sigle_fileid:""
     };
   },
   computed: {
@@ -176,6 +177,7 @@ export default {
     },
     //新建文件夹
     add_older(formName) {
+      
       this.$refs[formName].validate(valid => {
         if (valid) {
           this.$post(
@@ -184,7 +186,7 @@ export default {
               type: "user",
               orgId: this.folderform.orgId,
               name: this.folderform.foldername,
-              parentId: this.dirId
+              parentId: this.parentId === "" ? "" : this.dirId
             },
             "json"
           ).then(res => {
@@ -275,15 +277,33 @@ export default {
         dirIds: this.dirIds.map(res => res + "").join(","),
         orgId: this.folderform.orgId
       };
-      var object = Base64.encode(JSON.stringify(data));
-      var sign = md5(object + this.$store.getters.sign);
-      window.open(
-        `gwt/cloudisk/cloudiskAttachment/BatchDownload?${qs.stringify({
-          object,
-          sign,
-          token: this.$store.getters.token
-        })}`
-      );
+      var sigle_data = {
+        jh:this.sigle_fileid
+      }
+      if(this.fileIds.length === 1 && this.dirIds.length === 0){
+        // alert("dan")
+          var object = Base64.encode(JSON.stringify(sigle_data));
+          var sign = md5(object + this.$store.getters.sign);
+          window.open(
+            `gwt/cloudisk/cloudiskAttachment/sigleFileDownload?${qs.stringify({
+              object,
+              sign,
+              token: this.$store.getters.token
+            })}`
+          );
+      }else{
+        // alert("duo")
+          var object = Base64.encode(JSON.stringify(data));
+          var sign = md5(object + this.$store.getters.sign);
+          window.open(
+            `gwt/cloudisk/cloudiskAttachment/BatchDownload?${qs.stringify({
+              object,
+              sign,
+              token: this.$store.getters.token
+            })}`
+          );
+      }
+      
     },
     //递归取数
     go_child_file(index) {
@@ -329,15 +349,40 @@ export default {
     file_click(row) {
       console.log(row);
       this.dirId = row.dirId;
-      // console.log(this.dirId)
       this.folderform.originalName = row.originalName;
-      // console.log(index)
       if (row.type === "folder") {
         this.file_nav.push({
           row,
           originalName: row.originalName,
           id: row.dirId
-        });
+      });
+      // var img_src = row.originalName.substring(
+      //   row.originalName.lastIndexOf("."),
+      //   row.originalName.length
+      // );
+      // var sigle_data = {
+      //   jh:this.sigle_fileid
+      // }
+      // if (
+      //   row.type === "file" &&
+      //   img_src != ".bmp" &&
+      //   img_src != ".png" &&
+      //   img_src != ".gif" &&
+      //   img_src != ".jpg" &&
+      //   img_src != ".jpeg"
+      // ) {
+      //   alert("jpg")
+      //     var object = Base64.encode(JSON.stringify(sigle_data));
+      //     var sign = md5(object + this.$store.getters.sign);
+      //     window.open(
+      //       `gwt/cloudisk/cloudiskAttachment/sigleFileDownload?${qs.stringify({
+      //         object,
+      //         sign,
+      //         token: this.$store.getters.token
+      //       })}`
+      //     );
+      // }
+      
         this.parentId = row.dirId;
         this.pageNo = 1;
         this.init_usercloudisk(this.pageSize, 1);
@@ -356,6 +401,7 @@ export default {
         if (e[i].type === "file") {
           this.fileIds.push(e[i].fileId);
           console.log(e[i].fileId);
+          this.sigle_fileid = e[i].fileId
         } else {
           this.dirIds.push(e[i].dirId);
           // console.log(e[i].type)

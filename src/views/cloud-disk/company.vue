@@ -446,12 +446,12 @@ export default {
       });
     },
     change_left_nav(item, index) {
+     
       this.left_nav_data_current = index;
-      // if(this.left_nav_data_current){
-      //     this.get_deptCloudisk()
-      // }
       this.temp_data = item;
       console.log(item);
+      this.file_nav = [];
+      this.parentId = "";
       this.get_deptCloudisk(this.pageSize, 1);
     },
     //递归取数
@@ -512,7 +512,7 @@ export default {
         index.originalName.lastIndexOf("."),
         index.originalName.length
       );
-      console.log(img_src);
+      console.log("img_src");
       if (
         img_src != ".bmp" &&
         img_src != ".png" &&
@@ -523,7 +523,7 @@ export default {
         return;
       }
       window.open(
-        `http://192.168.31.7/#/part-cloud-disk/index/${this.attaPath}/${
+        `http://192.168.31.7/#/part-cloud-disk/index/${index.attaPath}/${
           index.originalName
         }`
       );
