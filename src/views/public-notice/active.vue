@@ -91,6 +91,7 @@ export default {
   beforeDestroy() {
     sessionStorage.removeItem("public-notice/active/pageNo");
     sessionStorage.removeItem("public-notice/active/total");
+    this.$store.commit("DEL_VIEW_BY_NAME", "已发通知");
   },
   created() {
     this.$store.dispatch("readSession", SET_MEETING_TYPE_LIST);

@@ -83,7 +83,7 @@ export default {
     ...mapGetters(["meeting_type_list"])
   },
    beforeDestroy() {
-    // this.$store.commit("DEL_VIEW_BY_NAME", "材料征集");
+    this.$store.commit("DEL_VIEW_BY_NAME", "通知签收");
   },
   methods: {
     condition() {

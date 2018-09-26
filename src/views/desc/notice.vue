@@ -131,6 +131,9 @@ export default {
   computed: {
     ...mapGetters(["message_data"])
   },
+  beforeDestroy() {
+    this.$store.commit("DEL_VIEW_BY_NAME", "通知详情");
+  },
   methods: {
     //导入部门
     select_nav(index) {

@@ -113,8 +113,8 @@
                 <el-form-item label="新手机号" prop='phone'>
                     <el-input v-model="phone_first_visible_form.phone" placeholder="请输入新手机号" class="codeinput"></el-input>
                     <el-button type="primary" class="getcode" @click="getCode">
-                      <span v-if="sendMsgDisabled">{{time+'秒后获取'}}</span>
-                      <span v-if="!sendMsgDisabled">获取验证码</span>
+                      <span v-show="show" @click="getCode">获取验证码</span>
+                      <span v-show="!show" class="count">{{count+'秒后获取'}}</span>
                     </el-button>
                     
                 </el-form-item>
@@ -181,7 +181,7 @@
                     <el-input type="password" v-model="pwdform.oldpwd" size="small" placeholder="请输入原密码"></el-input>
                 </el-form-item>
                 <el-form-item label="新密码" prop='newpwd1'>
-                    <el-input type="password" v-model="pwdform.newpwd1" size="small" placeholder="请输入6-12位，字母与数字组合的新密码"></el-input>
+                    <el-input type="password" v-model="pwdform.newpwd1" size="small" placeholder="请输入8-20位，字母与数字组合的新密码"></el-input>
                 </el-form-item>
                 <el-form-item label="确认密码" prop='newpwd2'>
                     <el-input type="password" v-model="pwdform.newpwd2" size="small" placeholder="请再次输入密码"></el-input>
@@ -221,10 +221,10 @@ export default {
     var validateNewpwd1 = (rule, value, callback) => {
       if (value === "") {
         callback(new Error("请输入密码"));
-      } else if (
-        !/^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{6,12}$/.test(value)
-      ) {
-        callback(new Error("请输入6-12位，字母与数字组合的新密码"));
+      } else if (!/^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{8,20}$/.test(value)) {
+        callback(new Error("请输入8-20位，字母与数字组合的新密码"));
+      } else if (value === this.pwdform.oldpwd) {
+        callback(new Error("新密码不能和旧密码相同"));
       } else {
         if (this.pwdform.newpwd2 !== "") {
           this.$refs.pwdform.validateField("newpwd2");
@@ -321,40 +321,43 @@ export default {
           {
             required: true,
             trigger: "blur",
-            validator: validatePhone
+            message: "请输入手机号"
           }
         ]
       },
       //验证码
-      time: 60, // 发送验证码倒计时
-      sendMsgDisabled: false,
-      resetform:{
-        duty:"",
-        phone:"",
-        remark:""
+      show: true,
+      count: "",
+      timer: null,
+      resetform: {
+        duty: "",
+        phone: "",
+        remark: ""
       },
-      attachId:""
+      attachId: "",
+      is_disable:true
     };
   },
   created() {
     this.getUserInfo();
     this.getloginTable();
-    this.get_head()
+    this.get_head();
   },
   computed: {
     ...mapGetters(["user_info"])
   },
   methods: {
     //获取头像
-    get_head(){
-      this.$post(`gwt/cloudisk/attachment/list`,
-      {
-        inIdAry: this.attachId
-      },
-      "json")
-      .then(res=>{
-        console.log(res)
-      })
+    get_head() {
+      this.$post(
+        `gwt/cloudisk/attachment/list`,
+        {
+          inIdAry: this.attachId
+        },
+        "json"
+      ).then(res => {
+        console.log(res);
+      });
     },
     //获取用户基本信息
     getUserInfo() {
@@ -374,7 +377,8 @@ export default {
           this.userform.pwd = res.data.user.password;
 
           this.resetform.duty = res.data.user.sysOrgUserX.duty;
-          this.resetform.userLevelName = res.data.user.sysOrgUserX.userLevelName;
+          this.resetform.userLevelName =
+            res.data.user.sysOrgUserX.userLevelName;
           this.resetform.phone = res.data.user.sysOrgUserX.phone;
           this.resetform.remark = res.data.user.sysOrgUserX.remark;
 
@@ -417,14 +421,18 @@ export default {
       });
     },
     resetForm(formName) {
-        if( this.userform.duty !== this.resetform.duty || this.userform.phone !== this.resetform.phone || this.userform.remark !== this.resetform.remark){
-          this.userform.duty = this.resetform.duty;
-          this.userform.phone = this.resetform.phone;
-          this.userform.remark = this.resetform.remark;
-          this.isHide = true
-        }else{
-          this.isHide = true
-        }
+      if (
+        this.userform.duty !== this.resetform.duty ||
+        this.userform.phone !== this.resetform.phone ||
+        this.userform.remark !== this.resetform.remark
+      ) {
+        this.userform.duty = this.resetform.duty;
+        this.userform.phone = this.resetform.phone;
+        this.userform.remark = this.resetform.remark;
+        this.isHide = true;
+      } else {
+        this.isHide = true;
+      }
     },
     //获取登陆信息表格
     getloginTable() {
@@ -477,10 +485,10 @@ export default {
             if (res.result !== "0000") {
               this.$message.error(res.msg);
             } else {
-              this.$message.success("密码修改成功,请重新登陆！")
+              this.$message.success("密码修改成功,请重新登陆！");
               this.userform.password = this.pwdform.newpwd1.replace(/\w/g, "*");
               this.role_visible = false;
-              this.$router.push({ path: "/login" })
+              this.$router.push({ path: "/login" });
               // this.getUserInfo();
             }
           });
@@ -513,7 +521,7 @@ export default {
           console.log(res);
           if (res.result == "0000") {
             this.password_second_visible = true;
-            this.password_first_visible_form = {}
+            this.password_first_visible_form = {};
           } else {
             this.$message.error(res.msg);
           }
@@ -524,69 +532,133 @@ export default {
 
     //获取验证码
     getCode() {
-      this.$post(
-        `gwt/getPhoneValidateCode`,
-        {
-          phone: this.userform.mobilePhone,
-          newPhoneNum: this.phone_first_visible_form.phone,
-          fromSource: "updatePhone"
-        },
-        "json"
-      ).then(res => {
-        console.log(res);
-        if (res.result !== "0000") {
-          this.$message.error(res.msg);
-        } else {
-          var myreg = /^[1][3,4,5,7,8][0-9]{9}$/;
-          if(!myreg.test(this.phone_first_visible_form.phone)){
-            return false;
-          }else{
-            let me = this;
-            me.sendMsgDisabled = true;
-            let interval = window.setInterval(function() {
-              if (me.time-- <= 0) {
-                me.time = 60;
-                me.sendMsgDisabled = false;
-                window.clearInterval(interval);
+      var reg=11 && /^((13|14|15|17|18)[0-9]{1}\d{8})$/;
+      if(this.phone_first_visible_form.phone === ""){
+          this.$message.error("新手机号不能为空");
+          return;
+      }else if(!reg.test(this.phone_first_visible_form.phone)){
+          this.$message.error("手机号不合法");
+          return
+      }else{
+        console.log(this.show)
+        if(!this.show){
+          return;
+        }
+        this.$post(
+          `gwt/getPhoneValidateCode`,
+          {
+            phone: this.userform.mobilePhone,
+            newPhoneNum: this.phone_first_visible_form.phone,
+            fromSource: "updatePhone"
+          },
+          "json"
+        ).then(res => {
+          console.log(res);
+          if (res.result !== "0000") {
+            this.$message.error(res.msg);
+          }
+          const TIME_COUNT = 60;
+          if (!this.timer) {
+            this.count = TIME_COUNT;
+            this.show = false;
+            this.timer = setInterval(() => {
+              if (this.count > 0 && this.count <= TIME_COUNT) {
+                this.count--;
+                
+              } else {
+                this.show = true;
+                clearInterval(this.timer);
+                this.timer = null;
               }
             }, 1000);
+            this.$message({
+              message: "短信验证码已发送，请注意查收",
+              type: "success"
+            });
           }
-          
-        }
-      });
+        });
+      }
     },
     onCancel_second() {
       this.password_second_visible = false;
     },
-    onSubmit_second(formName) {
-      this.$refs[formName].validate((valid) => {
-          if (valid) {
-             this.$post(
-                `gwt/system/sysUserZone/changPhone`,
-                {
-                  newPhoneNum: this.phone_first_visible_form.phone,
-                  oldPhone: this.userform.mobilePhone
-                },
-                "json"
-              ).then(res => {
-                console.log(res);
-                if (res.result === "0000") {
-                  this.getUserInfo();
-                  this.$message.success(res.msg);
-                  this.password_second_visible = false;
-                  this.phone_first_visible_form = {}
-                }
-              });
-          } else {
-            console.log('error submit!!');
-            return false;
+    onSubmit_second(formName) {  
+      this.$refs[formName].validate(res => {
+        if (!res) return;
+        this.$post(
+          "gwt/checkPhoneValidateCode",
+          {
+            userCode: this.phone_first_visible_form.code,
+            phone: this.phone_first_visible_form.phone
+          },
+          "json"
+        )
+        .then(res => {
+          if (res.result !== "0000") {
+            this.$swal({
+              title: "操作失败！",
+              text: res.msg,
+              type: "error",
+              showConfirmButton: true
+            });
+            return;
           }
+          this.$post(
+            `gwt/system/sysUserZone/changPhone`,
+            {
+              newPhoneNum: this.phone_first_visible_form.phone,
+              oldPhone: this.userform.mobilePhone
+            },
+            "json"
+          ).then(res => {
+            console.log(res);
+            if (res.result === "0000") {
+              this.getUserInfo();
+              this.$message.success(res.msg);
+              this.password_second_visible = false;
+              this.phone_first_visible_form = {};
+            }
+          });
+          this.password_second_visible = false;
+          this.$message({
+            type: "success",
+            message: "手机号修改成功"
+          });
+          this.getUserInfo();
+        })
+        .catch(res => {
+          console.log(res);
         });
-     
+      });
     },
+    // onSubmit_second(formName) {  
+    //   this.$refs[formName].validate(valid => {
+    //     if (valid) {
+    //       this.$post(
+    //         `gwt/system/sysUserZone/changPhone`,
+    //         {
+    //           newPhoneNum: this.phone_first_visible_form.phone,
+    //           oldPhone: this.userform.mobilePhone
+    //         },
+    //         "json"
+    //       ).then(res => {
+    //         console.log(res);
+    //         if (res.result === "0000") {
+    //           this.getUserInfo();
+    //           this.$message.success(res.msg);
+    //           this.password_second_visible = false;
+    //           this.phone_first_visible_form = {};
+    //         }
+    //       });
+    //     } else {
+    //       console.log("error submit!!");
+    //       return false;
+    //     }
+    //   });
+    // },
     //上传头像
     download(type) {
-      console.log(type)
+      console.log(type);
       this.$refs.cropper.getCropData(data => {
         var formData = new FormData();
         formData.append("ownerSystem", "gwt-platform");
@@ -594,22 +666,21 @@ export default {
         formData.append("userId", this.userform.id);
         formData.append("selectHeadFile", data);
         this.$post("gwt/uploadFile/uploadHead", formData, "form")
-        .then(res => {
-          console.log(res);
-          if (res.result === "0000") {
-            this.upload_img_dialog = false;
-            // this.init_usercloudisk();
-            this.$message({
-              type: "success",
-              message: "上传成功"
-            });
-            this.user_img = res.data.headInfo.fullAttaPath;
-            console.log(this.user_img)
-          
-          }
-        })
-        .catch(res => {});
-      })
+          .then(res => {
+            console.log(res);
+            if (res.result === "0000") {
+              this.upload_img_dialog = false;
+              // this.init_usercloudisk();
+              this.$message({
+                type: "success",
+                message: "上传成功"
+              });
+              this.user_img = res.data.headInfo.fullAttaPath;
+              console.log(this.user_img);
+            }
+          })
+          .catch(res => {});
+      });
     },
     //放大图片
     zoom_in() {
@@ -709,7 +780,7 @@ export default {
 .getcode {
   float: right;
 }
-.optionbtn{
-  text-align: center
+.optionbtn {
+  text-align: center;
 }
 </style>

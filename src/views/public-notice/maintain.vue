@@ -105,7 +105,7 @@ export default {
       pageSize: 5,
       total: 0,
       loading: false,
-      noticeType: "",
+      noticeType: 0,
       date: "",
       Q_noticeTitle_SL: "",
       tableData: [],
@@ -132,7 +132,9 @@ export default {
   computed: {
     ...mapGetters(["meeting_type_list"])
   },
-
+  beforeDestroy() {
+    this.$store.commit("DEL_VIEW_BY_NAME", "通知维护");
+  },
   methods: {
     get_active_desc(item) {
       item.NOTICE_ID = item.noticeId;
@@ -176,7 +178,7 @@ export default {
         })}`,
         {
           account: this.noticeType == 0 ? 0 : this.noticeType,
-          noticeType: this.noticeType,
+          noticeType: this.noticeType == 0 ? 0 : this.noticeType,
           begincreateTime: this.date[0],
           endcreateTime: this.date[1],
           noticeTitle: this.Q_noticeTitle_SL
