@@ -9,7 +9,7 @@
             <el-button type="success" icon="el-icon-plus" size='medium' @click="add_part" style="padding:10px 0px;overflow:hidden;width:180px" v-wave>新增部门</el-button>
           </div>
         </div>
-        <div class="part-content common-temp scrollbar" style="overflow: auto">
+        <div class="part-content common-temp scrollbar" style="overflow: auto" v-loading='tree_loading'>
             <el-tree :data="tree_data" :props="defaultProps"
             node-key="id"
             :filter-node-method="filterNode"
@@ -153,6 +153,7 @@ export default {
   },
   data() {
     return {
+      tree_loading: false,
       form: {
         orgName: "",
         orgAllName: "",
@@ -353,11 +354,11 @@ export default {
         })
         .catch(res => {
           this.table_loading = false;
-          console.log(res);
         });
     },
     //查询用户管理部门配置
     get_user_tree() {
+      this.tree_loading = true;
       var url = "gwt/system/sysOrg/getAreaOrgTreeData";
       if (!this.is_admin) {
         url = "gwt/system/sysOrg/getOrgTreeData";
@@ -370,6 +371,7 @@ export default {
         "json"
       )
         .then(res => {
+          this.tree_loading = false;
           if (res.result !== "0000") {
             return;
           }
@@ -381,12 +383,13 @@ export default {
           if (this.expand_arr.length) {
             this.search_child_part(this.pageSize, this.pageNo);
           } else {
-            this.temp_data =  this.tree_data[0];
-            this.expand_arr.push( this.tree_data[0].id);
+            this.temp_data = this.tree_data[0];
+            this.expand_arr.push(this.tree_data[0].id);
             this.search_child_part(this.pageSize, this.pageNo);
           }
         })
         .catch(res => {
+          this.tree_loading = false;
           console.log(res);
         });
     },
@@ -394,6 +397,7 @@ export default {
       this.edit_visible = true;
       this.part_type = "add";
       this.$nextTick(res => {
+        this.$refs.form.resetFields();
         this.option_value1 = "";
         this.option_value2 = "";
         this.option_value3 = "";
@@ -403,7 +407,6 @@ export default {
         this.form.deptType = "";
         this.form.orgAllName = "";
         this.form.city = "";
-        this.$refs.form.resetFields();
       });
     },
     handleNodeClick(data) {
@@ -566,6 +569,7 @@ export default {
               type: "success",
               message: res.msg
             });
+            this.get_user_tree();
             this.search_child_part(this.pageSize, this.pageNo);
             this.edit_visible = false;
           })

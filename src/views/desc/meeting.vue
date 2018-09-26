@@ -1,6 +1,6 @@
 <template>
 <div>
-    <div class="notice-desc" v-loading='loading'>
+    <div class="notice-desc" v-loading='all_loading'>
         <div class="article-title">
             <h3>{{data.noticeTitle}}</h3>
             <p>
@@ -42,11 +42,12 @@
           <el-button type="primary" size="medium" @click="reveive_report" v-if='status == "1000" && isTimeOut '><svg-icon icon-class='签收'></svg-icon>签收</el-button>
           <el-button type="success" size="medium" @click="forward_report" v-if='status == "1001" && isTimeOut'><svg-icon icon-class='转发'></svg-icon>转发</el-button>
         </p>
-        <el-dialog :close-on-click-modal='false'
-            title="举报信息"
-            class="common-dialog "
-            v-drag
-            :visible.sync="role_visible">
+        <el-dialog 
+          :close-on-click-modal='false'
+          title="举报信息"
+          class="common-dialog "
+          v-drag
+          :visible.sync="role_visible">
             <el-form ref="form" :model="form" label-width="80px" :rules="rules"  v-loading='form_loading' @submit.native.prevent>
                 <el-form-item label="举报类型" prop='arrayContentType'>
                   <el-checkbox-group v-model="form.arrayContentType">
@@ -208,9 +209,10 @@
         </div>
     </div>
     <add-user 
-    :show='add_user_dialog' @close='add_user_dialog = false' 
+    :show='add_user_dialog' 
     :loading = 'add_user_loading'
     :user-list='has_select_user_list'
+    @close='add_user_dialog = false' 
     @cancel='add_user_dialog = false'
     @submit="submit_user_dialog"></add-user>
 </div>
@@ -236,6 +238,7 @@ export default {
   },
   data() {
     return {
+      all_loading: false,
       add_form: {
         name: "",
         orgName: "",
@@ -291,7 +294,7 @@ export default {
       has_select_user_list: [],
       add_user_loading: false,
       add_form: {},
-      isTimeOut: true
+      isTimeOut: false
     };
   },
   beforeDestroy(e) {
@@ -307,7 +310,6 @@ export default {
     var pageSize = localStorage.getItem("stuff-desc/index/pageSize");
     this.pageSize = pageSize ? pageSize - 0 : 5;
     this.$store.dispatch("readSession", SET_MESSAGE_DATA);
-    console.log(JSON.stringify(this.message_data, {}, 4));
     this.get_meeting_data();
     this.init_file(this.message_data.NOTICE_ID);
     this.status = this.message_data.REC_STATUS;
@@ -385,13 +387,16 @@ export default {
           if (res.result !== "0000") {
             return;
           }
-          this.has_select_user_list = res.data.tbNoticeRegisterListBean.map(
+          this.has_select_user_list = res.data.tbNoticeRegisterListBean.filter(res=>{
+            return res.userId
+          }).map(
             res => {
               res.REAL_NAME = res.name;
               res.ORG_NAME = res.orgName;
+              res.ID = res.userId;
               return res;
             }
-          );
+          )
         })
         .catch(res => {
           console.log(res);
@@ -655,6 +660,7 @@ export default {
     },
     //获取 init 数据
     get_meeting_data() {
+      this.all_loading = true;
       this.$post(
         "gwt/notice/tbNotice/getNoticeTotalInfo",
         {
@@ -663,7 +669,7 @@ export default {
         "json"
       )
         .then(res => {
-          this.loading = false;
+          this.all_loading = false;
           if (res.result !== "0000") {
             return;
           }
@@ -684,7 +690,7 @@ export default {
           }
         })
         .catch(res => {
-          this.loading = false;
+          this.all_loading = false;
         });
     },
     init_file(noticeId) {

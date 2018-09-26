@@ -16,7 +16,7 @@
               </div>
               <p class="tips">{{ status === '1002' ? tbNoticeRefuse.REAL_NAME :tbNoticeSign.REAL_NAME}}</p>
               <p class="tips">
-                {{ status === '1002' ? tbNoticeRefuse.SIGN_TIME :tbNoticeSign.SIGN_TIME}}
+                {{ status === '1002' ? tbNoticeRefuse.REFUSE_TIME :tbNoticeSign.SIGN_TIME}}
                 {{status === '1001' ? "签收": null}}
                 {{status === '1002' ? "拒签": null}}
               </p>
@@ -233,6 +233,7 @@ export default {
     },
     //获取 init 数据
     get_meeting_data() {
+      this.loading = true;
       this.$post(
         "gwt/notice/tbNotice/getNoticeTotalInfo",
         {

@@ -17,7 +17,7 @@
                             placeholder="选择日期时间">
                         </el-date-picker>
                     </el-form-item>
-                    <el-form-item label="结束时间" prop='endTime' v-if="notice_data.noticeType === '3'">>
+                    <el-form-item label="结束时间" prop='endTime' v-if="notice_data.noticeType === '3'">
                         <el-date-picker
                             v-model="form.endTime"
                             type="datetime"

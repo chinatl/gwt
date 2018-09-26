@@ -54,7 +54,7 @@
 </el-dialog>
 </template>
 <script>
-import { generate_tree } from "@/utils";
+import { generate_tree1 } from "@/utils";
 export default {
   data() {
     return {
@@ -123,7 +123,7 @@ export default {
       if (res.result !== "0000") {
         return;
       }
-      this.field_list = generate_tree(res.data.nodes);
+      this.field_list = generate_tree1(res.data.nodes);
       for (var i = 0; i < this.field_list.length; i++) {
         if (this.field_list[i].name === "常用联系人") {
           this.field_list.splice(i, 1);

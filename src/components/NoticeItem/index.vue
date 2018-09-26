@@ -8,8 +8,8 @@
                  {{data.NOTICE_TITLE}}
                 <span class="status">
                     {{data.REC_STATUS === 1000 ? "未签收": null}}
-                    {{data.REC_STATUS === 1001  ?  data.NOTICE_TYPE_NAME ==="会议通知" ? "未报名": '已拒签' : null}}
-                    {{data.REC_STATUS === 1002 ? "已签收": null}}
+                    {{data.REC_STATUS === 1001  ?  data.NOTICE_TYPE_NAME ==="会议通知" ? "未报名": '已签收' : null}}
+                    {{data.REC_STATUS === 1002 ? "已拒签": null}}
                     {{data.REC_STATUS === 1003 ? "未报名": null}}
                     {{data.REC_STATUS === 1004 ? "已报名": null}} 
                 </span>

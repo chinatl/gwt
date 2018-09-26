@@ -10,12 +10,13 @@
             </div>
             <div class="select-part-bottom common-temp scrollbar" style="overflow:auto">
                 <el-tree
-                :data="$store.getters.tree_data"
+                :data="allData"
                 show-checkbox
                 node-key="id"
                 @check="handleCheckChange"
                 :filter-node-method="filterNode"
                 ref="tree"
+                :default-checked-keys="checkedKeys"
                 :highlight-current= 'true'
                 :props="defaultProps">
                 </el-tree>
@@ -75,11 +76,32 @@ export default {
       type: Boolean,
       default: false,
       required: true
+    },
+    allData: {
+      type: Array,
+      default: [],
+      required: true
+    },
+    selectPart: {
+      type: Array,
+      default: [],
+      required: true
     }
   },
   watch: {
     filterText(val) {
       this.$refs.tree.filter(val);
+    },
+    show(res) {
+      if (res) {
+        this.has_checked_item = this.selectPart;
+        this.checkedKeys = this.selectPart.map(res => {
+          return res.id;
+        });
+        if (this.$refs.tree) {
+          this.$refs.tree.setCheckedKeys(this.checkedKeys);
+        }
+      }
     }
   },
   computed: {
@@ -92,17 +114,11 @@ export default {
       }
     }
   },
-  created() {
-    this.$store.dispatch("get_all_tree_data");
-  },
   methods: {
     filterNode(value, data) {
       if (!value) return true;
       return data.name.indexOf(value) !== -1;
     },
-
-    //过滤
-
     // 清空
     remove_all() {
       this.$refs.tree.setCheckedKeys([]);
@@ -115,7 +131,7 @@ export default {
     handleCheckChange(e, { checkedKeys, checkedNodes }) {
       this.checkedKeys = checkedKeys;
       this.has_checked_item = checkedNodes.filter(res => {
-        return res.childrens === "";
+        return res.nodeType === "ORG";
       });
     },
     handleNodeClick() {},

@@ -25,9 +25,9 @@
             </div>
             <div class="desc-action-content">
               <ul class="common-table-bar scrollbar" style="height:540px">
-                <li  @click="change_group(-1)" :class="current == -1 ? 'current':''">默认分组</li>
+                <li  @click="change_group(null,-1)" :class="current == -1 ? 'current':''">默认分组</li>
                 <li v-for="(item,index) in category"
-                  @click="change_group(index)"
+                  @click="change_group(item,index)"
                  :key="index" :class="current == index ? 'current':''">{{item.name}}</li>
               </ul>
             </div>
@@ -64,6 +64,7 @@
                 <el-table
                     :data="tableData"
                     border
+                    v-loading='table_loading'
                     style="width: 100%">
                     <el-table-column
                     prop="name"
@@ -97,7 +98,7 @@
                         size="mini"
                         type="danger"
                         icon="el-icon-delete"
-                        @click="handleDelete(scope.$index, scope.row)">删除</el-button>
+                        @click="handleDelete(scope.row)">删除</el-button>
                     </template>
                     </el-table-column>
                 </el-table>
@@ -141,8 +142,13 @@
             </el-form>
         </el-dialog>
         <!-- 添加部门 -->
-        <add-part :show='part_visible' 
-        @close='part_visible = false' @submit="submit_part" :loading='loading'></add-part>
+        <add-part 
+        @close='part_visible = false'
+        @submit="submit_part" 
+        :show='part_visible'
+        :all-data='partList' 
+        :select-part='select_part'
+        :loading='loading'></add-part>
     </div>
 </template>
 <script>
@@ -188,11 +194,20 @@ export default {
       category: [], //目录
       current: -1,
       temp_data: {},
-      orgName: ""
+      orgName: "",
+      partList: [],
+      select_part: [],
+      default_data: [],
+      table_loading: false
     };
   },
   computed: {
-    ...mapGetters(["field_manager_data", "field_app_list", "is_admin"]),
+    ...mapGetters([
+      "field_manager_data",
+      "field_app_list",
+      "is_admin",
+      "tree_data"
+    ]),
     app_list() {
       return this.field_app_list.filter(res => {
         return res.isShow === "1";
@@ -202,8 +217,14 @@ export default {
       if (this.current === -1) {
         return "默认分组";
       }
+      if (!this.category[this.current]) {
+        this.current = this.category.length - 1;
+      }
       return this.category[this.current].name;
     }
+  },
+  beforeDestroy(e) {
+    this.$store.commit("DEL_VIEW_BY_NAME", "域详情");
   },
   created() {
     this.$store.dispatch("readSession", SET_TREE_DATE);
@@ -212,8 +233,13 @@ export default {
     this.$store.dispatch("get_all_app_list", this.field_manager_data.domainId);
     this.search_all_group();
     this.init(this.pageSize, this.pageNo);
+    this.$store.dispatch("get_all_tree_data");
+    this.partList = this.tree_data;
+    this.search_has_select_part();
+    this.search_group_list();
   },
   methods: {
+    //
     change_table_checked(event, index) {
       if (event) {
         this.tableData = this.tableData.map((res, i) => {
@@ -244,27 +270,91 @@ export default {
       this.pageNo = e;
       this.init(this.pageSize, e);
     },
-    init(pageSize, currentPage) {
-      var groupId = "";
-      if (this.current !== -1) {
-        groupId = this.temp_data.id;
+    //查全部可以选的部门
+    search_has_select_part() {
+      this.$post(
+        "gwt/system/sysDomain/getOrgByDomainId",
+        {
+          domainId: this.field_manager_data.domainId
+        },
+        "json"
+      ).then(res => {
+        if (res.result !== "0000") {
+          return;
+        }
+        this.default_data = res.data.orgList.map(res => {
+          res.name = res.orgName;
+          res.id = res.orgId;
+          res.nodeType = "ORG";
+          return res;
+        });
+      });
+    },
+
+    //查询当前分组已选择的部门
+    search_group_list() {
+      var url = "";
+      if (this.current === -1) {
+        url = "gwt/system/sysDomain/getOrgByDomainId";
+      } else {
+        url = "gwt/system/sysDomain/sysgroup/getOrgByGroupId";
       }
       this.$post(
-        `gwt/system/sysDomain/getOrgByDomainIdPage?${qs.stringify({
+        url,
+        {
+          domainId: this.field_manager_data.domainId,
+          groupId: this.temp_data.id
+        },
+        "json"
+      ).then(res => {
+        if (res.result !== "0000") {
+          return;
+        }
+        this.select_part = res.data.orgList.map(res => {
+          res.name = res.orgName;
+          res.id = res.orgId;
+          return res;
+        });
+      });
+    },
+    change_group(item, index) {
+      this.current = index;
+      if (index === -1) {
+        this.partList = this.tree_data;
+        this.search_group_list();
+        this.search_has_select_part();
+      } else {
+        this.temp_data = item;
+        this.partList = this.default_data;
+        this.search_group_list();
+      }
+      this.init(this.pageSize, 1);
+    },
+    init(pageSize, currentPage) {
+      var url = "";
+      var groupId = "";
+      if (this.current === -1) {
+        url = "gwt/system/sysDomain/getOrgByDomainIdPage";
+      } else {
+        groupId = this.temp_data.id;
+        url = "gwt/system/sysDomain/sysgroup/getOrgByGroupIdPage";
+      }
+      this.table_loading = true;
+      this.$post(
+        `${url}?${qs.stringify({
           pageSize,
           currentPage
         })}`,
         {
           domainId: this.field_manager_data.domainId,
-          groupId,
-          orgName: this.orgName
+          orgName: this.orgName,
+          groupId
         },
         "json"
       )
         .then(res => {
+          this.table_loading = false;
           if (res.result !== "0000") {
-            this.tableData = [];
-            this.total = 0;
             return;
           }
           this.tableData = res.data.sysOrgPageBean.datas.map((res, i) => {
@@ -274,6 +364,7 @@ export default {
           this.total = res.data.sysOrgPageBean.totalCount - 0;
         })
         .catch(res => {
+          this.table_loading = false;
           console.log(res);
         });
     },
@@ -304,8 +395,14 @@ export default {
         });
         return;
       }
+      var url;
+      if (this.current == -1) {
+        url = "gwt/system/sysDomain/sortOrg";
+      } else {
+        url = "gwt/system/sysDomain/sysgroup/sort";
+      }
       this.$post(
-        "gwt/system/sysDomain/sortOrg",
+        url,
         {
           pk: "domainId",
           sortType,
@@ -396,14 +493,7 @@ export default {
           });
       });
     },
-    change_group(index) {
-      this.current = index;
-      if (index === -1) {
-      } else {
-        this.temp_data = this.category[this.current];
-      }
-      this.init();
-    },
+
     //删除添加分组
     delete_group() {
       delete_item({
@@ -462,13 +552,15 @@ export default {
     },
     //提交 添加部门
     submit_part(checkedKeys) {
+      console.log(checkedKeys);
       this.loading = true;
-      // gwt/system/sysDomain/sysgroup/addOrg
-      var url = "gwt/system/sysDomain/addOrg";
+      var url = "";
       var groupId = "";
-      if (this.current !== -1) {
-        groupId = this.category[this.current].id;
+      if (this.current == -1) {
+        url = "gwt/system/sysDomain/addOrg";
+      } else {
         url = "gwt/system/sysDomain/sysgroup/addOrg";
+        groupId = this.category[this.current].id;
       }
       this.$post(
         url,
@@ -486,14 +578,36 @@ export default {
         .then(res => {
           this.loading = false;
           if (action_fail(res, "添加部门成功")) return;
-          this.init();
+          this.init(this.pageSize, this.pageNo);
           this.part_visible = false;
         })
         .catch(res => {
           this.loading = false;
         });
     },
-    handleDelete(index, item) {}
+    handleDelete(item) {
+      var url = "";
+      var groupId;
+      if (this.current === -1) {
+        url = "gwt/system/sysDomain/delOrg";
+      } else {
+        url = "gwt/system/sysDomain/sysgroup/delorg";
+        groupId = this.temp_data.id;
+      }
+      delete_item({
+        url,
+        data: {
+          orgId: item.orgId,
+          domainId: this.field_manager_data.domainId,
+          groupId
+        },
+        success: res => {
+          if (action_fail(res)) return;
+          this.init(this.pageSize, this.pageNo);
+          this.search_group_list();
+        }
+      });
+    }
   }
 };
 </script>
