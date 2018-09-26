@@ -118,7 +118,7 @@ export default {
     ...mapGetters(["meeting_type_list"])
   },
   beforeDestroy() {
-    this.$store.commit("DEL_VIEW_BY_NAME", "草稿箱");
+    // this.$store.commit("DEL_VIEW_BY_NAME", "草稿箱");
   },
   methods: {
     go_drafts(item) {

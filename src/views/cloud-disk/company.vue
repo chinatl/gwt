@@ -174,7 +174,7 @@ export default {
       originalName: "",
       input: "",
       attaPath: "",
-      createId:""
+      createId:[]
     };
   },
   computed: {
@@ -338,29 +338,49 @@ export default {
       var data = {
         fileIds: this.fileIds.map(res => res + "").join(",")
       };
-      var object = Base64.encode(JSON.stringify(data));
-      var sign = md5(object + this.$store.getters.sign);
-      window.open(
-        `gwt/cloudisk/cloudiskAttachment/BatchDownload?${qs.stringify({
-          object,
-          sign,
-          token: this.$store.getters.token
-        })}`
-      );
+      var sigle_data = {
+        jh:parseInt(this.sigle_fileid)
+      }
+      if(this.fileIds.length === 1 && this.dirIds.length === 0){
+        // alert("dan")
+        //   console.log(parseInt(this.sigle_fileid))
+          var object = Base64.encode(JSON.stringify(sigle_data));
+          var sign = md5(object + this.$store.getters.sign);
+          window.open(
+            `/gwt/cloudisk/cloudiskAttachment/sigleFileDownload?${qs.stringify({
+              object,
+              sign,
+              token: this.$store.getters.token
+            })}`
+          );
+      }else{
+        // alert("duo")
+          var object = Base64.encode(JSON.stringify(data));
+          var sign = md5(object + this.$store.getters.sign);
+          window.open(
+            `/gwt/cloudisk/cloudiskAttachment/BatchDownload?${qs.stringify({
+              object,
+              sign,
+              token: this.$store.getters.token
+            })}`
+          );
+      }
     },
     //删除
     delete_btn() {
-      if(parseInt(this.current_user.id) !== this.createId){
-            this.$swal({
-              title: "提示信息！",
-              text: "您没有权限删除此文件",
-              type: "warning",
-              confirmButtonColor: "#DD6B55",
-              confirmButtonText: "确定",
-              showConfirmButton: true
-            });
-            return
-      }
+      // console.log(this.createId)
+      // return;
+      // if(parseInt(this.current_user.id) !== this.createId && this.createId.includes(parseInt(this.current_user.id))){
+      //       this.$swal({
+      //         title: "提示信息！",
+      //         text: "您没有权限删除此文件",
+      //         type: "warning",
+      //         confirmButtonColor: "#DD6B55",
+      //         confirmButtonText: "确定",
+      //         showConfirmButton: true
+      //       });
+      //       return
+      // }
       if (this.fileIds.length == 0 && this.dirIds.length == 0) {
         this.$swal({
           title: "提示信息！",
@@ -549,11 +569,14 @@ export default {
       this.select_list = e;
       this.fileIds = [];
       this.dirIds = [];
+      this.createId = [];
       for (var i = 0; i < e.length; i++) {
         if (e[i].type === "file") {
           this.fileIds.push(e[i].fileId);
+          // console.log(e[i].fileId);
           this.originalName = e[i].originalName;
-          this.createId = e[i].createUser
+          this.createId.push(e[i].createUser)
+          // console.log(this.fileIds)
         } else {
           this.dirIds.push(e[i].dirId);
         }

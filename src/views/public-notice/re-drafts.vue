@@ -120,7 +120,7 @@ export default {
     };
   },
   beforeDestroy() {
-    this.$store.commit("DEL_VIEW_BY_NAME", "创建会议");
+    this.$store.commit("DEL_VIEW_BY_NAME", "草稿编辑");
   },
   created() {
     this.$store.dispatch("readSession", SET_NOTICE_DATA);

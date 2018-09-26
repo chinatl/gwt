@@ -359,9 +359,9 @@ export const constantRouterMap = [
     children: [
       {
         path: 'index',
-        name: '编辑',
+        name: '草稿编辑',
         component: () => import('@/views/public-notice/re-drafts'),
-        meta: { title: '编辑' }
+        meta: { title: '草稿编辑' }
       }
     ]
   },

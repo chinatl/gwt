@@ -75,6 +75,7 @@ import qs from "qs";
 import { fileType } from "@/utils";
 import { Base64 } from "js-base64";
 import md5 from "js-md5";
+import { delete_item, action_fail } from "@/utils/user";
 export default {
   components: {
     uploadButton
@@ -114,7 +115,7 @@ export default {
       fileIds: [],
       parentId: "",
       loading: false,
-      sigle_fileid:""
+      sigle_fileid: ""
     };
   },
   computed: {
@@ -177,7 +178,6 @@ export default {
     },
     //新建文件夹
     add_older(formName) {
-      
       this.$refs[formName].validate(valid => {
         if (valid) {
           this.$post(
@@ -278,33 +278,29 @@ export default {
         orgId: this.folderform.orgId
       };
       var sigle_data = {
-        jh:parseInt(this.sigle_fileid)
+        fileId: row.fileId
+      };
+      if (this.fileIds.length === 1 && this.dirIds.length === 0) {
+        var object = Base64.encode(JSON.stringify(sigle_data));
+        var sign = md5(object + this.$store.getters.sign);
+        window.open(
+          `/gwt/cloudisk/cloudiskAttachment/sigleFileDownload?${qs.stringify({
+            object,
+            sign,
+            token: this.$store.getters.token
+          })}`
+        );
+      } else {
+        var object = Base64.encode(JSON.stringify(data));
+        var sign = md5(object + this.$store.getters.sign);
+        window.open(
+          `/gwt/cloudisk/cloudiskAttachment/BatchDownload?${qs.stringify({
+            object,
+            sign,
+            token: this.$store.getters.token
+          })}`
+        );
       }
-      if(this.fileIds.length === 1 && this.dirIds.length === 0){
-        // alert("dan")
-        //   console.log(parseInt(this.sigle_fileid))
-          var object = Base64.encode(JSON.stringify(sigle_data));
-          var sign = md5(object + this.$store.getters.sign);
-          window.open(
-            `gwt/cloudisk/cloudiskAttachment/sigleFileDownload?${qs.stringify({
-              object,
-              sign,
-              token: this.$store.getters.token
-            })}`
-          );
-      }else{
-        // alert("duo")
-          var object = Base64.encode(JSON.stringify(data));
-          var sign = md5(object + this.$store.getters.sign);
-          window.open(
-            `gwt/cloudisk/cloudiskAttachment/BatchDownload?${qs.stringify({
-              object,
-              sign,
-              token: this.$store.getters.token
-            })}`
-          );
-      }
-      
     },
     //递归取数
     go_child_file(index) {
@@ -349,15 +345,15 @@ export default {
       this.dirId = row.dirId;
       this.folderform.originalName = row.originalName;
       if (row.type === "folder") {
-          this.file_nav.push({
-            row,
-            originalName: row.originalName,
-            id: row.dirId
+        this.file_nav.push({
+          row,
+          originalName: row.originalName,
+          id: row.dirId
         });
         this.parentId = row.dirId;
         this.pageNo = 1;
         this.init_usercloudisk(this.pageSize, 1);
-        return
+        return;
       }
       var img_src = row.originalName.substring(
         row.originalName.lastIndexOf("."),
@@ -369,25 +365,38 @@ export default {
         img_src != ".gif" &&
         img_src != ".jpg" &&
         img_src != ".jpeg" &&
-        img_src != '.pdf'
+        img_src != ".pdf"
       ) {
-          var sigle_data = {
-            jh:parseInt(this.sigle_fileid)
-          }
-          var object = Base64.encode(JSON.stringify(sigle_data));
-          var sign = md5(object + this.$store.getters.sign);
-          window.open(`/api/gwt/cloudisk/cloudiskAttachment/sigleFileDownload?${qs.stringify({
-              object,
-              sign,
-              token: this.$store.getters.token
-            })}`)
-          return
+        console.log();
+        var sigle_data = {
+          fileId: parseInt(this.sigle_fileid)
+        };
+        var object = Base64.encode(JSON.stringify(sigle_data));
+        var sign = md5(object + this.$store.getters.sign);
+        window.open(
+          `/gwt/cloudisk/cloudiskAttachment/sigleFileDownload?${qs.stringify({
+            object,
+            sign,
+            token: this.$store.getters.token
+          })}`
+        );
+        return;
+      } else {
+        this.$post(
+          "gwt/cloudisk/cloudiskAttachment/getAttachment",
+          {
+            fileId: row.fileId
+          },
+          "json"
+        ).then(res => {
+          if (action_fail(res)) return;
+          window.open(
+            res.data.cloudiskAttachment.attaPath +
+              "/" +
+              res.data.cloudiskAttachment.storeName
+          );
+        });
       }
-      window.open(
-        `/api/gwt/part-cloud-disk/index/${row.attaPath}/${
-          row.originalName
-        }`
-      );
     },
     //row-click
     get_svg_name(name) {
@@ -401,7 +410,7 @@ export default {
       for (var i = 0; i < e.length; i++) {
         if (e[i].type === "file") {
           this.fileIds.push(e[i].fileId);
-          this.sigle_fileid = e[i].fileId
+          this.sigle_fileid = e[i].fileId;
         } else {
           this.dirIds.push(e[i].dirId);
           // console.log(e[i].type)
