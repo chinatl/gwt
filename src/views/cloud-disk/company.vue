@@ -174,7 +174,8 @@ export default {
       originalName: "",
       input: "",
       attaPath: "",
-      createId:[]
+      createId:[],
+      sigle_fileid:""
     };
   },
   computed: {
@@ -342,7 +343,8 @@ export default {
         jh:parseInt(this.sigle_fileid)
       }
       if(this.fileIds.length === 1 && this.dirIds.length === 0){
-        // alert("dan")
+        alert("dan")
+        // console.log(this.sigle_fileid)
         //   console.log(parseInt(this.sigle_fileid))
           var object = Base64.encode(JSON.stringify(sigle_data));
           var sign = md5(object + this.$store.getters.sign);
@@ -354,7 +356,7 @@ export default {
             })}`
           );
       }else{
-        // alert("duo")
+        alert("duo")
           var object = Base64.encode(JSON.stringify(data));
           var sign = md5(object + this.$store.getters.sign);
           window.open(
@@ -368,19 +370,19 @@ export default {
     },
     //删除
     delete_btn() {
-      // console.log(this.createId)
+      // console.log(this.createId.includes(parseInt(this.current_user.id)))
       // return;
-      // if(parseInt(this.current_user.id) !== this.createId && this.createId.includes(parseInt(this.current_user.id))){
-      //       this.$swal({
-      //         title: "提示信息！",
-      //         text: "您没有权限删除此文件",
-      //         type: "warning",
-      //         confirmButtonColor: "#DD6B55",
-      //         confirmButtonText: "确定",
-      //         showConfirmButton: true
-      //       });
-      //       return
-      // }
+      if(parseInt(this.current_user.id) !== this.createId && !this.createId.includes(parseInt(this.current_user.id))){
+            this.$swal({
+              title: "提示信息！",
+              text: "您没有权限删除此文件",
+              type: "warning",
+              confirmButtonColor: "#DD6B55",
+              confirmButtonText: "确定",
+              showConfirmButton: true
+            });
+            return
+      }
       if (this.fileIds.length == 0 && this.dirIds.length == 0) {
         this.$swal({
           title: "提示信息！",
@@ -566,7 +568,7 @@ export default {
       return fileType(name);
     },
     handleSelectionChange(e) {
-      // console.log(e)
+      console.log(e)
       this.select_list = e;
       this.fileIds = [];
       this.dirIds = [];
@@ -577,7 +579,8 @@ export default {
           // console.log(e[i].fileId);
           this.originalName = e[i].originalName;
           this.createId.push(e[i].createUser)
-          // console.log(this.fileIds)
+          this.sigle_fileid = e[i].fileId
+          // console.log(this.sigle_fileid)
         } else {
           this.dirIds.push(e[i].dirId);
         }
