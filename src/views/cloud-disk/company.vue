@@ -553,7 +553,6 @@ export default {
       for (var i = 0; i < e.length; i++) {
         if (e[i].type === "file") {
           this.fileIds.push(e[i].fileId);
-          console.log(e[i].fileId);
           this.originalName = e[i].originalName;
           this.createId = e[i].createUser
         } else {
