@@ -119,9 +119,11 @@ export default {
       dialog: false
     };
   },
+  beforeDestroy() {
+    this.$store.commit("DEL_VIEW_BY_NAME", "创建会议");
+  },
   created() {
     this.$store.dispatch("readSession", SET_NOTICE_DATA);
-    console.log(JSON.stringify(this.notice_data, {}, 4));
     this.init();
   },
   computed: {

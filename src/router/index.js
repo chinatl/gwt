@@ -101,7 +101,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '通知详情',
         component: () => import('@/views/desc/notice'),
-        meta: { title: '通知详情', hidden: true },
+        meta: { title: '通知详情' },
       }
     ]
   },
@@ -113,7 +113,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '材料详情',
         component: () => import('@/views/desc/stuff'),
-        meta: { title: '材料详情', hidden: true  },
+        meta: { title: '材料详情' },
       }
     ]
   },
@@ -125,7 +125,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '会议详情',
         component: () => import('@/views/desc/meeting'),
-        meta: { title: '会议详情' , hidden: true },
+        meta: { title: '会议详情' },
       }
     ]
   },
@@ -137,7 +137,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '已发通知详情',
         component: () => import('@/views/desc/active'),
-        meta: { title: '已发通知详情', hidden: true  },
+        meta: { title: '通知详情' },
       }
     ]
   },
@@ -149,7 +149,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '转发通知',
         component: () => import('@/views/desc/forward-notice'),
-        meta: { title: '转发通知', hidden: true  },
+        meta: { title: '转发通知'  },
       }
     ]
   },
@@ -361,7 +361,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '编辑',
         component: () => import('@/views/public-notice/re-drafts'),
-        meta: { title: '编辑' , hidden: true }
+        meta: { title: '编辑' }
       }
     ]
   },

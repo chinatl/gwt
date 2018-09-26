@@ -20,7 +20,9 @@
                     value-format="yyyy-MM-dd"
                    >
                 </el-date-picker>
-                <el-input v-model="Q_noticeTitle_SL" placeholder="请输入标题" style="width:200px" size='medium'></el-input>
+                <el-input v-model="Q_noticeTitle_SL" placeholder="请输入标题"
+                @keyup.native.enter="condition"
+                 style="width:200px" size='medium'></el-input>
                 <el-button type="primary" icon="el-icon-search" size='medium' v-wave @click="condition">搜索</el-button>
             </div>
         </div>
@@ -29,7 +31,7 @@
               v-for="(item,index) in tableData" 
               :data='item'
               :key='index'
-              @click="go_desc(item)"
+              @click="get_active_desc(item)"
               ></notice-item>
         </div>
         
@@ -48,7 +50,7 @@
     </div>
 </template>
 <script>
-import { SET_MEETING_TYPE_LIST } from "@/store/mutations";
+import { SET_MEETING_TYPE_LIST, SET_MESSAGE_DATA } from "@/store/mutations";
 import { mapGetters } from "vuex";
 import NoticeItem from "@/components/NoticeItem";
 import qs from "qs";
@@ -82,16 +84,19 @@ export default {
     ...mapGetters(["meeting_type_list"])
   },
   methods: {
+    get_active_desc(item) {
+      console.log(item);
+      this.$store.commit(SET_MESSAGE_DATA, item);
+      this.$router.push({
+        path: "/active-desc/index"
+      });
+    },
     condition() {
       this.pageNo = 1;
       sessionStorage.setItem("public-notice/forwarded/pageNo", 1);
       this.init(this.pageSize, 1);
     },
-    go_desc(item) {
-      return;
-    },
     init(pageSize, pageNo) {
-      console.log(this.date)
       this.loading = true;
       this.$post(
         `gwt/notice/tbNoticeForward/list?${qs.stringify({
@@ -101,19 +106,30 @@ export default {
         {
           account: this.noticeType == 0 ? 0 : this.noticeType,
           noticeType: this.noticeType,
-          begincreateTime: "" ,
+          begincreateTime: "",
           endcreateTime: this.date[1],
           noticeTitle: this.Q_noticeTitle_SL
         },
         "json"
       )
         .then(res => {
-          console.log(res)
+          console.log(res);
           this.loading = false;
           if (res.result !== "0000") {
             return;
           }
-          this.tableData = res.data.tbNoticeForwardPageBean.datas;
+          this.tableData = res.data.tbNoticeForwardPageBean.datas.map(res => {
+            res.NOTICE_TITLE = res.dataMap.NOTICE_TITLE;
+            res.RECE_TIME = res.dataMap.CREATE_TIME;
+            res.NOTICE_TYPE_NAME =
+              res.dataMap.NOTICE_TYPE === 1
+                ? "会议通知"
+                : res.dataMap.NOTICE_TYPE === 2
+                  ? "通知"
+                  : "材料征集";
+            res.NOTICE_ID = res.dataMap.NOTICE_ID;
+            return res;
+          });
           sessionStorage.setItem(
             "public-notice/forwarded/total",
             res.data.tbNoticeForwardPageBean.totalCount
@@ -121,7 +137,6 @@ export default {
         })
         .catch(res => {
           this.loading = false;
-          console.log(res);
         });
     },
     handleSizeChange(e) {

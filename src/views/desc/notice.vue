@@ -118,7 +118,8 @@ export default {
         ]
       },
       tbNoticeSign: {}, //签收详情
-      tbNoticeRefuse: {} //签收详情
+      tbNoticeRefuse: {}, //签收详情
+      isTimeOut: true
     };
   },
   created() {
@@ -126,7 +127,6 @@ export default {
     console.log(JSON.stringify(this.message_data, {}, 4));
     this.get_meeting_data();
     this.init_file(this.message_data.NOTICE_ID);
-    
   },
   computed: {
     ...mapGetters(["message_data"])
@@ -137,7 +137,7 @@ export default {
       this.current = index;
     },
     // 查看人员报名表数据
- 
+
     //转发
     forward_report() {
       this.$router.push({

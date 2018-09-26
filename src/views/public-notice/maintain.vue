@@ -29,7 +29,11 @@
         <div class="common-table">
             <el-table  :data="tableData" border style="width: 100%" v-show="is_ndel">
                 <el-table-column align="center" prop='noticeTypeName' label="通知类型"></el-table-column>
-                <el-table-column align="center" prop='noticeTitle' label="通知标题"></el-table-column>
+                <el-table-column align="center" prop='noticeTitle' label="通知标题">
+                  <template slot-scope="scope">
+                    <span class="href" @click="get_active_desc(scope.row)">{{scope.row.noticeTitle}}</span>
+                  </template>
+                </el-table-column>
                 <el-table-column align="center" prop='userName' label="发布人"></el-table-column>
                 <el-table-column  align="center" prop='updateTime' label="发布时间"></el-table-column>
                 <el-table-column prop="name"
@@ -48,7 +52,11 @@
             </el-table>
             <el-table  :data="tableData" border style="width: 100%" v-show="is_ydel">
                 <el-table-column align="center" prop='noticeTypeName' label="通知类型"></el-table-column>
-                <el-table-column align="center" prop='noticeTitle' label="通知标题"></el-table-column>
+                <el-table-column align="center" label="通知标题">
+                  <template slot-scope="scope">
+                    <span class="href" @click="get_active_desc(scope.row)">{{scope.row.noticeTitle}}</span>
+                  </template>
+                </el-table-column>
                 <el-table-column align="center" prop='userName' label="发布人"></el-table-column>
                 <el-table-column  align="center" prop='createTime' label="发布时间"></el-table-column>
                 <el-table-column  align="center" prop='updateUserName' label="删除人"></el-table-column>
@@ -86,7 +94,7 @@
     </div>
 </template>
 <script>
-import { SET_MEETING_TYPE_LIST } from "@/store/mutations";
+import { SET_MEETING_TYPE_LIST, SET_MESSAGE_DATA } from "@/store/mutations";
 import { mapGetters } from "vuex";
 import NoticeItem from "@/components/NoticeItem";
 import qs from "qs";
@@ -101,12 +109,12 @@ export default {
       date: "",
       Q_noticeTitle_SL: "",
       tableData: [],
-      is_org:"",
-      totalCount:"",
-      userid:"",
-      is_ndel:true,
-      is_ydel:false,
-      delCount:0//删除总条数
+      is_org: "",
+      totalCount: "",
+      userid: "",
+      is_ndel: true,
+      is_ydel: false,
+      delCount: 0 //删除总条数
     };
   },
   created() {
@@ -126,6 +134,15 @@ export default {
   },
 
   methods: {
+    get_active_desc(item) {
+      item.NOTICE_ID = item.noticeId;
+      item.NOTICE_TYPE = item.noticeType - 0;
+      item.REC_STATUS = item.noticeStatus;
+      this.$store.commit(SET_MESSAGE_DATA, item);
+      this.$router.push({
+        path: "/active-desc/index"
+      });
+    },
     condition() {
       this.pageNo = 1;
       sessionStorage.setItem("public-notice/maintain/pageNo", 1);
@@ -207,13 +224,12 @@ export default {
             return;
           }
           this.tableData = res.data.noticeDeletePageBean.datas;
-        //   sessionStorage.setItem(
-        //     "public-notice/maintain/total",
-        //     res.data.tbNoticeMaintenancePageBean.totalCount
-        //   );
-          this.delCount = parseInt(res.data.noticeDeletePageBean.totalCount)
-          console.log(this.delCount)
-          
+          //   sessionStorage.setItem(
+          //     "public-notice/maintain/total",
+          //     res.data.tbNoticeMaintenancePageBean.totalCount
+          //   );
+          this.delCount = parseInt(res.data.noticeDeletePageBean.totalCount);
+          console.log(this.delCount);
         })
         .catch(res => {
           this.loading = false;
@@ -226,13 +242,13 @@ export default {
       this.pageNo = 1;
       this.pageSize = e;
       this.init(e, 1);
-      this.get_delNotice(e,1)
+      this.get_delNotice(e, 1);
     },
     handleCurrentChange(e) {
       sessionStorage.setItem("public-notice/maintain/pageNo", e);
       this.pageNo = e;
       this.init(this.pageSize, e);
-      this.get_delNotice(e,1)
+      this.get_delNotice(e, 1);
     },
     handleEdit(index, item) {},
     handleDelete(row) {

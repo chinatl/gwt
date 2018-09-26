@@ -510,13 +510,12 @@ export default {
           this.tableData = res.data.tbNoticeAttachmentPageBean;
           this.total = res.data.totalCount;
         } else if (this.dataType === 5) {
-          this.tableData = res.data.tbNoticeSmsNoticeFailedPageBean.datas;
+          this.tableData = res.data.tbNoticeSmsNoticeFailedPageBean.datas || [];
           this.total = res.data.tbNoticeSmsNoticeFailedPageBean.totalCount - 0;
         } else {
           this.tableData = res.data.tbNoticeItemPageBean.datas;
           this.total = res.data.tbNoticeItemPageBean.totalCount - 0;
         }
-        console.log(res);
       });
     },
     //再次提醒用户
