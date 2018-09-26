@@ -23,7 +23,7 @@
                 <el-input v-model="Q_noticeTitle_SL" placeholder="请输入标题" style="width:200px" size='medium'></el-input>
                 <el-button type="primary" icon="el-icon-search" size='medium' v-wave @click="condition">搜索</el-button>
                 <el-button type="warning" icon="el-icon-circle-close" size='medium' v-wave @click="ndel_list" v-show="is_ndel">已删除通知</el-button>
-                <el-button type="danger" icon="el-icon-circle-close" size='medium' v-wave @click="ydel_list" v-show="is_ydel">已删除通知列表</el-button>
+                <el-button type="primary" icon="el-icon-circle-close" size='medium' v-wave @click="ydel_list" v-show="is_ydel">全部删除通知</el-button>
             </div>
         </div>
         <div class="common-table">
