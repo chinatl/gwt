@@ -99,6 +99,7 @@ export default {
   },
   created() {
     this.$store.dispatch("readSession", SET_NOTICE_DATA);
+    console.log(JSON.stringify(this.notice_data, {}, 4));
     this.init();
   },
   computed: {
@@ -206,7 +207,7 @@ export default {
         });
     },
     onSubmit() {
-      console.log(this.file_list)
+      console.log(this.file_list);
       if (!this.form.checked) {
         this.$message({
           message: "请确认该通知不含涉密信息！",
@@ -252,7 +253,7 @@ export default {
                 this.$post(
                   "gwt/notice/tbNotice/save",
                   {
-                    noticeId: "",
+                    noticeId: this.notice_data.NOTICE_ID,
                     noticeTitle: this.form.noticeTitle,
                     noticeType: this.notice_data.NOTICE_TYPE, //会议 2//通知 3//材料
                     noticeAdress: this.form.noticeAdress,
@@ -265,7 +266,7 @@ export default {
                       this.form.endTime,
                       "{y}-{m}-{d} {h}:{i}:{s}"
                     ),
-                    changeType: 'change',
+                    changeType: "change",
                     selectedUsers: this.has_select_user_list
                       .map(res => res.ID)
                       .join(","),

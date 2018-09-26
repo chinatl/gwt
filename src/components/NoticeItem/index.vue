@@ -15,6 +15,7 @@
                 </span>
             </div>
             <div class="user-message-info">
+                <little-button :name='data.NOTICE_STATUS === 1003 ?"变 更":""' v-if="data.NOTICE_STATUS === 1003"></little-button>
                 <little-button :name='data.NOTICE_TYPE_NAME'></little-button>
                 <span class="current">{{data.REAL_NAME}}</span>
                 <span class="current">{{data.ORG_ALL_NAME}}</span>
@@ -38,6 +39,9 @@ export default {
       default: {},
       required: true
     }
+  },
+  created(){
+    console.log(this.data)
   },
   methods: {
     item_click() {
