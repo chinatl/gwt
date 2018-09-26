@@ -173,7 +173,8 @@ export default {
       reportDialogVisible: false,
       originalName: "",
       input: "",
-      attaPath: ""
+      attaPath: "",
+      createId:""
     };
   },
   computed: {
@@ -349,6 +350,17 @@ export default {
     },
     //删除
     delete_btn() {
+      if(parseInt(this.current_user.id) !== this.createId){
+            this.$swal({
+              title: "提示信息！",
+              text: "您没有权限删除此文件",
+              type: "warning",
+              confirmButtonColor: "#DD6B55",
+              confirmButtonText: "确定",
+              showConfirmButton: true
+            });
+            return
+      }
       if (this.fileIds.length == 0 && this.dirIds.length == 0) {
         this.$swal({
           title: "提示信息！",
@@ -383,7 +395,7 @@ export default {
           "json"
         )
           .then(res => {
-            console.log(res);
+            console.log(res.deptCloudiskPageBean.datas.createUser);
             if (res.result === "0000") {
               this.get_deptCloudisk(this.pageSize, this.pageNo);
               this.$message({
@@ -534,6 +546,7 @@ export default {
       return fileType(name);
     },
     handleSelectionChange(e) {
+      // console.log(e)
       this.select_list = e;
       this.fileIds = [];
       this.dirIds = [];
@@ -542,6 +555,7 @@ export default {
           this.fileIds.push(e[i].fileId);
           console.log(e[i].fileId);
           this.originalName = e[i].originalName;
+          this.createId = e[i].createUser
         } else {
           this.dirIds.push(e[i].dirId);
         }
