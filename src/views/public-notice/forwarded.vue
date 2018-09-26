@@ -16,7 +16,7 @@
                     range-separator="至"
                     start-placeholder="开始日期"
                     end-placeholder="结束日期"
-                    format="yyyy 年 MM 月 dd 日"
+                    format="yyyy-MM-dd "
                     value-format="yyyy-MM-dd"
                    >
                 </el-date-picker>
@@ -64,8 +64,8 @@ export default {
       pageSize: 5,
       total: 0,
       loading: false,
-      noticeType: "",
-      date: "0",
+      noticeType: 0,
+      date: "",
       Q_noticeTitle_SL: "",
       tableData: []
     };
@@ -82,6 +82,9 @@ export default {
   },
   computed: {
     ...mapGetters(["meeting_type_list"])
+  },
+  beforeDestroy() {
+    this.$store.commit("DEL_VIEW_BY_NAME", "已转发通知");
   },
   methods: {
     get_active_desc(item) {
@@ -104,9 +107,9 @@ export default {
           pageSize: pageSize
         })}`,
         {
-          account: this.noticeType == 0 ? 0 : this.noticeType,
-          noticeType: this.noticeType,
-          begincreateTime: "",
+          account: this.noticeType == 0 ? "" : this.noticeType ,
+          noticeType:this.noticeType == 0 ? "" : this.noticeType,
+          begincreateTime: this.date[0],
           endcreateTime: this.date[1],
           noticeTitle: this.Q_noticeTitle_SL
         },

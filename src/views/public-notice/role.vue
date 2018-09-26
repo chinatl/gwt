@@ -144,6 +144,9 @@ export default {
   created() {
     this.get_tree_data();
   },
+  beforeDestroy() {
+    this.$store.commit("DEL_VIEW_BY_NAME", "权限维护");
+  },
   methods: {
     filterNode(value, data) {
       if (!value) return true;
