@@ -586,37 +586,30 @@ export default {
     },
     //上传头像
     download(type) {
-      console.log(this.userform.id)
+      console.log(type)
       this.$refs.cropper.getCropData(data => {
-        // console.log(data);
-        this.$post(
-          `gwt/uploadFile/uploadHead`,
-          {
-            selectHeadFile: data,
-            ownerSystem: "gwt-platform",
-            ownerModule: "user",
-            ownerAperation: "",
-            userId: this.userform.id
-          },
-          "form"
-        ).then(res => {
-          console.log(res)
-          // if (res.result !== "0000") {
-          //   this.$swal({
-          //     title: "操作失败！",
-          //     text: res.msg,
-          //     type: "error",
-          //     confirmButtonColor: "#DD6B55",
-          //     confirmButtonText: "确定",
-          //     showConfirmButton: true
-          //   });
-          //   return;
-          // }
-          // this.user_img = data;
-          // this.upload_img_dialog = false;
-        });
-        // test.location.href = data
-      });
+        var formData = new FormData();
+        formData.append("ownerSystem", "gwt-platform");
+        formData.append("ownerModule", "user");
+        formData.append("userId", this.userform.id);
+        formData.append("selectHeadFile", data);
+        this.$post("gwt/uploadFile/uploadHead", formData, "form")
+        .then(res => {
+          console.log(res);
+          if (res.result === "0000") {
+            this.upload_img_dialog = false;
+            // this.init_usercloudisk();
+            this.$message({
+              type: "success",
+              message: "上传成功"
+            });
+            this.user_img = res.data.headInfo.fullAttaPath;
+            console.log(this.user_img)
+          
+          }
+        })
+        .catch(res => {});
+      })
     },
     //放大图片
     zoom_in() {
