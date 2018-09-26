@@ -278,13 +278,14 @@ export default {
         orgId: this.folderform.orgId
       };
       var sigle_data = {
-        jh:this.sigle_fileid
+        jh:parseInt(this.sigle_fileid)
       }
       if(this.fileIds.length === 1 && this.dirIds.length === 0){
         // alert("dan")
+        //   console.log(parseInt(this.sigle_fileid))
           var object = Base64.encode(JSON.stringify(sigle_data));
           var sign = md5(object + this.$store.getters.sign);
-          window.open(
+          this.$post(
             `gwt/cloudisk/cloudiskAttachment/sigleFileDownload?${qs.stringify({
               object,
               sign,
@@ -351,42 +352,46 @@ export default {
       this.dirId = row.dirId;
       this.folderform.originalName = row.originalName;
       if (row.type === "folder") {
-        this.file_nav.push({
-          row,
-          originalName: row.originalName,
-          id: row.dirId
-      });
-      // var img_src = row.originalName.substring(
-      //   row.originalName.lastIndexOf("."),
-      //   row.originalName.length
-      // );
-      // var sigle_data = {
-      //   jh:this.sigle_fileid
-      // }
-      // if (
-      //   row.type === "file" &&
-      //   img_src != ".bmp" &&
-      //   img_src != ".png" &&
-      //   img_src != ".gif" &&
-      //   img_src != ".jpg" &&
-      //   img_src != ".jpeg"
-      // ) {
-      //   alert("jpg")
-      //     var object = Base64.encode(JSON.stringify(sigle_data));
-      //     var sign = md5(object + this.$store.getters.sign);
-      //     window.open(
-      //       `gwt/cloudisk/cloudiskAttachment/sigleFileDownload?${qs.stringify({
-      //         object,
-      //         sign,
-      //         token: this.$store.getters.token
-      //       })}`
-      //     );
-      // }
-      
+          this.file_nav.push({
+            row,
+            originalName: row.originalName,
+            id: row.dirId
+        });
         this.parentId = row.dirId;
         this.pageNo = 1;
         this.init_usercloudisk(this.pageSize, 1);
       }
+      var img_src = row.originalName.substring(
+        row.originalName.lastIndexOf("."),
+        row.originalName.length
+      );
+      console.log("img_src");
+      if (
+        img_src != ".bmp" &&
+        img_src != ".png" &&
+        img_src != ".gif" &&
+        img_src != ".jpg" &&
+        img_src != ".jpeg"
+      ) {
+          var sigle_data = {
+            jh:parseInt(this.sigle_fileid)
+          }
+          var object = Base64.encode(JSON.stringify(sigle_data));
+          var sign = md5(object + this.$store.getters.sign);
+          this.$post(
+            `gwt/cloudisk/cloudiskAttachment/sigleFileDownload?${qs.stringify({
+              object,
+              sign,
+              token: this.$store.getters.token
+            })}`
+          );
+          return
+      }
+      window.open(
+        `http://192.168.31.7/#/part-cloud-disk/index/${row.attaPath}/${
+          row.originalName
+        }`
+      );
     },
     //row-click
     get_svg_name(name) {
