@@ -21,7 +21,7 @@
         <t-layout>
           <div slot="left">
             <div class="desc-action">
-              <el-button type="success" icon="el-icon-plus" style="width:100%" @click="add_group">新增分组</el-button>
+              <el-button type="success" icon="el-icon-plus" style="width:100%" v-if="is_admin" @click="add_group">新增分组</el-button>
             </div>
             <div class="desc-action-content">
               <ul class="common-table-bar scrollbar" style="height:540px">
@@ -52,6 +52,7 @@
                 </div>
                 <div>
                     <arrow-button 
+                      v-if="!is_admin"
                       @setTop='setTop'
                       @top='goTop'
                       @bottom='goBottom'
@@ -67,6 +68,7 @@
                     v-loading='table_loading'
                     style="width: 100%">
                     <el-table-column
+                    v-if="!is_admin"
                     prop="name"
                     align="center"
                     width="100"
@@ -396,10 +398,12 @@ export default {
         return;
       }
       var url;
+      var groupId;
       if (this.current == -1) {
         url = "gwt/system/sysDomain/sortOrg";
       } else {
         url = "gwt/system/sysDomain/sysgroup/sort";
+        groupId = this.temp_data.id;
       }
       this.$post(
         url,
@@ -407,7 +411,8 @@ export default {
           pk: "domainId",
           sortType,
           domainId: this.field_manager_data.domainId,
-          orgId: data.orgId
+          orgId: data.orgId,
+          groupId
         },
         "json"
       )

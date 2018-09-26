@@ -51,6 +51,7 @@
                     icon="el-icon-edit-outline"
                     @click="handleEdit(scope.row)" v-wave>编辑详情</el-button>
                     <el-button
+                    v-if="is_admin"
                     size="mini"
                     type="danger"
                     icon="el-icon-delete"

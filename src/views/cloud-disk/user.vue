@@ -285,7 +285,7 @@ export default {
         //   console.log(parseInt(this.sigle_fileid))
           var object = Base64.encode(JSON.stringify(sigle_data));
           var sign = md5(object + this.$store.getters.sign);
-          this.$post(
+          window.open(
             `gwt/cloudisk/cloudiskAttachment/sigleFileDownload?${qs.stringify({
               object,
               sign,
@@ -313,11 +313,9 @@ export default {
         return;
       }
       var arr = [];
-      console.log(index);
       for (var i = 0; i < this.file_nav.length; i++) {
         arr.push(this.file_nav[i].id);
       }
-      console.log(arr);
       this.file_nav = this.file_nav.slice(0, index + 1);
       this.$post(
         `gwt/cloudisk/cloudiskAttaUserRelation/userCloudiskPage?${qs.stringify({
@@ -348,7 +346,6 @@ export default {
       this.init_usercloudisk(this.pageSize, 1);
     },
     file_click(row) {
-      console.log(row);
       this.dirId = row.dirId;
       this.folderform.originalName = row.originalName;
       if (row.type === "folder") {
@@ -360,35 +357,34 @@ export default {
         this.parentId = row.dirId;
         this.pageNo = 1;
         this.init_usercloudisk(this.pageSize, 1);
+        return
       }
       var img_src = row.originalName.substring(
         row.originalName.lastIndexOf("."),
         row.originalName.length
       );
-      console.log("img_src");
       if (
         img_src != ".bmp" &&
         img_src != ".png" &&
         img_src != ".gif" &&
         img_src != ".jpg" &&
-        img_src != ".jpeg"
+        img_src != ".jpeg" &&
+        img_src != '.pdf'
       ) {
           var sigle_data = {
             jh:parseInt(this.sigle_fileid)
           }
           var object = Base64.encode(JSON.stringify(sigle_data));
           var sign = md5(object + this.$store.getters.sign);
-          this.$post(
-            `gwt/cloudisk/cloudiskAttachment/sigleFileDownload?${qs.stringify({
+          window.open(`/api/gwt/cloudisk/cloudiskAttachment/sigleFileDownload?${qs.stringify({
               object,
               sign,
               token: this.$store.getters.token
-            })}`
-          );
+            })}`)
           return
       }
       window.open(
-        `http://192.168.31.7/#/part-cloud-disk/index/${row.attaPath}/${
+        `/api/gwt/part-cloud-disk/index/${row.attaPath}/${
           row.originalName
         }`
       );
@@ -405,7 +401,6 @@ export default {
       for (var i = 0; i < e.length; i++) {
         if (e[i].type === "file") {
           this.fileIds.push(e[i].fileId);
-          console.log(e[i].fileId);
           this.sigle_fileid = e[i].fileId
         } else {
           this.dirIds.push(e[i].dirId);

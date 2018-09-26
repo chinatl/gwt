@@ -395,7 +395,6 @@ export default {
           "json"
         )
           .then(res => {
-            console.log(res.deptCloudiskPageBean.datas.createUser);
             if (res.result === "0000") {
               this.get_deptCloudisk(this.pageSize, this.pageNo);
               this.$message({
