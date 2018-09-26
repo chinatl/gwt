@@ -137,6 +137,7 @@ export default {
             "public-notice/forwarded/total",
             res.data.tbNoticeForwardPageBean.totalCount
           );
+          this.total = parseInt(res.data.tbNoticeForwardPageBean.totalCount)
         })
         .catch(res => {
           this.loading = false;
