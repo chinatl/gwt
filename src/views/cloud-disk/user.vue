@@ -285,8 +285,8 @@ export default {
         //   console.log(parseInt(this.sigle_fileid))
           var object = Base64.encode(JSON.stringify(sigle_data));
           var sign = md5(object + this.$store.getters.sign);
-          this.$post(
-            `gwt/cloudisk/cloudiskAttachment/sigleFileDownload?${qs.stringify({
+          window.open(
+            `/gwt/cloudisk/cloudiskAttachment/sigleFileDownload?${qs.stringify({
               object,
               sign,
               token: this.$store.getters.token
@@ -297,7 +297,7 @@ export default {
           var object = Base64.encode(JSON.stringify(data));
           var sign = md5(object + this.$store.getters.sign);
           window.open(
-            `gwt/cloudisk/cloudiskAttachment/BatchDownload?${qs.stringify({
+            `/gwt/cloudisk/cloudiskAttachment/BatchDownload?${qs.stringify({
               object,
               sign,
               token: this.$store.getters.token
@@ -378,8 +378,8 @@ export default {
           }
           var object = Base64.encode(JSON.stringify(sigle_data));
           var sign = md5(object + this.$store.getters.sign);
-          this.$post(
-            `gwt/cloudisk/cloudiskAttachment/sigleFileDownload?${qs.stringify({
+          window.open(
+            `/gwt/cloudisk/cloudiskAttachment/sigleFileDownload?${qs.stringify({
               object,
               sign,
               token: this.$store.getters.token
@@ -388,7 +388,7 @@ export default {
           return
       }
       window.open(
-        `http://192.168.31.7/#/part-cloud-disk/index/${row.attaPath}/${
+        `/${row.attaPath}/${
           row.originalName
         }`
       );

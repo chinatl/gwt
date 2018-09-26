@@ -174,7 +174,7 @@ export default {
       originalName: "",
       input: "",
       attaPath: "",
-      createId:""
+      createId:[]
     };
   },
   computed: {
@@ -350,7 +350,7 @@ export default {
     },
     //删除
     delete_btn() {
-      if(parseInt(this.current_user.id) !== this.createId){
+      if(parseInt(this.current_user.id) !== this.createId && this.createId.includes(parseInt(this.current_user.id))){
             this.$swal({
               title: "提示信息！",
               text: "您没有权限删除此文件",
@@ -550,12 +550,14 @@ export default {
       this.select_list = e;
       this.fileIds = [];
       this.dirIds = [];
+      this.createId = [];
       for (var i = 0; i < e.length; i++) {
         if (e[i].type === "file") {
           this.fileIds.push(e[i].fileId);
-          console.log(e[i].fileId);
+          // console.log(e[i].fileId);
           this.originalName = e[i].originalName;
-          this.createId = e[i].createUser
+          this.createId.push(e[i].createUser)
+          // console.log(this.fileIds)
         } else {
           this.dirIds.push(e[i].dirId);
         }
