@@ -136,7 +136,7 @@ export default {
     },
     handleNodeClick() {},
     onSubmit() {
-      this.$emit("submit", this.checkedKeys);
+      this.$emit("submit", this.has_checked_item);
     },
     cancel() {
       this.$emit("close");

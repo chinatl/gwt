@@ -10,7 +10,7 @@ import part from './modules/part'
 
 import getters from './getters'
 import { setItem, getItem } from '@/utils/auth'
-import { SET_USER_INFO, SET_USER_SIGN, SET_USER_TOKEN, SET_FIELD_MANAGER_DATA, SET_FIELD_APP_LIST, SET_TREE_DATE, SET_SILDER_LIST, SET_IS_ADMIN } from './mutations'
+import { SET_GROUP_LIST, SET_USER_INFO, SET_USER_SIGN, SET_USER_TOKEN, SET_FIELD_MANAGER_DATA, SET_FIELD_APP_LIST, SET_TREE_DATE, SET_SILDER_LIST, SET_IS_ADMIN } from './mutations'
 Vue.use(Vuex);
 import { post } from '@/utils/fetch'
 const store = new Vuex.Store({
@@ -41,9 +41,15 @@ const store = new Vuex.Store({
     field_app_list: [],
     tree_data: [],
     slierbar_list: [],
-    is_admin: false
+    group_list: [],
+    is_admin: false,
+    is_permisssion: false
   },
   mutations: {
+    [SET_GROUP_LIST](state, data) {
+      state.group_list = data;
+      setItem(SET_GROUP_LIST, data)
+    },
     [SET_FIELD_MANAGER_DATA](state, data) {
       state.field_manager_data = data;
       setItem(SET_FIELD_MANAGER_DATA, data)
@@ -98,6 +104,16 @@ const store = new Vuex.Store({
     }
   },
   actions: {
+    get_user_send_permission({ state }) {
+      post('gwt/notice/tbNotice/checkPermission', {}, 'json').then(res => {
+        if (res.result !== '0000') {
+          return
+        }
+        state.is_permisssion = res.data.permission;
+      }).catch(res => {
+        console.log(res)
+      })
+    },
     readSession: ({
       commit
     }, key) => {
@@ -113,7 +129,6 @@ const store = new Vuex.Store({
         if (res.result !== '0000') {
           return
         };
-        console.log(res.data.appList.map(res=>res.isActive))
         commit(SET_FIELD_APP_LIST, res.data.appList)
       }).catch(res => {
         console.log(res)

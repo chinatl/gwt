@@ -27,7 +27,6 @@
                     </template>
                 </el-table-column>
                 <el-table-column
-                prop="remark"
                 align="center"
                 show-overflow-tooltip
                 label="角色描述">
@@ -65,25 +64,25 @@
             </el-pagination>
         </div>
         <!-- 角色新增弹出框 -->
-            <el-dialog :close-on-click-modal='false'
-            :title="role_type === 'add' ? '新增角色':'编辑角色'"
-            class="common-dialog padding0"
-            v-drag
-            :visible.sync="role_visible">
-            <el-form ref="form" :model="form" label-width="80px" :rules="rules"  v-loading='form_loading'>
-                <el-form-item label="角色名称" prop='roleName' maxlength='10'>
-                    <el-input v-model="form.roleName" size="small"></el-input>
-                </el-form-item>
-                <el-form-item :label="item.appName" v-for="(item,index) in checked_list" :key="index +'00'">
-                    <el-checkbox-group v-model="item.checked">
-                        <el-checkbox :label="item_check.resId" :name="item_check.appId" v-for="(item_check,index_check) in item.children" :key="index_check">{{item_check.resName}}</el-checkbox>
-                    </el-checkbox-group>
-                </el-form-item>
-                <el-form-item label="角色描述" prop="remark">
-                        <el-input type="textarea" v-model="form.remark" :autosize="{ minRows: 4, maxRows: 6}"></el-input>
-                </el-form-item>
-                <form-button @cancel='onCancel' @submit="onSubmit"></form-button>
-            </el-form>
+        <el-dialog :close-on-click-modal='false'
+          :title="role_type === 'add' ? '新增角色':'编辑角色'"
+          class="common-dialog padding0"
+          v-drag
+          :visible.sync="role_visible">
+          <el-form ref="form" :model="form" label-width="80px" :rules="rules"  v-loading='form_loading'>
+              <el-form-item label="角色名称" prop='roleName' maxlength='10'>
+                  <el-input v-model="form.roleName" size="small"></el-input>
+              </el-form-item>
+              <el-form-item :label="item.appName" v-for="(item,index) in checked_list" :key="index +'00'">
+                  <el-checkbox-group v-model="item.checked">
+                      <el-checkbox :label="item_check.resId" :name="item_check.appId" v-for="(item_check,index_check) in item.children" :key="index_check">{{item_check.resName}}</el-checkbox>
+                  </el-checkbox-group>
+              </el-form-item>
+              <el-form-item label="角色描述">
+                      <el-input type="textarea" v-model="form.remark" :autosize="{ minRows: 4, maxRows: 6}"></el-input>
+              </el-form-item>
+              <form-button @cancel='onCancel' @submit="onSubmit"></form-button>
+          </el-form>
         </el-dialog>
     </div>
     <div v-else>
@@ -100,6 +99,7 @@
                   node-key="id"
                   :filter-node-method="filterNode"
                   ref="tree"
+                  :default-expanded-keys="expand_arr"
                   @node-click="handleNodeClick"
                   :highlight-current= 'true'
                   :props="defaultProps">
@@ -175,7 +175,7 @@
                         :label="item_check.resId" :name="item_check.appId" v-for="(item_check,index_check) in item.children" :key="index_check">{{item_check.resName}}</el-checkbox>
                     </el-checkbox-group>
                 </el-form-item>
-                <el-form-item label="角色描述" prop="remark">
+                <el-form-item label="角色描述">
                         <el-input type="textarea" v-model="form.remark" :autosize="{ minRows: 4, maxRows: 6}" :readonly='role_type === "update"'></el-input>
                 </el-form-item>
                 <form-button @cancel='onCancel' @submit="onSubmit" v-if="is_admin || role_type=== 'add'"></form-button>
@@ -245,7 +245,8 @@ export default {
       add_dialog: false,
       dialog_loading: false,
       form_data: {},
-      user_list: []
+      user_list: [],
+      expand_arr:[]
     };
   },
   created() {
@@ -257,11 +258,10 @@ export default {
     var pageSize = localStorage.getItem("user-manager/role/pageSize");
     this.pageSize = pageSize ? pageSize - 0 : 5;
 
+    this.get_all_resource();
     if (this.is_admin) {
-      this.get_all_resource();
       this.init(this.pageSize, this.pageNo);
     } else {
-      this.get_all_resource();
       this.get_user_tree_data();
     }
   },
@@ -270,7 +270,7 @@ export default {
     sessionStorage.removeItem("user-manager/role/total");
   },
   computed: {
-    ...mapGetters(["is_admin"])
+    ...mapGetters(["is_admin","group_list",'user_info'])
   },
   watch: {
     filterText(val) {
@@ -385,10 +385,21 @@ export default {
     },
     //点击左边树事件
     handleNodeClick(data) {
+      if (
+        !this.is_admin &&
+        !this.group_list.map(res => res.orgId).includes(data.id)
+      ) {
+        this.$message({
+          message: "您没有操作权限！",
+          type: "warning",
+          showClose: true
+        });
+        return;
+      }
       this.current = 0;
       this.temp_data = data;
-      this.search_user_by_part(data.id);
       this.pageNo = 1;
+      this.search_user_by_part(data.id);
       this.search_role_by_part(this.pageSize, 1);
     },
     //获取部门树数据
@@ -399,17 +410,26 @@ export default {
             return;
           }
           this.tree_data = generate_tree(res.data.nodes);
-          if (this.tree_data.length) {
-            this.temp_data = this.tree_data[0];
-            this.search_role_by_part(this.pageSize, this.pageNo);
-          }
+            this.expand_arr = [this.user_info.sysOrgUserX.orgId];
+            this.temp_data = JSON.parse(
+              JSON.stringify(this.user_info.sysOrgUserX)
+            );
+            this.temp_data.id = this.temp_data.orgId;
+            this.temp_data.name = this.temp_data.orgAllName;
+            this.handleNodeClick(this.temp_data);
         })
         .catch(res => {
           console.log(res);
         });
     },
     get_all_resource() {
-      this.$post("gwt/system/sysRoleRes/getRoleResList")
+      var url;
+      if (this.is_admin) {
+        url = "gwt/system/sysRoleRes/getRoleResList";
+      } else {
+        url = "gwt/system/sysRoleRes/getRoleResListforOrg";
+      }
+      this.$post(url, {}, "json")
         .then(res => {
           if (res.result !== "0000") {
             return;

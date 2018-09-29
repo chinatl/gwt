@@ -142,6 +142,7 @@ export default {
       "json"
     )
       .then(res => {
+        console.log(res.data.nodes)
         if (res.result !== "0000") {
           return;
         }

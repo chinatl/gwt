@@ -70,3 +70,14 @@ export function validatePhone(rule, value, callback) {
     }
   }
 }
+export function validatePassword(rule, value, callback) {
+  if (value === "") {
+    callback(new Error("请输入密码"));
+  } else {
+    if (!/^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{8,16}$/.test(value)) {
+      callback("请输入8位以上，字母与数字组合的新密码");
+    } else {
+      callback();
+    }
+  }
+}

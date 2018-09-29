@@ -1,6 +1,6 @@
 <template>
     <div class="common">
-        <t-title title="通知维护"></t-title>
+        <t-title :title="is_del ?'已删除通知':'通知维护'"></t-title>
         <div class="common-action">
             <div>
                 <el-select v-model="noticeType" size="medium" style="margin-right:8px;" @change="condition">
@@ -22,12 +22,12 @@
                 </el-date-picker>
                 <el-input v-model="Q_noticeTitle_SL" placeholder="请输入标题" style="width:200px" size='medium'></el-input>
                 <el-button type="primary" icon="el-icon-search" size='medium' v-wave @click="condition">搜索</el-button>
-                <el-button type="warning" icon="el-icon-circle-close" size='medium' v-wave @click="ndel_list" v-show="is_ndel">已删除通知</el-button>
-                <el-button type="primary" icon="el-icon-circle-close" size='medium' v-wave @click="ydel_list" v-show="is_ydel">全部删除通知</el-button>
+                <el-button type="warning" icon="el-icon-circle-close" size='medium' v-wave @click="ndel_list" v-if="!is_del">已删除通知</el-button>
+                <el-button type="primary" size='medium' v-wave @click="ndel_list" v-else>全部通知</el-button>
             </div>
         </div>
         <div class="common-table">
-            <el-table  :data="tableData" border style="width: 100%" v-show="is_ndel">
+            <el-table  :data="tableData" border style="width: 100%" v-show="!is_del">
                 <el-table-column align="center" prop='noticeTypeName' label="通知类型"></el-table-column>
                 <el-table-column align="center" prop='noticeTitle' label="通知标题">
                   <template slot-scope="scope">
@@ -35,11 +35,12 @@
                   </template>
                 </el-table-column>
                 <el-table-column align="center" prop='userName' label="发布人"></el-table-column>
-                <el-table-column  align="center" prop='updateTime' label="发布时间"></el-table-column>
+                <el-table-column  align="center" prop='createTime' label="发布时间"></el-table-column>
                 <el-table-column prop="name"
                 label="操作"
                 align="center"
                 width='120'
+                v-show='!is_del'
                 >
                  <template slot-scope="scope">
                     <el-button
@@ -50,47 +51,29 @@
                 </template>
                 </el-table-column>
             </el-table>
-            <el-table  :data="tableData" border style="width: 100%" v-show="is_ydel">
+            <el-table  :data="tableData" border style="width: 100%" v-show="is_del">
                 <el-table-column align="center" prop='noticeTypeName' label="通知类型"></el-table-column>
-                <el-table-column align="center" label="通知标题">
-                  <template slot-scope="scope">
-                    <span class="href" @click="get_active_desc(scope.row)">{{scope.row.noticeTitle}}</span>
-                  </template>
-                </el-table-column>
+                <el-table-column align="center" prop='noticeTitle' label="通知标题"></el-table-column>
                 <el-table-column align="center" prop='userName' label="发布人"></el-table-column>
                 <el-table-column  align="center" prop='createTime' label="发布时间"></el-table-column>
                 <el-table-column  align="center" prop='updateUserName' label="删除人"></el-table-column>
                 <el-table-column  align="center" prop='updateTime' label="删除时间"></el-table-column>
                 <el-table-column  align="center" prop='deleteReason' label="删除理由"></el-table-column>
-                
             </el-table>
         </div>
-        <div class="common-page" v-show="is_ndel">
+        <div class="common-page">
             <el-pagination
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
             :current-page="pageNo"
-            :page-sizes="[10, 20, 30, 40]"
+            :page-sizes="$store.getters.page_list"
             :page-size="pageSize"
             layout="total, sizes, prev, pager, next, jumper"
             background
             :total="total">
             </el-pagination>
-         
         </div>
-        <div class="common-page" v-show="is_ydel">
-            <el-pagination
-            @size-change="handleSizeChange"
-            @current-change="handleCurrentChange"
-            :current-page="pageNo"
-            :page-sizes="[10, 20, 30, 40]"
-            :page-size="pageSize"
-            layout="total, sizes, prev, pager, next, jumper"
-            background
-            :total="delCount">
-            </el-pagination>
-         
-        </div>
+     
     </div>
 </template>
 <script>
@@ -111,10 +94,8 @@ export default {
       tableData: [],
       is_org: "",
       totalCount: "",
-      userid: "",
-      is_ndel: true,
-      is_ydel: false,
-      delCount: 0 //删除总条数
+      delCount: 0, //删除总条数,
+      is_del: false
     };
   },
   created() {
@@ -125,8 +106,6 @@ export default {
     this.pageNo = pageNo ? pageNo - 0 : 1;
     var pageSize = localStorage.getItem("public-notice/maintain/pageSize");
     this.pageSize = pageSize ? pageSize - 0 : 10;
-    this.is_currentorg();
-    this.init_user();
     this.init(this.pageSize, this.pageNo);
   },
   computed: {
@@ -134,6 +113,8 @@ export default {
   },
   beforeDestroy() {
     this.$store.commit("DEL_VIEW_BY_NAME", "通知维护");
+    sessionStorage.removeItem("public-notice/maintain/pageNo");
+    sessionStorage.removeItem("public-notice/maintain/total");
   },
   methods: {
     get_active_desc(item) {
@@ -150,29 +131,17 @@ export default {
       sessionStorage.setItem("public-notice/maintain/pageNo", 1);
       this.init(this.pageSize, 1);
     },
-    init_user() {
-      this.$post(`gwt/getCurrentOrgUser`, {}, "json").then(res => {
-        if (res.result !== "0000") {
-          return;
-        }
-        this.userid = res.data.hashMap.id;
-      });
-    },
-    is_currentorg() {
-      this.$post(`gwt/isCurrentOrgManager`, {}, "json").then(res => {
-        console.log(res);
-        if (res.result !== "0000") {
-          return;
-        }
-        this.is_org = res.data.hashMap;
-      });
-    },
-
     //初始化数据列表
     init(pageSize, pageNo) {
       this.loading = true;
+      var url;
+      if (this.is_del) {
+        url = "gwt/notice/tbNoticeMaintenance/getNoticeDeleteList";
+      } else {
+        url = "gwt/notice/tbNoticeMaintenance/list";
+      }
       this.$post(
-        `gwt/notice/tbNoticeMaintenance/list?${qs.stringify({
+        `${url}?${qs.stringify({
           currentPage: pageNo,
           pageSize: pageSize
         })}`,
@@ -186,16 +155,25 @@ export default {
         "json"
       )
         .then(res => {
-          console.log(res);
           this.loading = false;
           if (res.result !== "0000") {
             return;
           }
-          this.tableData = res.data.tbNoticeMaintenancePageBean.datas || [];
-          sessionStorage.setItem(
-            "public-notice/maintain/total",
-            res.data.tbNoticeMaintenancePageBean.totalCount
-          );
+          if (this.is_del) {
+            this.tableData = res.data.noticeDeletePageBean.datas || [];
+            this.total = res.data.noticeDeletePageBean.totalCount - 0;
+            sessionStorage.setItem(
+              "public-notice/maintain/total",
+              res.data.noticeDeletePageBean.totalCount
+            );
+          } else {
+            this.tableData = res.data.tbNoticeMaintenancePageBean.datas || [];
+            this.total = res.data.tbNoticeMaintenancePageBean.totalCount - 0;
+            sessionStorage.setItem(
+              "public-notice/maintain/total",
+              res.data.tbNoticeMaintenancePageBean.totalCount
+            );
+          }
         })
         .catch(res => {
           this.loading = false;
@@ -203,69 +181,19 @@ export default {
         });
     },
     //获取已删除的通知
-    get_delNotice(pageSize, pageNo) {
-      this.loading = true;
-      this.$post(
-        `gwt/notice/tbNoticeMaintenance/getNoticeDeleteList?${qs.stringify({
-          currentPage: 1,
-          pageSize: 10
-        })}`,
-        {
-          account: this.noticeType == 0 ? 0 : this.noticeType,
-          noticeType: this.noticeType,
-          begincreateTime: this.date[0],
-          endcreateTime: this.date[1],
-          noticeTitle: this.Q_noticeTitle_SL
-        },
-        "json"
-      )
-        .then(res => {
-          console.log(res);
-          this.loading = false;
-          if (res.result !== "0000") {
-            return;
-          }
-          this.tableData = res.data.noticeDeletePageBean.datas;
-          //   sessionStorage.setItem(
-          //     "public-notice/maintain/total",
-          //     res.data.tbNoticeMaintenancePageBean.totalCount
-          //   );
-          this.delCount = parseInt(res.data.noticeDeletePageBean.totalCount);
-          console.log(this.delCount);
-        })
-        .catch(res => {
-          this.loading = false;
-          console.log(res);
-        });
-    },
+
     handleSizeChange(e) {
-      console.log(e);
       localStorage.setItem("public-notice/maintain/pageSize", e);
       this.pageNo = 1;
       this.pageSize = e;
       this.init(e, 1);
-      this.get_delNotice(e, 1);
     },
     handleCurrentChange(e) {
       sessionStorage.setItem("public-notice/maintain/pageNo", e);
       this.pageNo = e;
       this.init(this.pageSize, e);
-      this.get_delNotice(e, 1);
     },
-    handleEdit(index, item) {},
     handleDelete(row) {
-      console.log(row);
-      if (this.is_org !== true) {
-        this.$swal({
-          title: "提示信息！",
-          text: "您无权删除通知！",
-          type: "warning",
-          confirmButtonColor: "#DD6B55",
-          confirmButtonText: "确定",
-          showConfirmButton: true
-        });
-        // return;
-      }
       this.$swal({
         confirmButtonText: "确定",
         showCancelButton: true,
@@ -279,7 +207,6 @@ export default {
           return !value && "请输入删除原因，此为必填项！";
         }
       }).then(res => {
-        console.log(res);
         if (res.value) {
           this.$post(
             `gwt/notice/tbNoticeMaintenance/del`,
@@ -290,7 +217,6 @@ export default {
             },
             "json"
           ).then(res => {
-            console.log(res);
             if (res.result !== "0000") {
               return;
             }
@@ -298,24 +224,16 @@ export default {
               type: "success",
               message: "删除成功"
             });
-            this.init(this.pageSize, 1);
+            this.init(this.pageSize, this.pageNo);
           });
         }
       });
     },
     //删除通知列表
     ndel_list() {
-      this.is_ndel = !this.is_ndel;
-      this.is_ydel = !this.is_ydel;
-      this.get_delNotice(this.pageSize, 1);
-    },
-    ydel_list() {
-      this.is_ndel = !this.is_ndel;
-      this.is_ydel = !this.is_ydel;
+      this.is_del = !this.is_del;
+      this.pageNo = 1;
       this.init(this.pageSize, 1);
-    },
-    pickerOptions(e) {
-      console.log(e);
     }
   }
 };

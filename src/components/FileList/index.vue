@@ -2,7 +2,7 @@
 <div class="cnclosure-area" v-if="list.length">
     <div class="cnclosure-list" v-for='(item,index) in list' :key="index">
         <div class="file-logo">
-            <img :src="item.url" v-if="get_svg_name(item.suffix) === 'photo'">
+            <img :src="item.url || item.fullAttaPath" v-if="get_svg_name(item.suffix) === 'photo'">
             <svg-icon :icon-class='get_svg_name(item.suffix)' v-else></svg-icon>
         </div>
         <div class="file-name">{{item.originalName}}</div>
@@ -107,6 +107,8 @@ export default {
         color: #000;
         padding-left: 12px;
         font-size: 12px;
+        text-overflow:ellipsis;
+        overflow: hidden;
       }
       .cnclosure-mask-action {
         height: 32px;

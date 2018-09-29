@@ -12,6 +12,7 @@
                 node-key="id"
                 :filter-node-method="filterNode"
                 ref="tree"
+                :default-expanded-keys="expand_arr"
                  @node-click="handleNodeClick"
                 :highlight-current= 'true'
                 :props="defaultProps">
@@ -45,7 +46,7 @@
                     <span class="blod">{{userAndOrgList.map(res=>{
                       return  res.REAL_NAME
                       }).join('、')}}</span>
-                      <span style="margin-left:20px" v-if="temp_data.nodeType !== 'REGION'"><el-button size="small" type="success" icon="el-icon-plus" @click="open_user_dialog">添加</el-button></span>
+                      <span style="margin-left:20px" v-if="temp_data.nodeType === 'ORG'"><el-button size="small" type="success" icon="el-icon-plus" @click="open_user_dialog">添加</el-button></span>
                 </p>
                 <p>
                     <span class="span1">部门地址：</span>
@@ -103,7 +104,8 @@
                     width="60"
                     label="性别">
                     <template slot-scope='scope'>
-                        {{scope.row.sex === '1' ? "男":"女"}}
+                        {{scope.row.sex === '1' ? "男" : null}}
+                        {{scope.row.sex === '0' ? "女" : null}}
                     </template>
                     </el-table-column>
                     <el-table-column
@@ -177,15 +179,14 @@
                     width="60"
                     label="性别">
                     <template slot-scope='scope'>
-                        {{scope.row.sex === '1' ? "男":"女"}}
+                        {{scope.row.sex === '1' ? "男" : null}}
+                        {{scope.row.sex === '0' ? "女" : null}}
                     </template>
                     </el-table-column>
                     <el-table-column
+                    prop="userLevelName"
                     align="center"
                     label="人员级别">
-                     <template slot-scope='scope'>
-                        {{scope.row.sysOrgUserX.userLevelName}}
-                    </template>
                     </el-table-column>
                     <el-table-column
                     prop="mobilePhone"
@@ -194,10 +195,8 @@
                     </el-table-column>
                     <el-table-column
                     align="center"
+                    prop="phone"
                     label="固定电话">
-                      <template slot-scope='scope'>
-                        {{scope.row.sysOrgUserX.phone}}
-                      </template>
                     </el-table-column>
                     <el-table-column
                     label="操作"
@@ -239,13 +238,13 @@
                 <el-input v-model="form.userName" size="small" disabled></el-input>
             </el-form-item>
             <el-form-item label="手机号码" prop='mobilePhone'>
-                <el-input v-model="form.mobilePhone" size="small"></el-input>
+                <el-input v-model="form.mobilePhone" size="small" @blur="select_has_same_user" :disabled="can_edit"></el-input>
             </el-form-item>
             <el-form-item label="姓名" prop='realName'>
-                <el-input v-model="form.realName" size="small"></el-input>
+                <el-input v-model="form.realName" size="small" :disabled="can_edit"></el-input>
             </el-form-item>
             <el-form-item label="性别" prop="sex">
-                <el-select v-model="form.sex" placeholder="请选择性别" size="small" style="width:100%">
+                <el-select v-model="form.sex" placeholder="请选择性别" size="small" style="width:100%" :disabled="can_edit">
                     <el-option label="男" value="1"></el-option>
                     <el-option label="女" value="0"></el-option>
                 </el-select>
@@ -259,7 +258,7 @@
                 </el-select>
             </el-form-item>
             <el-form-item label="角色">
-                <el-select v-model="form.roleIds" placeholder="请选择"  multiple size="small" style="width:100%">
+                <el-select v-model="form.roleIds" placeholder="请选择"  multiple size="small" style="width:100%"  filterable>
                   <el-option v-for='(item,index) in role_list' :key="index + '0000'" :label="item.roleName" :value="item.roleId"></el-option>
               </el-select>
             </el-form-item>
@@ -334,7 +333,7 @@ export default {
         realName: [{ required: true, message: "请输入姓名", trigger: "blur" }],
         part: [{ required: true, message: "请输入活动名称", trigger: "blur" }],
         userLevel: [
-          { required: true, message: "请选择人员级别", trigger: "blur" }
+          { required: true, message: "请选择人员级别", trigger: "change" }
         ],
         sex: [{ required: true, message: "请选择性别", trigger: "blur" }]
       },
@@ -354,7 +353,9 @@ export default {
       userAndOrgList: [],
       user_and_orgList: [],
       select_arr: ["用户管理", "停用用户"],
-      current: 0
+      current: 0,
+      can_edit: false,
+      expand_arr: []
     };
   },
   watch: {
@@ -370,11 +371,71 @@ export default {
     this.pageSize = pageSize ? pageSize - 0 : 5;
   },
   computed: {
-    ...mapGetters(["is_admin"])
+    ...mapGetters(["is_admin", "group_list", "user_info"])
   },
   methods: {
+    select_has_same_user(e) {
+      if (this.user_type === "update") {
+        return;
+      }
+      this.$post(
+        "gwt/system/sysUser/checkUserExits",
+        {
+          mobilePhone: e.target.value,
+          orgId: this.temp_data.id
+        },
+        "json"
+      )
+        .then(response => {
+          if (response.result !== "0000") {
+            return;
+          }
+          if (response.data.hasUser) {
+            this.$refs.form.resetFields();
+            this.$message({
+              message: "该部门已存在此用户,请重新输入",
+              type: "warning"
+            });
+            return;
+          }
+          if (response.data.orgInfo) {
+            this.$swal({
+              title: "提示信息",
+              text: `在${
+                response.data.orgInfo.orgName
+              }下存在该用户，是否为同一人?`,
+              type: "info",
+              showCancelButton: true,
+              // confirmButtonColor: "#DD6B55",
+              confirmButtonText: "确定",
+              cancelButtonText: "取消",
+              confirmButtonClass: "btn btn-success"
+            }).then(res => {
+              if (res.value) {
+                this.$message({
+                  message: "用户数据载入成功！",
+                  type: "success"
+                });
+                this.can_edit = true;
+                this.$refs.form.resetFields();
+                this.form.mobilePhone = response.data.userInfo.mobilePhone;
+                this.form.userName = response.data.userInfo.userName;
+                this.form.realName = response.data.userInfo.realName;
+                this.form.sex = response.data.userInfo.sex;
+                this.form.userId = response.data.userInfo.userId;
+                this.form.id = response.data.userInfo.id;
+              } else {
+                this.$refs.form.resetFields();
+                this.form.mobilePhone = "";
+              }
+            });
+          }
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
     //查询用户管理部门配置
-
     get_tree_data() {
       var url = "gwt/system/sysOrg/getAreaOrgTreeData";
       if (!this.is_admin) {
@@ -395,10 +456,12 @@ export default {
             this.tree_data = res.data.nodes;
           } else {
             this.tree_data = generate_tree(res.data.nodes);
-          }
-          if (this.tree_data.length) {
-            this.temp_data = this.tree_data[0];
-            this.handleNodeClick(this.tree_data[0]);
+            this.expand_arr = [this.user_info.sysOrgUserX.orgId];
+            this.temp_data = JSON.parse(
+              JSON.stringify(this.user_info.sysOrgUserX)
+            );
+            this.temp_data.id = this.temp_data.orgId;
+            this.handleNodeClick(this.temp_data)
           }
         })
         .catch(res => {
@@ -411,6 +474,7 @@ export default {
       console.log(this.add_dialog);
     },
     submit_add_user(list) {
+      this.can_edit = false;
       if (list.length === 0) {
         this.$message({
           message: "部门管理员不能为空！",
@@ -518,7 +582,17 @@ export default {
     },
     //点击左边部门
     handleNodeClick(data) {
-      console.log(data)
+      if (
+        !this.is_admin &&
+        !this.group_list.map(res => res.orgId).includes(data.id)
+      ) {
+        this.$message({
+          message: "您没有操作权限！",
+          type: "warning",
+          showClose: true
+        });
+        return;
+      }
       this.temp_data = data;
       if (data.id.includes("region")) {
         this.orgInfo.orgAllName = "系统管理员";
@@ -550,7 +624,6 @@ export default {
       this.search_user_list(this.pageSize, 1);
     },
     check_user_use(index) {
-      console.log(index);
       if (this.current === index) {
         return;
       }
@@ -644,7 +717,7 @@ export default {
                 return;
               }
               this.$message({
-                message: "启用成功",
+                message: "启用用户成功！",
                 type: "success"
               });
               _this.search_user_list(_this.pageSize, _this.pageNo);
@@ -697,7 +770,7 @@ export default {
                 return;
               }
               this.$message({
-                message: "启用成功",
+                message: "停用用户成功！",
                 type: "success"
               });
               _this.search_user_list(_this.pageSize, _this.pageNo);
@@ -765,13 +838,13 @@ export default {
       this.search_user_list(this.pageSize, e);
     },
     edit_user(item) {
-      console.log(JSON.stringify(item, {}, 4));
+      this.can_edit = false;
       this.user_visible = true;
       this.user_type = "update";
       this.form.userName = item.userName;
       this.form.mobilePhone = item.mobilePhone;
       this.form.realName = item.realName;
-      this.form.sex = item.sex;
+      this.form.sex = item.sex + "";
       this.form.realName = item.realName;
       this.form.remark = item.sysOrgUserX.remark;
       this.form.phone = item.sysOrgUserX.phone;
@@ -834,6 +907,11 @@ export default {
           id = this.form.id;
           message = "更新用户成功!";
           orgId = this.form.orgId;
+        } else {
+          if (this.can_edit) {
+            userId = this.form.userId;
+            // id = this.form.id;
+          }
         }
         this.dialog_loading = true;
         this.$post(

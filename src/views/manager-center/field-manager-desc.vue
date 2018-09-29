@@ -557,7 +557,6 @@ export default {
     },
     //提交 添加部门
     submit_part(checkedKeys) {
-      console.log(checkedKeys);
       this.loading = true;
       var url = "";
       var groupId = "";
@@ -570,11 +569,7 @@ export default {
       this.$post(
         url,
         {
-          ids: checkedKeys
-            .filter(res => {
-              return res.includes("region") === false;
-            })
-            .join(","),
+          ids: checkedKeys.map(res => res.id).join(","),
           domainId: this.field_manager_data.domainId,
           groupId
         },
@@ -585,6 +580,7 @@ export default {
           if (action_fail(res, "添加部门成功")) return;
           this.init(this.pageSize, this.pageNo);
           this.part_visible = false;
+          this.search_group_list();
         })
         .catch(res => {
           this.loading = false;

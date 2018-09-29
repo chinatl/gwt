@@ -111,9 +111,9 @@ export const constantRouterMap = [
     children: [
       {
         path: 'index',
-        name: '材料详情',
+        name: '材料征集详情',
         component: () => import('@/views/desc/stuff'),
-        meta: { title: '材料详情' },
+        meta: { title: '材料征集详情' },
       }
     ]
   },
@@ -123,9 +123,9 @@ export const constantRouterMap = [
     children: [
       {
         path: 'index',
-        name: '会议详情',
+        name: '会议通知详情',
         component: () => import('@/views/desc/meeting'),
-        meta: { title: '会议详情' },
+        meta: { title: '会议通知详情' },
       }
     ]
   },
@@ -150,6 +150,18 @@ export const constantRouterMap = [
         name: '转发通知',
         component: () => import('@/views/desc/forward-notice'),
         meta: { title: '转发通知'  },
+      }
+    ]
+  },
+  {
+    path: '/file-desc',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        name: '文件举报详情',
+        component: () => import('@/views/desc/file'),
+        meta: { title: '文件举报详情'  },
       }
     ]
   },
@@ -189,10 +201,9 @@ export const constantRouterMap = [
     children: [
       {
         path: 'index',
-        name: '详情',
         name: '举报详情描述',
         component: () => import('@/views/my-message/report-desc'),
-        meta: { title: '详情列表', icon: '消息', up: true },
+        meta: { title: '举报详情', up: true },
       }
     ]
   },
@@ -359,9 +370,9 @@ export const constantRouterMap = [
     children: [
       {
         path: 'index',
-        name: '草稿编辑',
+        name: '通知编辑',
         component: () => import('@/views/public-notice/re-drafts'),
-        meta: { title: '草稿编辑' }
+        meta: { title: '通知编辑' }
       }
     ]
   },

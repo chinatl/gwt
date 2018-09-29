@@ -28,17 +28,30 @@ export default {
     size: {
       default: "small",
       type: String
+    },
+    pan: {
+      default: false,
+      type: Boolean
     }
   },
   methods: {
     upload_img(e) {
-      console.log(e);
-      if (e.size / 1024 / 1024 > 20) {
-        this.$message({
-          message: "请上传20M以内的文件",
-          type: "error"
-        });
-        return;
+      if (this.pan) {
+        if (e.size / 1024 / 1024 > 100) {
+          this.$message({
+            message: "请上传100M以内的文件",
+            type: "error"
+          });
+          return;
+        }
+      } else {
+        if (e.size / 1024 / 1024 > 20) {
+          this.$message({
+            message: "请上传20M以内的文件",
+            type: "error"
+          });
+          return;
+        }
       }
       if (fileType(e.name) === "unknown") {
         this.$message({

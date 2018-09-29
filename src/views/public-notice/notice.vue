@@ -6,7 +6,7 @@
                     <el-form-item label="标题" prop='noticeTitle'>
                         <el-input v-model="form.noticeTitle" size="small" maxlength="50"></el-input>
                     </el-form-item>
-                    <el-form-item label="接收部门">
+                    <el-form-item label="接收部门" v-if="is_permisssion">
                         <div class="flex">
                             <el-input v-model="form.part" size="small" placeholder="请选择接收部门" readonly></el-input>
                             <add-user-button @click="yield_dialog= true">选择部门</add-user-button>
@@ -92,6 +92,12 @@ export default {
       yield_dialog: false, //部门管理弹窗
       dialog: false
     };
+  },
+  beforeDestroy() {
+    this.$store.commit("DEL_VIEW_BY_NAME", "创建会议");
+  },
+  created() {
+    this.$store.dispatch("get_user_send_permission");
   },
   beforeDestroy() {
     this.$store.commit("DEL_VIEW_BY_NAME", "创建通知");
@@ -270,9 +276,7 @@ export default {
           noticeProfile: this.form.noticeProfile,
           startTime: parseTime(this.form.startTime, "{y}-{m}-{d} {h}:{i}:{s}"),
           endTime: "",
-          selectedUsers: this.has_select_user_list
-            .map(res => res.ID)
-            .join(","),
+          selectedUsers: this.has_select_user_list.map(res => res.ID).join(","),
           attrArray: this.file_list.map(res => res.id).join(","),
           orgArray: this.has_select_part_list
             .map(res => res.id.replace(/\D*/g, ""))

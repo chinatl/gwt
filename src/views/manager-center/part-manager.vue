@@ -117,7 +117,7 @@
     <el-input v-model="temp_data.name" size="small" readonly></el-input>
 </el-form-item>
 <el-form-item label="部门名称" prop='orgName'>
-    <el-input v-model="form.orgName" size="small" maxlength="10"></el-input>
+    <el-input v-model="form.orgName" size="small" maxlength="10" @blur="add_part_all_name"></el-input>
 </el-form-item>
 <el-form-item label="部门全称" prop="orgAllName">
     <el-input v-model="form.orgAllName" size="small"></el-input>
@@ -204,7 +204,7 @@ export default {
     };
   },
   computed: {
-    ...mapGetters(["is_admin"])
+    ...mapGetters(["is_admin", "group_list", "user_info"])
   },
   watch: {
     filterText(val) {
@@ -235,6 +235,11 @@ export default {
     this.select_region();
   },
   methods: {
+    add_part_all_name() {
+      if (this.temp_data.nodeType === "ORG") {
+        this.form.orgAllName = this.temp_data.name + this.form.orgName;
+      }
+    },
     filterNode(value, data) {
       if (!value) return true;
       return data.name.indexOf(value) !== -1;
@@ -318,9 +323,10 @@ export default {
       this.table_loading = true;
       var areaId = this.temp_data.areaId;
       var orgParentId = this.temp_data.id;
-      if (this.temp_data.nodeType === "REGION") {
-        orgParentId = "";
+      if (this.temp_data.nodeType === "ORG") {
+        orgParentId = orgParentId.replace(/\D/g, "");
       } else {
+        orgParentId = "";
         areaId = "";
       }
       this.$post(
@@ -329,7 +335,7 @@ export default {
           pageSize: pageSize
         })}`,
         {
-          orgParentId: orgParentId.replace(/\D/g, ""),
+          orgParentId,
           areaId: areaId.replace(/\D/g, "")
         },
         "json"
@@ -379,13 +385,16 @@ export default {
             this.tree_data = res.data.nodes;
           } else {
             this.tree_data = generate_tree(res.data.nodes);
-          }
-          if (this.expand_arr.length) {
+            this.expand_arr = [this.user_info.sysOrgUserX.orgId];
+            this.temp_data = JSON.parse(
+              JSON.stringify(this.user_info.sysOrgUserX)
+            );
+            this.temp_data.id = this.temp_data.orgId;
+            this.temp_data.name = this.temp_data.orgAllName;
+            this.temp_data.nodeType = "ORG";
+            console.log(this.temp_data);
             this.search_child_part(this.pageSize, this.pageNo);
-          } else {
-            this.temp_data = this.tree_data[0];
-            this.expand_arr.push(this.tree_data[0].id);
-            this.search_child_part(this.pageSize, this.pageNo);
+            // this.handleNodeClick(this.temp_data);
           }
         })
         .catch(res => {
@@ -410,7 +419,17 @@ export default {
       });
     },
     handleNodeClick(data) {
-      console.log(data);
+      if (
+        !this.is_admin &&
+        !this.group_list.map(res => res.orgId).includes(data.id)
+      ) {
+        this.$message({
+          message: "您没有操作权限！",
+          type: "warning",
+          showClose: true
+        });
+        return;
+      }
       if (data.id === this.temp_data.id) {
         return;
       }
@@ -422,15 +441,15 @@ export default {
     handle_edit(data) {
       this.edit_visible = true;
       this.part_type = "update";
-      this.form.orgId = data.orgId;
-      this.form.orgName = data.orgName;
-      this.form.orgAllName = data.orgAllName;
-      this.form.deptType = data.deptType;
-      this.form.orgAddr = data.orgAddr;
-      this.form.orgDesc = data.orgDesc;
-      this.form.orgParentId = data.orgParentId;
       this.$nextTick(res => {
         this.$refs.form.resetFields();
+        this.form.orgId = data.orgId;
+        this.form.orgName = data.orgName;
+        this.form.orgAllName = data.orgAllName;
+        this.form.deptType = data.deptType;
+        this.form.orgAddr = data.orgAddr;
+        this.form.orgDesc = data.orgDesc;
+        this.form.orgParentId = data.orgParentId;
       });
       if (this.temp_data.nodeType === "REGION") {
         this.$post(
@@ -542,8 +561,8 @@ export default {
           {
             orgId,
             orgParentId,
-            areaId: this.temp_data.areaId,
-            account,
+            areaId: account,
+            // account,
             orgName: this.form.orgName,
             orgAllName: this.form.orgAllName,
             deptType,
@@ -574,6 +593,7 @@ export default {
             this.edit_visible = false;
           })
           .catch(res => {
+            console.log(res);
             this.form_loading = false;
           });
       });

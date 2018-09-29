@@ -18,9 +18,9 @@
                 {{data.noticeProfile}}
             </div>
             <div class="file-info">
-                附件： <span>{{file_length}} 个附件，共{{file_list | folderSize}}</span>
+                附件： <span>{{file_list.length}} 个附件，共{{file_list | folderSize}}</span>
             </div>
-            <file-list :list='file_list' @delete='delete_file'></file-list>
+            <file-list :list='file_list' @delete='delete_file' :remove='true'></file-list>
         </div>
         <p style="text-align:right"><el-button @click="del_dialog" type="danger"  icon="el-icon-delete"  size="medium">删除</el-button></p>
 
@@ -66,10 +66,13 @@ export default {
       }
     };
   },
+  beforeDestroy() {
+    this.$store.commit("DEL_VIEW_BY_NAME", "举报详情描述");
+  },
   created() {
     this.$store.dispatch("readSession", SET_REPORT_DATA);
-    this.init(this.report_data.id);
-    this.init_file(this.report_data.id);
+    this.init(this.report_data.contentId);
+    this.init_file(this.report_data.contentId);
   },
   computed: {
     ...mapGetters(["report_data"])
@@ -77,7 +80,7 @@ export default {
   methods: {
     del_dialog() {
       this.visible = true;
-         this.$nextTick(res => {
+      this.$nextTick(res => {
         this.$refs.form.resetFields();
       });
       this.form.deleteReason = "";
@@ -89,14 +92,18 @@ export default {
       this.$refs.form.validate(res => {
         if (!res) return;
         this.form_loading = true;
-        this.$post("gwt/business/tbAnnouncement/del", {
-          id: this.data.noticeId,
-          msgTitle: `标题为“${this.data.noticeTitle}”的公告因“${
-            this.form.deleteReason
-          }”被管理员删除，请知悉`,
-          deleteReason: this.form.deleteReason,
-          msgId: this.report_data.msgId
-        },'json')
+        this.$post(
+          "gwt/notice/tbNotice/del",
+          {
+            noticeId: this.report_data.id,
+            msgTitle: `标题为“${this.data.noticeTitle}”的公告因“${
+              this.form.deleteReason
+            }”被管理员删除，请知悉`,
+            cause: this.form.deleteReason,
+            msgId: this.report_data.msgId
+          },
+          "json"
+        )
           .then(res => {
             this.form_loading = false;
             if (res.result !== "0000") {
@@ -127,7 +134,7 @@ export default {
     },
     //查内容
     init(noticeId) {
-      console.log(noticeId)
+      console.log(noticeId);
       this.$post(
         "gwt/notice/tbNotice/get",
         {
@@ -159,9 +166,10 @@ export default {
           if (res.result !== "0000") {
             return;
           }
-          this.get_file_by_id(
-            res.data.tbNoticeAttachmentPageBean.map(res => res.ID).join(",")
-          );
+             this.file_list = res.data.tbNoticeAttachmentPageBean[0].ATTA_INFOS;
+          // this.get_file_by_id(
+          //   res.data.tbNoticeAttachmentPageBean.map(res => res.ATTA_IDS).join(",")
+          // );
         })
         .catch(res => {
           console.log(res);

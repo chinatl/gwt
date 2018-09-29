@@ -54,7 +54,7 @@
 </el-dialog>
 </template>
 <script>
-import { generate_tree1 } from "@/utils";
+import { generate_tree } from "@/utils";
 export default {
   data() {
     return {
@@ -112,34 +112,30 @@ export default {
     }
   },
   created() {
-    this.$post(
-      "gwt/system/sysOrg/getSelfDoaminOrgTree",
-      {
-        addressBookUserFlag: "",
-        addressBookOrgFlag: "Y"
-      },
-      "json"
-    ).then(res => {
-      if (res.result !== "0000") {
-        return;
-      }
-      this.field_list = generate_tree1(res.data.nodes);
-      for (var i = 0; i < this.field_list.length; i++) {
-        if (this.field_list[i].name === "常用联系人") {
-          this.field_list.splice(i, 1);
+    this.$post("gwt/system/sysAddressBookGroup/getGroupTree", {}, "json").then(
+      res => {
+        console.log(res.data.nodes);
+        if (res.result !== "0000") {
+          return;
+        }
+        this.field_list = generate_tree(res.data.nodes);
+        for (var i = 0; i < this.field_list.length; i++) {
+          if (this.field_list[i].name === "常用联系人") {
+            this.field_list.splice(i, 1);
+          }
+        }
+        for (var i = 0; i < this.field_list.length; i++) {
+          this.field_list[i].checkedNodes = [];
+          this.field_list[i].checkedKeys = [];
+        }
+        if (this.field_list.length) {
+          this.data = this.field_list[0].childrens;
+          if (this.data.length) {
+            this.expanded_keys = [this.data[0].id];
+          }
         }
       }
-      for (var i = 0; i < this.field_list.length; i++) {
-        this.field_list[i].checkedNodes = [];
-        this.field_list[i].checkedKeys = [];
-      }
-      if (this.field_list.length) {
-        this.data = this.field_list[0].childrens;
-        if (this.data.length) {
-          this.expanded_keys = [this.data[0].id];
-        }
-      }
-    });
+    );
   },
   methods: {
     filterNode(value, data) {

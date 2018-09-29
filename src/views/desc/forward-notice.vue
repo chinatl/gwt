@@ -3,7 +3,7 @@
         <t-title title="转发部门"></t-title>
         <div class="page-form" v-loading='loading'>
               <el-form ref="form" :model="form" label-width="80px">
-                    <el-form-item label="接收部门">
+                    <el-form-item label="接收部门" v-if="is_permisssion">
                         <div class="flex">
                             <el-input v-model="form.part" size="small" placeholder="请选择接收部门" readonly></el-input>
                             <add-user-button @click="yield_dialog= true">选择部门</add-user-button>
@@ -62,15 +62,18 @@ export default {
       has_select_user_list: [],
       has_select_part_list: [],
       yield_dialog: false, //部门管理弹窗
-      dialog: false,
+      dialog: false
     };
+  },
+  beforeDestroy() {
+    this.$store.commit("DEL_VIEW_BY_NAME", "转发通知");
   },
   created() {
     this.$store.dispatch("readSession", SET_MESSAGE_DATA);
-    console.log(JSON.stringify(this.message_data, {}, 4));
+    this.$store.dispatch("get_user_send_permission");
   },
   computed: {
-    ...mapGetters(["message_data"])
+    ...mapGetters(["message_data","is_permisssion"])
   },
   methods: {
     submit_yield(list) {
@@ -91,9 +94,7 @@ export default {
           orgArray: this.has_select_part_list
             .map(res => res.id.replace(/\D*/g, ""))
             .join(","),
-          selectedUsers: this.has_select_user_list
-            .map(res => res.USER_ID)
-            .join(","),
+          selectedUsers: this.has_select_user_list.map(res => res.ID).join(","),
           noticeId: this.message_data.NOTICE_ID,
           parentId: "",
           forwardDesc: this.form.forwardDesc
@@ -102,20 +103,15 @@ export default {
       )
         .then(res => {
           this.loading = false;
-          if (action_fail(res, "转发成功")) return;
-          this.$router.push({
-            path: "/notice-desc/index"
-          });
+          if (action_fail(res, "通知转发成功！")) return;
+          this.$router.go(-1);
         })
         .catch(res => {
           this.loading = false;
-          console.log(res);
         });
     },
     save_message() {
-      this.$router.push({
-        path: "/notice-desc/index"
-      });
+      this.$router.go(-1);
     }
   }
 };

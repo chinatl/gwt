@@ -17,7 +17,7 @@
                             placeholder="选择日期时间">
                         </el-date-picker>
                     </el-form-item>
-                    <el-form-item label="接收部门">
+                    <el-form-item label="接收部门" v-if="is_permisssion">
                         <div class="flex">
                             <el-input v-model="form.part" size="small" placeholder="请选择接收部门" readonly></el-input>
                             <add-user-button @click="yield_dialog= true">选择部门</add-user-button>
@@ -68,6 +68,7 @@ import formButton from "@/components/Button/formButton";
 import { parseTime } from "@/utils";
 import { action_fail } from "@/utils/user";
 import { validateTime } from "@/utils/validate";
+import { mapGetters } from "vuex";
 export default {
   components: {
     fileList,
@@ -106,6 +107,12 @@ export default {
   },
   beforeDestroy() {
     this.$store.commit("DEL_VIEW_BY_NAME", "创建会议");
+  },
+  computed: {
+    ...mapGetters(["is_permisssion"])
+  },
+  created() {
+    this.$store.dispatch("get_user_send_permission");
   },
   methods: {
     submit_yield(list) {

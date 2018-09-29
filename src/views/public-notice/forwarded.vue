@@ -18,6 +18,7 @@
                     end-placeholder="结束日期"
                     format="yyyy-MM-dd "
                     value-format="yyyy-MM-dd"
+                    @change="condition"
                    >
                 </el-date-picker>
                 <el-input v-model="Q_noticeTitle_SL" placeholder="请输入标题"
@@ -88,15 +89,14 @@ export default {
   },
   methods: {
     get_active_desc(item) {
-      console.log(item);
       this.$store.commit(SET_MESSAGE_DATA, item);
       this.$router.push({
         path: "/active-desc/index"
       });
     },
     condition() {
-      this.pageNo = 1;
       sessionStorage.setItem("public-notice/forwarded/pageNo", 1);
+      this.pageNo = 1;
       this.init(this.pageSize, 1);
     },
     init(pageSize, pageNo) {
@@ -107,8 +107,8 @@ export default {
           pageSize: pageSize
         })}`,
         {
-          account: this.noticeType == 0 ? "" : this.noticeType ,
-          noticeType:this.noticeType == 0 ? "" : this.noticeType,
+          account: this.noticeType == 0 ? "" : this.noticeType,
+          noticeType: this.noticeType == 0 ? "" : this.noticeType,
           begincreateTime: this.date[0],
           endcreateTime: this.date[1],
           noticeTitle: this.Q_noticeTitle_SL
@@ -116,14 +116,13 @@ export default {
         "json"
       )
         .then(res => {
-          console.log(res);
           this.loading = false;
           if (res.result !== "0000") {
             return;
           }
           this.tableData = res.data.tbNoticeForwardPageBean.datas.map(res => {
             res.NOTICE_TITLE = res.dataMap.NOTICE_TITLE;
-            res.RECE_TIME = res.dataMap.CREATE_TIME;
+            res.RECE_TIME = res.createTime;
             res.NOTICE_TYPE_NAME =
               res.dataMap.NOTICE_TYPE === 1
                 ? "会议通知"
@@ -131,13 +130,14 @@ export default {
                   ? "通知"
                   : "材料征集";
             res.NOTICE_ID = res.dataMap.NOTICE_ID;
+            res.NOTICE_TYPE = res.dataMap.NOTICE_TYPE;
             return res;
           });
           sessionStorage.setItem(
             "public-notice/forwarded/total",
             res.data.tbNoticeForwardPageBean.totalCount
           );
-          this.total = parseInt(res.data.tbNoticeForwardPageBean.totalCount)
+          this.total = parseInt(res.data.tbNoticeForwardPageBean.totalCount);
         })
         .catch(res => {
           this.loading = false;

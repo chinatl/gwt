@@ -12,7 +12,7 @@
                     align="right"
                     size="medium"
                     unlink-panels
-                     style="margin-right:8px;"
+                    style="margin-right:8px;"
                     range-separator="至"
                     start-placeholder="开始日期"
                     end-placeholder="结束日期"
@@ -83,7 +83,7 @@ export default {
     ...mapGetters(["meeting_type_list"])
   },
    beforeDestroy() {
-    this.$store.commit("DEL_VIEW_BY_NAME", "通知签收");
+    // this.$store.commit("DEL_VIEW_BY_NAME", "通知签收");
   },
   methods: {
     condition() {

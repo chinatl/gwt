@@ -3,7 +3,7 @@
         <t-title title="个人云盘"></t-title>
         <div class="common-action">
             <div class="disk-cloud">
-                <upload-button icon="el-icon-upload2" @on-change="upload_img" size='medium' type="success" >上传</upload-button>
+                <upload-button icon="el-icon-upload2" @on-change="upload_img" size='medium' type="success" :pan='true' >上传</upload-button>
                 <el-button type="success" icon="el-icon-plus" size='medium' v-wave @click="dialogFolderVisible = true">新建文件夹</el-button>
                 <el-button type="primary" icon="el-icon-download" size='medium' v-wave @click="download_file">下载</el-button>
                 <el-button type="danger" icon="el-icon-close" size='medium' v-wave @click="delete_btn">删除</el-button>
@@ -278,7 +278,7 @@ export default {
         orgId: this.folderform.orgId
       };
       var sigle_data = {
-        fileId: row.fileId
+        fileId: data.fileIds
       };
       if (this.fileIds.length === 1 && this.dirIds.length === 0) {
         var object = Base64.encode(JSON.stringify(sigle_data));
@@ -325,7 +325,6 @@ export default {
         },
         "json"
       ).then(res => {
-        console.log(res);
         if (res.result === "0000") {
           this.tableData = res.data.userCloudiskPageBean.datas;
           // this.totalCount = parseInt(res.data.userCloudiskPageBean.totalCount);
@@ -367,7 +366,6 @@ export default {
         img_src != ".jpeg" &&
         img_src != ".pdf"
       ) {
-        console.log();
         var sigle_data = {
           fileId: parseInt(this.sigle_fileid)
         };
@@ -380,7 +378,6 @@ export default {
             token: this.$store.getters.token
           })}`
         );
-        return;
       } else {
         this.$post(
           "gwt/cloudisk/cloudiskAttachment/getAttachment",

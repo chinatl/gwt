@@ -11,7 +11,9 @@
                     <el-input size="small" v-model="filterText" placeholder="搜索部门名称"></el-input>
                 </div>
                 <div class="flex">
-                    <el-select size="small" v-show="current === 2" v-model="select.type" style="width:100%">
+                    <el-select size="small" v-show="current === 2" 
+                        @change="condition"
+                        v-model="select.type" style="width:100%">
                         <el-option label="默认" value="0"></el-option>
                         <el-option label="会议通知" value="1"></el-option>
                         <el-option label="通知" value="2"></el-option>
@@ -35,7 +37,6 @@
                 <div>
                     <el-input size="medium" placeholder="请输入姓名/手机号"  v-model="searchParam"  style="width:200px" @keyup.native.enter="condition"></el-input>
                     <el-button type="primary" icon="el-icon-search" size="medium"  style="margin-right:8px" v-wave @click="condition">搜索</el-button>
-                  
                 </div>
                 <div v-if='current === 2'>
                     <el-button type="success" icon="el-icon-plus" size="medium"  style="margin-right:8px" @click="add_user_dialog" v-wave>新增接收人</el-button>
@@ -62,7 +63,11 @@
                       {{scope.row.mobilePhone}}
                     </template>
                     </el-table-column>
-                    <el-table-column prop="phone" align="center" label="固定电话"></el-table-column>
+                    <el-table-column prop="phone" align="center" label="固定电话">
+                       <template slot-scope="scope">
+                      {{scope.row.sysOrgUserX.phone}}
+                    </template>
+                    </el-table-column>
                     <el-table-column
                     prop="name"
                     label="操作"
@@ -312,7 +317,7 @@ export default {
           })}`,
           {
             selectedUsers: "+",
-            // getAllFlag: "N",
+            searchParam: this.searchParam,
             orgId: orgId,
             receiveNoticeType: this.select.type
           },

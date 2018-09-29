@@ -131,7 +131,6 @@ export default {
     },
     //查内容
     init(noticeId) {
-      console.log(noticeId);
       this.$post(
         "gwt/notice/tbNotice/get",
         {

@@ -37,11 +37,12 @@
             <file-list :list='file_list' @delete='delete_file' :remove='true'></file-list>
         </div>
         <p style="text-align:right" class="notice-desc-button">
-          <el-button type="warning" size="medium" @click="report_notice" ><svg-icon icon-class='警察'></svg-icon>举报</el-button>
-          <el-button type="danger" size="medium"  @click="refuse"  v-if='status == "1000" && !isTimeOut'><svg-icon icon-class='拒签'></svg-icon>拒签</el-button>
-          <el-button type="primary" size="medium" @click="reveive_report" v-if='status == "1000" && !isTimeOut'><svg-icon icon-class='签收'></svg-icon>签收</el-button>
-          <el-button type="success" size="medium" @click="forward_report" v-if='status == "1001" && !isTimeOut'><svg-icon icon-class='转发'></svg-icon>转发</el-button>
+          <el-button type="warning" size="medium" @click="report_notice" v-if='change_status !== "1003"'><svg-icon icon-class='警察'></svg-icon>举报</el-button>
+          <el-button type="danger" size="medium"  @click="refuse"  v-if='status == "1000" && !isTimeOut && change_status !== "1003"'><svg-icon icon-class='拒签'></svg-icon>拒签</el-button>
+          <el-button type="primary" size="medium" @click="reveive_report" v-if='status == "1000" && !isTimeOut && change_status !== "1003"'><svg-icon icon-class='签收'></svg-icon>签收</el-button>
+          <el-button type="success" size="medium" @click="forward_report" v-if='(status == "1004" || status == "1001") && !isTimeOut && change_status !== "1003"'><svg-icon icon-class='转发'></svg-icon>转发</el-button>
         </p>
+        <p class="change-notice" v-if="change_status === '1003'">该通知已变更，请查看变更后信息</p>
         <el-dialog :close-on-click-modal='false'
             title="举报信息"
             class="common-dialog "
@@ -81,7 +82,7 @@
                 label="姓名">
                 </el-table-column>
                 <el-table-column
-                prop="appName"
+                prop="DUTY"
                 align="center"
                 label="职务">
                 </el-table-column>
@@ -120,7 +121,7 @@
             :total="total">
             </el-pagination>
         </div>
-        <div class="common-action" v-if="!isTimeOut">
+        <div class="common-action" v-if="!isTimeOut && change_status!== '1003'">
             <upload-button  @on-change="upload_img">添加附件</upload-button>
             <file-list :list='user_upload_list' @delete='delete_user_file'></file-list>
         </div>
@@ -187,10 +188,12 @@ export default {
       pageNo: 1,
       total: 0,
       is_upload: false,
-      isTimeOut: true
+      isTimeOut: true,
+      change_status: ""
     };
   },
   beforeDestroy(e) {
+    this.$store.commit("DEL_VIEW_BY_NAME", "材料征集详情");
     sessionStorage.removeItem("stuff-desc/index/pageNo");
     sessionStorage.removeItem("stuff-desc/index/total");
   },
@@ -317,7 +320,7 @@ export default {
               this.user_upload_list = res.data.tbNoticeAttachmentPageBean[
                 i
               ].ATTA_INFOS.map(res => {
-                res.url = "/" + res.attaPath + "/" + res.ressmallImgName;
+                res.url = "/" + res.attaPath + "/" + res.smallImgName;
                 return res;
               });
               break;
@@ -423,6 +426,7 @@ export default {
     },
     //获取 init 数据
     get_meeting_data() {
+      this.loading = true;
       this.$post(
         "gwt/notice/tbNotice/getNoticeTotalInfo",
         {
@@ -440,6 +444,7 @@ export default {
           this.tbNoticeSign = res.data.tbNoticeSign;
           this.tbNoticeRefuse = res.data.tbNoticeRefuse;
           this.status = res.data.tbNoticeReceive.recStatus;
+          this.change_status  = res.data.tbNotice.noticeStatus;
           if (this.status == 1001) {
             this.get_user_sign_table(this.pageSize, this.pageNo);
           }

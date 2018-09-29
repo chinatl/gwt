@@ -25,7 +25,7 @@
                             placeholder="选择日期时间">
                         </el-date-picker>
                     </el-form-item>
-                    <el-form-item label="接收部门">
+                    <el-form-item label="接收部门" v-if='is_permisssion'>
                         <div class="flex">
                             <el-input v-model="form.part" size="small" placeholder="请选择接收部门" readonly></el-input>
                             <add-user-button @click="yield_dialog= true">选择部门</add-user-button>
@@ -120,14 +120,15 @@ export default {
     };
   },
   beforeDestroy() {
-    this.$store.commit("DEL_VIEW_BY_NAME", "草稿编辑");
+    this.$store.commit("DEL_VIEW_BY_NAME", "通知编辑");
   },
   created() {
     this.$store.dispatch("readSession", SET_NOTICE_DATA);
+    this.$store.dispatch("get_user_send_permission");
     this.init();
   },
   computed: {
-    ...mapGetters(["notice_data"])
+    ...mapGetters(["notice_data","is_permisssion"])
   },
   methods: {
     init() {
@@ -135,7 +136,9 @@ export default {
         "gwt/notice/tbNotice/getNoticeDraftDetail",
         {
           pk: "noticeId",
-          changeType: "",
+          changeType: this.notice_data.changeType
+            ? this.notice_data.changeType
+            : "",
           noticeId: this.notice_data.noticeId
         },
         "json"
@@ -285,7 +288,7 @@ export default {
                 this.$post(
                   "gwt/notice/tbNotice/save",
                   {
-                    noticeId: "",
+                    noticeId: '',
                     noticeTitle: this.form.noticeTitle,
                     noticeType: this.notice_data.noticeType, //会议 2//通知 3//材料
                     noticeAdress: this.form.noticeAdress,
@@ -344,7 +347,7 @@ export default {
       this.$post(
         "gwt/notice/tbNoticeDraft/save",
         {
-          noticeId: "",
+          noticeId: this.notice_data.noticeId,
           noticeTitle: this.form.noticeTitle,
           noticeType: this.notice_data.noticeType, //会议 2//通知 3//材料
           noticeAdress: this.form.noticeAdress,

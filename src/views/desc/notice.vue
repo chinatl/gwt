@@ -37,11 +37,12 @@
             <file-list :list='file_list' @delete='delete_file' :remove='true'></file-list>
         </div>
         <p style="text-align:right" class="notice-desc-button">
-          <el-button type="warning" size="medium" @click="report_notice" ><svg-icon icon-class='警察'></svg-icon>举报</el-button>
-          <el-button type="danger" size="medium"  @click="refuse"  v-if='status === "1000" && isTimeOut'><svg-icon icon-class='拒签'></svg-icon>拒签</el-button>
-          <el-button type="primary" size="medium" @click="reveive_report" v-if='status === "1000" && isTimeOut'><svg-icon icon-class='签收'></svg-icon>签收</el-button>
-          <el-button type="success" size="medium" @click="forward_report" v-if='status === "1001" && isTimeOut'><svg-icon icon-class='转发'></svg-icon>转发</el-button>
+          <el-button type="warning" size="medium" @click="report_notice" v-if='change_status !== "1003"'><svg-icon icon-class='警察'></svg-icon>举报</el-button>
+          <el-button type="danger" size="medium"  @click="refuse"  v-if='status === "1000" && isTimeOut && change_status !== "1003"'><svg-icon icon-class='拒签'></svg-icon>拒签</el-button>
+          <el-button type="primary" size="medium" @click="reveive_report" v-if='status === "1000" && isTimeOut && change_status !== "1003"'><svg-icon icon-class='签收'></svg-icon>签收</el-button>
+          <el-button type="success" size="medium" @click="forward_report" v-if='(status == "1004" || status == "1001") && isTimeOut && change_status !== "1003"'><svg-icon icon-class='转发'></svg-icon>转发</el-button>
         </p>
+        <p class="change-notice" v-if="change_status === '1003'">该通知已变更，请查看变更后信息</p>
         <el-dialog :close-on-click-modal='false'
             title="举报信息"
             class="common-dialog "
@@ -119,12 +120,12 @@ export default {
       },
       tbNoticeSign: {}, //签收详情
       tbNoticeRefuse: {}, //签收详情
-      isTimeOut: true
+      isTimeOut: true,
+      change_status: ''
     };
   },
   created() {
     this.$store.dispatch("readSession", SET_MESSAGE_DATA);
-    console.log(JSON.stringify(this.message_data, {}, 4));
     this.get_meeting_data();
     this.init_file(this.message_data.NOTICE_ID);
   },
@@ -254,6 +255,7 @@ export default {
           this.tbNoticeSign = res.data.tbNoticeSign;
           this.tbNoticeRefuse = res.data.tbNoticeRefuse;
           this.status = res.data.tbNoticeReceive.recStatus;
+          this.change_status  = res.data.tbNotice.noticeStatus;
         })
         .catch(res => {
           this.loading = false;

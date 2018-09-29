@@ -151,7 +151,28 @@ export default {
     },
     go_desc(item) {
       console.log(JSON.stringify(item, {}, 4));
+      this.$post(
+        "gwt/business/msgRecvUser/update",
+        {
+          id: item.RECV_ID,
+          state: "1"
+        },
+        "json"
+      )
+        .then(res => {
+          console.log(res);
+        })
+        .catch(res => {
+          console.log(res);
+        });
       if (item.TYPE_DESC === "举报") {
+        // if (item.STATE === 0) {
+        //   this.$message({
+        //     message: "该举报已被删除",
+        //     type: "info"
+        //   });
+        //   return;
+        // }
         this.$store.dispatch("get_report_desc", item.MSG_ID);
         this.$router.push({
           path: "/report/index"
@@ -175,7 +196,19 @@ export default {
           if (res.result !== "0000") {
             return;
           }
-          console.log(res.data.tbNoticeReceive.id);
+
+          if (res.data.tbNotice.noticeStatus === "1002") {
+            this.$swal({
+              title: "操作失败！",
+              text:
+                '该文件因为“' + res.data.tbNotice.deleteReason + '”被删除',
+              type: "error",
+              confirmButtonColor: "#DD6B55",
+              confirmButtonText: "确定",
+              showConfirmButton: true
+            });
+            return;
+          }
           item.RECEIVE_ID = res.data.tbNoticeReceive.id;
           this.$store.commit(SET_MESSAGE_DATA, item);
           if (item.TYPE_DESC === "通知") {

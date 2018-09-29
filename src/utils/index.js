@@ -392,7 +392,7 @@ export function fileType(name) {
   if (/\.(pptx?)$/.test(name)) {
     return "ppt";
   }
-  if (/\.(csv|xlsx?)$/.test(name)) {
+  if (/\.(xlsm|csv|xlsx?)$/.test(name)) {
     return "excel";
   }
   if (/\.(pdf)$/.test(name)) {
@@ -410,7 +410,7 @@ export function fileType(name) {
   if (/\.(rar)$/.test(name)) {
     return "rar";
   }
-  if (/\.(rar)$/.test(name)) {
+  if (/\.(zip)$/.test(name)) {
     return "zip";
   }
   return 'unknown'
@@ -474,13 +474,12 @@ export function generate_tree(arr) {//效率比上面的算法慢一点 因为�
     for (var k = 0, generate_arr_length = generate_arr.length; k < generate_arr_length; k++) {
       generate_arr[k].childrens = [];
       for (var j = 0, arr_lenth = arr.length; j < arr_lenth; j++) {
-        if (arr[j].pId === generate_arr[k].id) {
+        if (arr[j].pId === generate_arr[k].id ) {
           generate_arr[k].childrens.push(arr[j]);
         }
       }
       getTree(generate_arr[k].childrens)
     }
   };
-  console.log(newArr)
   return newArr
 }

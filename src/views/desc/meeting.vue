@@ -37,11 +37,12 @@
             <file-list :list='file_list' @delete='delete_file' :remove='true'></file-list>
         </div>
         <p style="text-align:right" class="notice-desc-button">
-          <el-button type="warning" size="medium" @click="report_notice" ><svg-icon icon-class='警察'></svg-icon>举报</el-button>
-          <el-button type="danger" size="medium"  @click="refuse"  v-if='status == "1000" && isTimeOut'><svg-icon icon-class='拒签'></svg-icon>拒签</el-button>
-          <el-button type="primary" size="medium" @click="reveive_report" v-if='status == "1000" && isTimeOut '><svg-icon icon-class='签收'></svg-icon>签收</el-button>
-          <el-button type="success" size="medium" @click="forward_report" v-if='status == "1001" && isTimeOut'><svg-icon icon-class='转发'></svg-icon>转发</el-button>
+          <el-button type="warning" size="medium" @click="report_notice" v-if='change_status !== "1003"'><svg-icon icon-class='警察'></svg-icon>举报</el-button>
+          <el-button type="danger" size="medium"  @click="refuse"  v-if='status == "1000" && isTimeOut && change_status !== "1003"'><svg-icon icon-class='拒签'></svg-icon>拒签</el-button>
+          <el-button type="primary" size="medium" @click="reveive_report" v-if='status == "1000" && isTimeOut && change_status !== "1003"'><svg-icon icon-class='签收'></svg-icon>签收</el-button>
+          <el-button type="success" size="medium" @click="forward_report" v-if='(status == "1004" || status == "1001") && isTimeOut && change_status !== "1003"'><svg-icon icon-class='转发'></svg-icon>转发</el-button>
         </p>
+        <p class="change-notice" v-if="change_status === '1003'">该通知已变更，请查看变更后信息</p>
         <el-dialog 
           :close-on-click-modal='false'
           title="举报信息"
@@ -72,7 +73,7 @@
             </div>
         </div>
         <div class="meeting-div"  v-show="current === 0">
-            <div style="padding-left:20px;padding-bottom:10px" v-if="isTimeOut">
+            <div style="padding-left:20px;padding-bottom:10px" v-if='isTimeOut && change_status !== "1003"'>
                 <el-button type="success" size="medium" icon="el-icon-plus" @click="add_user_dialog = true">部门导入</el-button>
             </div>
              <div class="common-table">
@@ -126,7 +127,7 @@
                 :total="total">
                 </el-pagination>
             </div>
-            <div class="common-action" v-if="isTimeOut">
+            <div class="common-action" v-if='isTimeOut && change_status !== "1003"'>
               <el-form ref='add_form' :inline="true" :model="add_form" :rules="add_form_rules">
                 <el-form-item label="姓名" prop="name">
                   <el-input v-model="add_form.name" size="small" placeholder="请输入姓名（必填）"></el-input>
@@ -159,7 +160,7 @@
                     label="姓名">
                     </el-table-column>
                     <el-table-column
-                    prop="appName"
+                    prop="DUTY"
                     align="center"
                     label="职务">
                     </el-table-column>
@@ -198,7 +199,7 @@
                 :total="total">
                 </el-pagination>
             </div>
-            <div class="common-action" v-if="isTimeOut">
+            <div class="common-action" v-if="isTimeOut && change_status !== '1003'">
                 <upload-button  @on-change="upload_img">添加附件</upload-button>
                 <file-list :list='user_upload_list' @delete='delete_user_file'></file-list>
             </div>
@@ -294,10 +295,12 @@ export default {
       has_select_user_list: [],
       add_user_loading: false,
       add_form: {},
-      isTimeOut: false
+      isTimeOut: false,
+      change_status: ''
     };
   },
   beforeDestroy(e) {
+    this.$store.commit("DEL_VIEW_BY_NAME", "会议通知详情");
     sessionStorage.removeItem("stuff-desc/index/pageNo");
     sessionStorage.removeItem("stuff-desc/index/total");
   },
@@ -387,16 +390,16 @@ export default {
           if (res.result !== "0000") {
             return;
           }
-          this.has_select_user_list = res.data.tbNoticeRegisterListBean.filter(res=>{
-            return res.userId
-          }).map(
-            res => {
+          this.has_select_user_list = res.data.tbNoticeRegisterListBean
+            .filter(res => {
+              return res.userId;
+            })
+            .map(res => {
               res.REAL_NAME = res.name;
               res.ORG_NAME = res.orgName;
               res.ID = res.userId;
               return res;
-            }
-          )
+            });
         })
         .catch(res => {
           console.log(res);
@@ -554,7 +557,7 @@ export default {
               this.user_upload_list = res.data.tbNoticeAttachmentPageBean[
                 i
               ].ATTA_INFOS.map(res => {
-                res.url = "/" + res.attaPath + "/" + res.ressmallImgName;
+                res.url = "/" + res.attaPath + "/" + res.smallImgName;
                 return res;
               });
               break;
@@ -678,7 +681,7 @@ export default {
           this.tbNoticeSign = res.data.tbNoticeSign;
           this.tbNoticeRefuse = res.data.tbNoticeRefuse;
           this.status = res.data.tbNoticeReceive.recStatus;
-
+          this.change_status  = res.data.tbNotice.noticeStatus;
           this.isTimeOut =
             +new Date(res.data.tbNotice.startTime) - Date.now() > 0;
           if (

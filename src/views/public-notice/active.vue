@@ -36,6 +36,9 @@
                     </div>
                   </div>
                   <div class="caozuo">
+                      <span class="reportColor" 
+                      v-if="item.FROM_NOTICE_ID"
+                      style="background-color: #fab858;">{{item.FROM_NOTICE_ID ?'变更':null}}</span>
                       <span class="reportColor">{{item.ITEM_NAME}}</span>
                       <span class="info-detail">{{item.REAL_NAME}}</span>
                       <span class="info-detail">{{item.ORG_ALL_NAME}}</span>
@@ -68,7 +71,7 @@ import {
 } from "@/store/mutations";
 import { mapGetters } from "vuex";
 import qs from "qs";
-import { action_fail } from "@/utils/user";
+import { action_fail, delete_item } from "@/utils/user";
 import { parseTime } from "@/utils";
 export default {
   components: {
@@ -117,6 +120,13 @@ export default {
     },
     //通知变更
     change_notice(item) {
+      if (item.NOTICE_STATUS === 1003) {
+        this.$message({
+          message: "通知已经更改，无法再使用变更功能",
+          type: "warning"
+        });
+        return;
+      }
       if (+new Date(item.CREATE_TIME) > Date.now() - 1000 * 60 * 2) {
         this.$message({
           message: "通知发送不到2分钟，不能变更，请使用撤销功能",
@@ -162,21 +172,26 @@ export default {
         });
         return;
       }
-      this.$post(
-        "gwt/notice/tbNoticeSendTemp/validateChange",
-        {
+      delete_item({
+        title: "您确定要撤销该通知吗",
+        text: "撤销通知，请谨慎操作！",
+        url: "gwt/notice/tbNoticeSendTemp/validateChange",
+        data: {
           noticeId: item.NOTICE_ID,
           changeType: "cancel"
         },
-        "json"
-      )
-        .then(res => {
+        success: res => {
           if (action_fail(res, "撤销成功")) return;
-          this.init(this.pageSize, this.pageNo);
-        })
-        .catch(res => {
-          console.log(res);
-        });
+          item.noticeId = item.NOTICE_ID;
+          item.noticeTypeName = item.ITEM_NAME;
+          item.noticeType = item.NOTICE_TYPE;
+          item.changeType = "cancel";
+          this.$store.commit(SET_NOTICE_DATA, item);
+          this.$router.push({
+            path: "/re-drafts/index"
+          });
+        }
+      });
     },
     condition() {
       this.pageNo = 1;

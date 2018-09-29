@@ -15,7 +15,9 @@
                 </span>
             </div>
             <div class="user-message-info">
-                <little-button :name='data.NOTICE_STATUS === 1003 ?"变 更":""' v-if="data.NOTICE_STATUS === 1003"></little-button>
+                <span class="reportColor" 
+                      v-if="data.FROM_NOTICE_ID"
+                      style="background-color: #fab858;">{{data.FROM_NOTICE_ID ?'变更':null}}</span>
                 <little-button :name='data.NOTICE_TYPE_NAME'></little-button>
                 <span class="current">{{data.REAL_NAME}}</span>
                 <span class="current">{{data.ORG_ALL_NAME}}</span>
@@ -40,8 +42,7 @@ export default {
       required: true
     }
   },
-  created(){
-    console.log(this.data)
+  created() {
   },
   methods: {
     item_click() {
@@ -112,6 +113,15 @@ export default {
       }
     }
     .user-message-info {
+      .reportColor {
+        font-weight: 100;
+        vertical-align: baseline;
+        padding: 4px 6px;
+        border-radius: 5px;
+        margin-right: 15px;
+        font-size: 11px;
+        color: #fff;
+      }
       .current {
         letter-spacing: 0.5px;
         color: #54cfde;

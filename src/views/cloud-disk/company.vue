@@ -14,7 +14,9 @@
           <t-title title="部门云盘"></t-title>
           <div class="common-action">
               <div class="disk-cloud">
-                  <upload-button icon="el-icon-upload2" @on-change="upload_img" size='medium' type="success" v-wave>上传</upload-button>
+                  <upload-button icon="el-icon-upload2"
+                  :pan='true'
+                  @on-change="upload_img" size='medium' type="success" v-wave>上传</upload-button>
                   <el-button type="success" icon="el-icon-plus" size='medium' v-wave @click="add_older">新建文件夹</el-button>
                   <el-button type="primary" icon="el-icon-download" size='medium' v-wave @click="download_file">下载</el-button>
                   <el-button type="danger" icon="el-icon-close" size='medium' v-wave @click="delete_btn">删除</el-button>
@@ -36,6 +38,7 @@
                   :data="tableData"
                   @selection-change="handleSelectionChange"
                   v-loading='loading'
+                  ref='multipleTable'
                   style="width: 100%">
                   <el-table-column type="selection" width="60" align="center"></el-table-column>
                   <el-table-column prop="originalName"  :label="file_name"  align="left"  show-overflow-tooltip> 
@@ -108,6 +111,7 @@ import qs from "qs";
 import { fileType } from "@/utils";
 import { Base64 } from "js-base64";
 import md5 from "js-md5";
+import { delete_item, action_fail } from "@/utils/user";
 export default {
   components: {
     uploadButton
@@ -174,8 +178,8 @@ export default {
       originalName: "",
       input: "",
       attaPath: "",
-      createId:[],
-      sigle_fileid:""
+      createId: [],
+      sigle_fileid: ""
     };
   },
   computed: {
@@ -217,6 +221,7 @@ export default {
           this.left_nav_data = res.data.sysOrgs;
           if (!this.left_nav_data.length) return;
           this.temp_data = this.left_nav_data[0];
+          console.log(this.temp_data);
           this.get_deptCloudisk(this.pageSize, this.pageNo);
         })
         .catch(res => {});
@@ -268,7 +273,6 @@ export default {
       console.log(this.temp_data.orgId);
       this.$post("gwt/uploadFile/uploadCloudisk", formData, "form")
         .then(res => {
-          console.log(res);
           this.attaPath = res.data.attachmentList[0].attaPath;
           // console.log(res.data.attachmentList[0].attaPath)
           if (res.result === "0000") {
@@ -325,7 +329,7 @@ export default {
     },
     //下载
     download_file() {
-      if (this.fileIds.length == 0 && this.dirIds.length == 0) {
+      if (this.select_list.length === 0) {
         this.$swal({
           title: "提示信息！",
           text: "请选择要下载的文件",
@@ -337,52 +341,56 @@ export default {
         return;
       }
       var data = {
-        fileIds: this.fileIds.map(res => res + "").join(",")
+        fileIds: this.fileIds.map(res => res + "").join(","),
+        dirIds: this.dirIds.map(res => res + "").join(","),
+        orgId: this.temp_data.orgId
       };
       var sigle_data = {
-        jh:parseInt(this.sigle_fileid)
-      }
-      if(this.fileIds.length === 1 && this.dirIds.length === 0){
-        alert("dan")
+        fileId: parseInt(this.sigle_fileid),
+        orgId: this.temp_data.orgId
+      };
+      if (this.fileIds.length === 1 && this.dirIds.length === 0) {
         // console.log(this.sigle_fileid)
         //   console.log(parseInt(this.sigle_fileid))
-          var object = Base64.encode(JSON.stringify(sigle_data));
-          var sign = md5(object + this.$store.getters.sign);
-          window.open(
-            `/gwt/cloudisk/cloudiskAttachment/sigleFileDownload?${qs.stringify({
-              object,
-              sign,
-              token: this.$store.getters.token
-            })}`
-          );
-      }else{
-        alert("duo")
-          var object = Base64.encode(JSON.stringify(data));
-          var sign = md5(object + this.$store.getters.sign);
-          window.open(
-            `/gwt/cloudisk/cloudiskAttachment/BatchDownload?${qs.stringify({
-              object,
-              sign,
-              token: this.$store.getters.token
-            })}`
-          );
+        var object = Base64.encode(JSON.stringify(sigle_data));
+        var sign = md5(object + this.$store.getters.sign);
+        window.open(
+          `/gwt/cloudisk/cloudiskAttachment/sigleFileDownload?${qs.stringify({
+            object,
+            sign,
+            token: this.$store.getters.token
+          })}`
+        );
+      } else {
+        var object = Base64.encode(JSON.stringify(data));
+        var sign = md5(object + this.$store.getters.sign);
+        window.open(
+          `/gwt/cloudisk/cloudiskAttachment/BatchDownload?${qs.stringify({
+            object,
+            sign,
+            token: this.$store.getters.token
+          })}`
+        );
       }
     },
     //删除
     delete_btn() {
       // console.log(this.createId.includes(parseInt(this.current_user.id)))
       // return;
-      if(parseInt(this.current_user.id) !== this.createId && !this.createId.includes(parseInt(this.current_user.id))){
-            this.$swal({
-              title: "提示信息！",
-              text: "您没有权限删除此文件",
-              type: "warning",
-              confirmButtonColor: "#DD6B55",
-              confirmButtonText: "确定",
-              showConfirmButton: true
-            });
-            return
-      }
+      // if (
+      //   parseInt(this.current_user.id) !== this.createId &&
+      //   !this.createId.includes(parseInt(this.current_user.id))
+      // ) {
+      //   this.$swal({
+      //     title: "提示信息！",
+      //     text: "您没有权限删除此文件",
+      //     type: "warning",
+      //     confirmButtonColor: "#DD6B55",
+      //     confirmButtonText: "确定",
+      //     showConfirmButton: true
+      //   });
+      //   return;
+      // }
       if (this.fileIds.length == 0 && this.dirIds.length == 0) {
         this.$swal({
           title: "提示信息！",
@@ -447,40 +455,58 @@ export default {
     },
     //举报信息提交
     submit_report(formName) {
-      // console.log(this.reportform.type);
       this.$refs[formName].validate(valid => {
         if (valid) {
           this.$post(
-            `gwt/cloudisk/cloudiskAttaOrgRelation/reportCloudiskInfo`,
+            "gwt/system/sysReport/report",
             {
-              orgId: this.temp_data.orgId,
-              dirIds: this.dirIds.map(res => res + "").join(","),
-              fileIds: this.fileIds.map(res => res + "").join(",")
+              appId: "1",
+              arrayContentType: this.reportform.type.join(","),
+              cause: this.reportform.desc,
+              contentId: this.select_list
+                .map(res => res.dirId || res.fileId)
+                .join(","),
+              reportored: this.select_list.map(res => res.createUser).join(","),
+              reportoredOrg: this.temp_data.orgId,
+              title: ` 标题为“${this.select_list
+                .map(res => res.originalName)
+                .join("、")}”的文件被举报，点击查看详情`,
+              smsTitle: ` 标题为“${this.select_list
+                .map(res => res.originalName)
+                .join("、")}”的文件被举报，点击查看详情`,
+              smsAppName: "文件"
             },
             "json"
-          ).then(res => {
-            // console.log(res);
-            if (res.result !== "0000") {
-              return;
-            }
-            this.reportDialogVisible = false;
-            this.get_deptCloudisk(this.pageSize, this.pageNo);
-            this.$message({
-              type: "success",
-              message: "举报成功"
+          )
+            .then(res => {
+              this.form_loading = false;
+              if (res.result !== "0000") {
+                this.$swal({
+                  title: "操作失败！",
+                  text: res.msg,
+                  type: "error",
+                  confirmButtonColor: "#DD6B55",
+                  confirmButtonText: "确定",
+                  showConfirmButton: true
+                });
+                return;
+              }
+              this.reportDialogVisible = false;
+              this.$message({
+                message: "举报成功",
+                type: "success"
+              });
+              this.$refs.multipleTable.clearSelection();
+            })
+            .catch(res => {
+              this.form_loading = false;
             });
-            this.reportform.type = [];
-            this.reportform.desc = ""
-            // location.reload()
-          });
         } else {
-          console.log("error submit!!");
           return false;
         }
       });
     },
     change_left_nav(item, index) {
-     
       this.left_nav_data_current = index;
       this.temp_data = item;
       console.log(item);
@@ -499,7 +525,6 @@ export default {
       for (var i = 0; i < this.file_nav.length; i++) {
         arr.push(this.file_nav[i].id);
       }
-      console.log(arr);
       this.file_nav = this.file_nav.slice(0, index + 1);
       this.$post(
         `gwt/cloudisk/cloudiskAttaOrgRelation/deptCloudiskPage?${qs.stringify({
@@ -514,7 +539,6 @@ export default {
         },
         "json"
       ).then(res => {
-        console.log(res);
         if (res.result === "0000") {
           this.tableData = res.data.deptCloudiskPageBean.datas;
           // this.totalCount = parseInt(res.data.deptCloudiskPageBean.totalCount);
@@ -530,7 +554,6 @@ export default {
       this.get_deptCloudisk(this.pageSize, 1);
     },
     file_click(index) {
-      console.log(index);
       this.parentId = index.dirId;
       if (index.type === "folder") {
         this.file_nav.push({
@@ -541,33 +564,54 @@ export default {
         this.parentId = index.dirId;
         this.pageNo = 1;
         this.get_deptCloudisk(this.pageSize, 1);
+        return;
       }
       var img_src = index.originalName.substring(
         index.originalName.lastIndexOf("."),
         index.originalName.length
       );
-      console.log("img_src");
       if (
         img_src != ".bmp" &&
         img_src != ".png" &&
         img_src != ".gif" &&
         img_src != ".jpg" &&
-        img_src != ".jpeg"
+        img_src != ".jpeg" &&
+        img_src != ".pdf"
       ) {
-        return;
+        var sigle_data = {
+          fileId: index.fileId
+        };
+        var object = Base64.encode(JSON.stringify(sigle_data));
+        var sign = md5(object + this.$store.getters.sign);
+        window.open(
+          `/gwt/cloudisk/cloudiskAttachment/sigleFileDownload?${qs.stringify({
+            object,
+            sign,
+            token: this.$store.getters.token
+          })}`
+        );
+      } else {
+        this.$post(
+          "gwt/cloudisk/cloudiskAttachment/getAttachment",
+          {
+            fileId: index.fileId
+          },
+          "json"
+        ).then(res => {
+          if (action_fail(res)) return;
+          window.open(
+            res.data.cloudiskAttachment.attaPath +
+              "/" +
+              res.data.cloudiskAttachment.storeName
+          );
+        });
       }
-      window.open(
-        `http://192.168.31.7/#/part-cloud-disk/index/${index.attaPath}/${
-          index.originalName
-        }`
-      );
     },
     //row-click
     get_svg_name(name) {
       return fileType(name);
     },
     handleSelectionChange(e) {
-      console.log(e)
       this.select_list = e;
       this.fileIds = [];
       this.dirIds = [];
@@ -575,11 +619,9 @@ export default {
       for (var i = 0; i < e.length; i++) {
         if (e[i].type === "file") {
           this.fileIds.push(e[i].fileId);
-          // console.log(e[i].fileId);
           this.originalName = e[i].originalName;
-          this.createId.push(e[i].createUser)
-          this.sigle_fileid = e[i].fileId
-          // console.log(this.sigle_fileid)
+          this.createId.push(e[i].createUser);
+          this.sigle_fileid = e[i].fileId;
         } else {
           this.dirIds.push(e[i].dirId);
         }

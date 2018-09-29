@@ -1,7 +1,7 @@
 <template>
     <div class="user-message" @click="item_click">
         <div class="user-message-left">
-            <span class="new-message"></span>
+            <span class="new-message" v-if="data.STATE === 0"></span>
             <img :src="require('@/assets/imgs/report-s.png')" v-if='data.TYPE_ID === 5'>
             <img :src="require('@/assets/imgs/message.png')" v-else>
             <i class="el-icon-close" @click.stop="delete_a_message"></i>

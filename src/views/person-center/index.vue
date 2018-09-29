@@ -57,11 +57,11 @@
                     </el-form-item>
                     <el-form-item label="手机号：" class="page-form-item">
                         {{userform.mobilePhone}}
-                        <el-button type="success" size="mini" icon="el-icon-edit-outline" @click="password_first_visible = true" v-wave>编辑</el-button>
+                        <el-button type="success" size="mini" icon="el-icon-edit-outline" @click="open_edit_phone" v-wave>编辑</el-button>
                     </el-form-item>
                     <el-form-item label="密码：" class="page-form-item">
                         {{userform.password}}
-                        <el-button type="success" size="mini" icon="el-icon-edit-outline" @click="role_visible = true" v-wave>编辑</el-button>
+                        <el-button type="success" size="mini" icon="el-icon-edit-outline" @click="open_edit_pwd" v-wave>编辑</el-button>
                     </el-form-item>
                 </el-form>
             </div>
@@ -95,9 +95,11 @@
             class="common-dialog"
             center v-drag
             :visible.sync="password_first_visible">
-            <el-form ref="password_first_visible_form" :model="password_first_visible_form" :rules="password_first_visible_form_rules" label-width="80px" >
+            <el-form ref="password_first_visible_form" :model="password_first_visible_form"  
+              @submit.native.prevent :rules="password_first_visible_form_rules" label-width="80px" >
                 <el-form-item label="密码" prop='password' >
-                    <el-input v-model="password_first_visible_form.password" placeholder="请输入原密码" type="password"></el-input>
+                    <el-input size="small" v-model="password_first_visible_form.password" 
+                    placeholder="请输入原密码" type="password"></el-input>
                 </el-form-item>
                 <form-button @cancel='onCancel_first' @submit="onSubmit_first" submit_name='下一步'></form-button>
             </el-form>
@@ -109,23 +111,23 @@
             @close="close_second_visible"
             center
             :visible.sync="password_second_visible">
-            <el-form ref="phone_first_visible_form" :model="phone_first_visible_form" :rules="phone_first_visible_form_rules" label-width="80px" >
+            <el-form ref="phone_first_visible_form" :model="phone_first_visible_form" 
+              @submit.native.prevent
+              :rules="phone_first_visible_form_rules" label-width="80px" >
                 <el-form-item label="新手机号" prop='phone'>
-                    <el-input v-model="phone_first_visible_form.phone" placeholder="请输入新手机号" class="codeinput"></el-input>
-                    <el-button type="primary" class="getcode" @click="getCode">
-                      <span v-show="show" @click="getCode">获取验证码</span>
-                      <span v-show="!show" class="count">{{count+'秒后获取'}}</span>
-                    </el-button>
-                    
+                    <div class="flex">
+                      <el-input v-model="phone_first_visible_form.phone" placeholder="请输入新手机号" size="small"></el-input>
+                      <div :class="isSend ? 'erp-btn info' : 'erp-btn'" 
+                      style="margin-left:10px;position:relative;line-height:32px;line-height: 17px;width:120px;text-align:center"
+                      @click="get_validate">{{send_message}}</div>
+                    </div>
                 </el-form-item>
                 <el-form-item label="验证码" prop='code'>
-                    <el-input v-model="phone_first_visible_form.code" placeholder="请输入验证码"></el-input>
+                    <el-input v-model="phone_first_visible_form.code" size="small" 
+                    maxlength="6"
+                    placeholder="请输入验证码"></el-input>
                 </el-form-item>
-                <el-form-item class="optionbtn">
-                  <el-button type="primary" @click="onSubmit_second('phone_first_visible_form')">完成</el-button>
-                  <el-button @click="onCancel_second('ruleForm')">取消</el-button>
-                </el-form-item>
-                <!-- <form-button @cancel='onCancel_second' @submit="onSubmit_second('phone_first_visible_form')" submit_name='完成'></form-button> -->
+                <form-button @cancel='onCancel_second' @submit="onSubmit_second('phone_first_visible_form')" submit_name='完成'></form-button>
             </el-form>
         </el-dialog>
         <!-- 上传图片弹框 -->
@@ -173,10 +175,11 @@
         </el-dialog>
         <!-- 修改密码 -->
         <el-dialog :close-on-click-modal='false'
+            v-drag
             title="修改密码"
             class="common-dialog"
-            :visible.sync="role_visible" v-drag>
-            <el-form ref="pwdform" :model="pwdform" label-width="80px" :rules="pwdformrules">
+            :visible.sync="role_visible" >
+            <el-form ref="pwdform" :model="pwdform" label-width="80px" :rules="pwdformrules" @submit.native.prevent>
                 <el-form-item label="原密码" prop='oldpwd'>
                     <el-input type="password" v-model="pwdform.oldpwd" size="small" placeholder="请输入原密码"></el-input>
                 </el-form-item>
@@ -197,7 +200,7 @@ import vueCropper from "vue-cropper";
 import uploadButton from "@/components/Button/uploadButton";
 import formButton from "@/components/Button/formButton";
 import littleButton from "@/components/Button/littleButton";
-import { validatePhone } from "@/utils/validate";
+import { validatePhone, validatePassword } from "@/utils/validate";
 import { mapGetters } from "vuex";
 import { delete_item } from "@/utils/user";
 export default {
@@ -242,6 +245,8 @@ export default {
       }
     };
     return {
+      send_message: "获取验证码",
+      isSend: false,
       pwdform: {
         oldpwd: "",
         newpwd1: "",
@@ -310,7 +315,9 @@ export default {
         password: ""
       },
       password_first_visible_form_rules: {
-        password: [{ required: true, trigger: "blur", validator: validOldPwd }]
+        password: [
+          { required: true, trigger: "blur", validator: validatePassword }
+        ]
       },
       phone_first_visible_form: {
         phone: "",
@@ -321,7 +328,7 @@ export default {
           {
             required: true,
             trigger: "blur",
-            message: "请输入手机号"
+            validator: validatePhone
           }
         ]
       },
@@ -335,7 +342,7 @@ export default {
         remark: ""
       },
       attachId: "",
-      is_disable:true
+      is_disable: true
     };
   },
   created() {
@@ -347,6 +354,18 @@ export default {
     ...mapGetters(["user_info"])
   },
   methods: {
+    open_edit_pwd() {
+      this.role_visible = true;
+      this.$nextTick(res => {
+        this.$refs.pwdform.resetFields();
+      });
+    },
+    open_edit_phone() {
+      this.password_first_visible = true;
+      this.$nextTick(res => {
+        this.$refs.password_first_visible_form.resetFields();
+      });
+    },
     //获取头像
     get_head() {
       this.$post(
@@ -382,11 +401,10 @@ export default {
           this.resetform.phone = res.data.user.sysOrgUserX.phone;
           this.resetform.remark = res.data.user.sysOrgUserX.remark;
 
-          this.attachId = res.data.AttrHeadId[0].attachId;
+          // this.attachId = res.data.AttrHeadId[0].attachId;
           this.user_img = res.data.AttrHeadId;
           this.isShow = !this.isShow;
           this.isHide = !this.isHide;
-          return;
         }
       });
     },
@@ -507,7 +525,6 @@ export default {
     },
     //确定修改密码
     onSubmit_first() {
-      console.log(this.password_first_visible_form.password);
       this.$refs.password_first_visible_form.validate(res => {
         if (!res) return;
         this.$post(
@@ -521,68 +538,81 @@ export default {
           console.log(res);
           if (res.result == "0000") {
             this.password_second_visible = true;
-            this.password_first_visible_form = {};
+            this.$nextTick(res => {
+              this.$refs.phone_first_visible_form.resetFields();
+            });
           } else {
             this.$message.error(res.msg);
           }
         });
       });
-      // this.password_second_visible = true;
     },
-
-    //获取验证码
-    getCode() {
-      var reg=11 && /^((13|14|15|17|18)[0-9]{1}\d{8})$/;
-      if(this.phone_first_visible_form.phone === ""){
-          this.$message.error("新手机号不能为空");
-          return;
-      }else if(!reg.test(this.phone_first_visible_form.phone)){
-          this.$message.error("手机号不合法");
-          return
-      }else{
-        console.log(this.show)
-        if(!this.show){
-          return;
-        }
+    /*获取验证码*/
+    get_validate() {
+      if (this.isSend) {
+        this.$message({
+          message: "您已发送验证码，请稍后再发",
+          type: "warning"
+        });
+        return;
+      }
+      this.$refs.phone_first_visible_form.validate(res => {
+        if (!res) return;
+        this.loading = true;
         this.$post(
-          `gwt/getPhoneValidateCode`,
+          "gwt/getPhoneValidateCode",
           {
             phone: this.userform.mobilePhone,
             newPhoneNum: this.phone_first_visible_form.phone,
             fromSource: "updatePhone"
           },
           "json"
-        ).then(res => {
-          console.log(res);
-          if (res.result !== "0000") {
-            this.$message.error(res.msg);
-          }
-          const TIME_COUNT = 60;
-          if (!this.timer) {
-            this.count = TIME_COUNT;
-            this.show = false;
-            this.timer = setInterval(() => {
-              if (this.count > 0 && this.count <= TIME_COUNT) {
-                this.count--;
-                
-              } else {
-                this.show = true;
-                clearInterval(this.timer);
-                this.timer = null;
-              }
-            }, 1000);
+        )
+          .then(res => {
+            this.loading = false;
+            if (res.result !== "0000") {
+              this.$swal({
+                title: "操作失败！",
+                text: res.msg,
+                type: "error",
+                confirmButtonColor: "#DD6B55",
+                showConfirmButton: true
+              });
+              return;
+            }
+            clearInterval(this.timer);
+            this.isSendPhone = true;
             this.$message({
               message: "短信验证码已发送，请注意查收",
               type: "success"
             });
-          }
-        });
-      }
+            this.isSend = true;
+            var isSend = sessionStorage.setItem("login-isSend", "true");
+            var a = 0;
+            this.send_message = 60 - a + "秒";
+            this.timer = setInterval(res => {
+              a++;
+              this.send_message = 60 - a + "秒";
+              sessionStorage.setItem("login-message", this.send_message);
+              if (a == 60) {
+                this.send_message = "获取验证码";
+                this.isSend = false;
+                clearInterval(this.timer);
+                var isSend = sessionStorage.setItem("login-isSend", "false");
+                sessionStorage.setItem("login-message", this.send_message);
+              }
+            }, 1000);
+          })
+          .catch(res => {
+            this.loading = false;
+          });
+      });
     },
+    //获取验证码
     onCancel_second() {
       this.password_second_visible = false;
     },
-    onSubmit_second(formName) {  
+    onSubmit_second(formName) {
       this.$refs[formName].validate(res => {
         if (!res) return;
         this.$post(
@@ -593,72 +623,49 @@ export default {
           },
           "json"
         )
-        .then(res => {
-          if (res.result !== "0000") {
-            this.$swal({
-              title: "操作失败！",
-              text: res.msg,
-              type: "error",
-              showConfirmButton: true
-            });
-            return;
-          }
-          this.$post(
-            `gwt/system/sysUserZone/changPhone`,
-            {
-              newPhoneNum: this.phone_first_visible_form.phone,
-              oldPhone: this.userform.mobilePhone
-            },
-            "json"
-          ).then(res => {
-            console.log(res);
-            if (res.result === "0000") {
-              this.getUserInfo();
-              this.$message.success(res.msg);
-              this.password_second_visible = false;
-              this.phone_first_visible_form = {};
+          .then(res => {
+            if (res.result !== "0000") {
+              this.$swal({
+                title: "操作失败！",
+                text: res.msg,
+                type: "error",
+                showConfirmButton: true
+              });
+              return;
             }
+            this.$post(
+              `gwt/system/sysUserZone/changPhone`,
+              {
+                newPhoneNum: this.phone_first_visible_form.phone,
+                oldPhone: this.userform.mobilePhone
+              },
+              "json"
+            ).then(res => {
+              console.log(res);
+              if (res.result === "0000") {
+                this.send_message = "发送验证码";
+                this.isSend = false;
+                clearInterval(this.timer);
+                this.getUserInfo();
+                this.$message.success(res.msg);
+                this.password_second_visible = false;
+                this.phone_first_visible_form = {};
+              }
+            });
+            this.password_second_visible = false;
+            this.$message({
+              type: "success",
+              message: "手机号修改成功"
+            });
+            this.getUserInfo();
+          })
+          .catch(res => {
+            console.log(res);
           });
-          this.password_second_visible = false;
-          this.$message({
-            type: "success",
-            message: "手机号修改成功"
-          });
-          this.getUserInfo();
-        })
-        .catch(res => {
-          console.log(res);
-        });
       });
     },
-    // onSubmit_second(formName) {  
-    //   this.$refs[formName].validate(valid => {
-    //     if (valid) {
-    //       this.$post(
-    //         `gwt/system/sysUserZone/changPhone`,
-    //         {
-    //           newPhoneNum: this.phone_first_visible_form.phone,
-    //           oldPhone: this.userform.mobilePhone
-    //         },
-    //         "json"
-    //       ).then(res => {
-    //         console.log(res);
-    //         if (res.result === "0000") {
-    //           this.getUserInfo();
-    //           this.$message.success(res.msg);
-    //           this.password_second_visible = false;
-    //           this.phone_first_visible_form = {};
-    //         }
-    //       });
-    //     } else {
-    //       console.log("error submit!!");
-    //       return false;
-    //     }
-    //   });
-    // },
     //上传头像
-    download(type) {
-      console.log(type);
+    download() {
       this.$refs.cropper.getCropData(data => {
         var formData = new FormData();
         formData.append("ownerSystem", "gwt-platform");
@@ -667,7 +674,6 @@ export default {
         formData.append("selectHeadFile", data);
         this.$post("gwt/uploadFile/uploadHead", formData, "form")
           .then(res => {
-            console.log(res);
             if (res.result === "0000") {
               this.upload_img_dialog = false;
               // this.init_usercloudisk();
@@ -676,10 +682,11 @@ export default {
                 message: "上传成功"
               });
               this.user_img = res.data.headInfo.fullAttaPath;
-              console.log(this.user_img);
             }
           })
-          .catch(res => {});
+          .catch(res => {
+            console.log(res);
+          });
       });
     },
     //放大图片
@@ -714,6 +721,18 @@ export default {
 </script>
 
 <style rel="stylesheet/scss" lang="scss">
+.send {
+  display: flex;
+  margin-top: 12px;
+  padding: 0 30px;
+  .erp-btn {
+    font-size: 14px;
+    font-size: 14px;
+    margin-left: 12px;
+    max-width: 120px;
+    min-width: 120px;
+  }
+}
 .person-center-page {
   margin-top: 20px;
 }
@@ -770,13 +789,11 @@ export default {
   float: right;
   margin: 10px 0;
 }
-.el-form-item__content .el-form-item__error {
-  position: static;
-  margin-bottom: 10px;
-}
-.codeinput {
-  width: 300px;
-}
+// .el-form-item__content .el-form-item__error {
+//   position: static;
+//   margin-bottom: 10px;
+// }
+
 .getcode {
   float: right;
 }

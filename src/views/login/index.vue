@@ -61,7 +61,8 @@ import {
   SET_USER_SIGN,
   SET_USER_TOKEN,
   SET_SILDER_LIST,
-  SET_IS_ADMIN
+  SET_IS_ADMIN,
+  SET_GROUP_LIST
 } from "@/store/mutations";
 import config from "@/config";
 export default {
@@ -139,6 +140,7 @@ export default {
       }
     });
     this.getQRURL();
+    sessionStorage.clear();
     sessionStorage.setItem("gwt-current-silder", "0");
     sessionStorage.setItem("gwt-current-silder-child", "-1");
   },
@@ -191,7 +193,14 @@ export default {
         this.pwdType = "password";
       }
     },
-
+    set_vuex_data(res) {
+      this.$store.commit(SET_USER_INFO, res.data.loginInfo.sysUser);
+      this.$store.commit(SET_USER_TOKEN, "Bearer " + res.data.token);
+      this.$store.commit(SET_USER_SIGN, res.data.randomKey);
+      this.$store.commit(SET_SILDER_LIST, res.data.resource);
+      this.$store.commit(SET_IS_ADMIN, res.data.isAdmin);
+      this.$store.commit(SET_GROUP_LIST, res.data.sysAllOrgs);
+    },
     handleLogin() {
       this.$refs.loginForm.validate(valid => {
         if (valid) {
@@ -219,7 +228,25 @@ export default {
                 });
                 return;
               }
-              if (res.data.code === "usererror") {
+              if (res.data.code === "userdelete") {
+                this.$swal({
+                  title: "登陆失败",
+                  text: `该用户名不存在`,
+                  type: "error",
+                  confirmButtonColor: "#DD6B55",
+                  confirmButtonText: "确定",
+                  showConfirmButton: true
+                });
+              } else if (res.data.code === "userdisable") {
+                this.$swal({
+                  title: "登陆失败",
+                  text: `用户已被停用，请联系管理员`,
+                  type: "error",
+                  confirmButtonColor: "#DD6B55",
+                  confirmButtonText: "确定",
+                  showConfirmButton: true
+                });
+              } else if (res.data.code === "usererror") {
                 this.show_code = true;
                 this.get_img_code();
                 this.$swal({
@@ -242,29 +269,17 @@ export default {
                   showConfirmButton: true
                 });
               } else if (res.data.code === "unauthorized") {
-                this.$store.commit(SET_SILDER_LIST, res.data.resource);
-                this.$store.commit(SET_USER_INFO, res.data.loginInfo.sysUser);
-                this.$store.commit(SET_USER_TOKEN, "Bearer " + res.data.token);
-                this.$store.commit(SET_USER_SIGN, res.data.randomKey);
-                this.$store.commit(SET_IS_ADMIN, res.data.isAdmin);
+                this.set_vuex_data(res);
                 this.$router.push({
                   path: "/login/message"
                 });
               } else if (res.data.code === "firstlogin") {
-                this.$store.commit(SET_SILDER_LIST, res.data.resource);
-                this.$store.commit(SET_USER_INFO, res.data.loginInfo.sysUser);
-                this.$store.commit(SET_USER_TOKEN, "Bearer " + res.data.token);
-                this.$store.commit(SET_USER_SIGN, res.data.randomKey);
-                this.$store.commit(SET_IS_ADMIN, res.data.isAdmin);
+                this.set_vuex_data(res);
                 this.$router.push({
                   path: "/firstlogin"
                 });
               } else {
-                this.$store.commit(SET_USER_INFO, res.data.loginInfo.sysUser);
-                this.$store.commit(SET_USER_TOKEN, "Bearer " + res.data.token);
-                this.$store.commit(SET_USER_SIGN, res.data.randomKey);
-                this.$store.commit(SET_SILDER_LIST, res.data.resource);
-                this.$store.commit(SET_IS_ADMIN, res.data.isAdmin);
+                this.set_vuex_data(res);
                 this.$message({
                   type: "success",
                   message: "登录成功！"

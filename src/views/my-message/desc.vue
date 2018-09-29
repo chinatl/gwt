@@ -40,6 +40,10 @@ export default {
   },
   created() {
     this.$store.dispatch("readSession", SET_REPORT_DATA);
+    console.log(this.report_data);
+  },
+  beforeDestroy() {
+    this.$store.commit("DEL_VIEW_BY_NAME", "举报详情");
   },
   methods: {
     retrun_message() {
@@ -55,9 +59,15 @@ export default {
         });
         return;
       }
-      this.$router.push({
-        path: "/report-desc/index"
-      });
+      if (this.report_data.appId === "1") {
+        this.$router.push({
+          path: "/file-desc/index"
+        });
+      } else {
+        this.$router.push({
+          path: "/report-desc/index"
+        });
+      }
     }
   }
 };

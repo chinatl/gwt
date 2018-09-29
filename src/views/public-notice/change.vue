@@ -25,7 +25,7 @@
                             placeholder="选择日期时间">
                         </el-date-picker>
                     </el-form-item>
-                    <el-form-item label="接收部门">
+                    <el-form-item label="接收部门" v-if="is_permisssion">
                         <el-input v-model="form.part" size="small" placeholder="请选择接收部门" readonly></el-input>
                     </el-form-item>
                     <el-form-item label="接收人">
@@ -99,11 +99,14 @@ export default {
   },
   created() {
     this.$store.dispatch("readSession", SET_NOTICE_DATA);
-    console.log(JSON.stringify(this.notice_data, {}, 4));
+    this.$store.dispatch("get_user_send_permission");
     this.init();
   },
+  beforeDestroy() {
+    this.$store.commit("DEL_VIEW_BY_NAME", "通知变革");
+  },
   computed: {
-    ...mapGetters(["notice_data"])
+    ...mapGetters(["notice_data","is_permisssion"])
   },
   methods: {
     init() {
@@ -253,7 +256,8 @@ export default {
                 this.$post(
                   "gwt/notice/tbNotice/save",
                   {
-                    noticeId: this.notice_data.NOTICE_ID,
+                    changeNoticeId: this.notice_data.NOTICE_ID,
+                    noticeId: '',
                     noticeTitle: this.form.noticeTitle,
                     noticeType: this.notice_data.NOTICE_TYPE, //会议 2//通知 3//材料
                     noticeAdress: this.form.noticeAdress,
@@ -278,7 +282,7 @@ export default {
                   "json"
                 )
                   .then(res => {
-                    if (action_fail(res, "会议创建成功！")) return;
+                    if (action_fail(res, "通知变更成功！")) return;
                     this.$router.push({
                       path: "/active/index"
                     });
@@ -323,7 +327,7 @@ export default {
           startTime: parseTime(this.form.startTime, "{y}-{m}-{d} {h}:{i}:{s}"),
           endTime: "",
           selectedUsers: this.has_select_user_list
-            .map(res => res.USER_ID)
+            .map(res => res.ID)
             .join(","),
           attrArray: this.file_list.map(res => res.id).join(","),
           orgArray: this.has_select_part_list

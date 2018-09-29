@@ -14,6 +14,7 @@
             <div class="artive-address">
                 <p v-if='status === "1002"'>拒签理由：<span>{{tbNoticeRefuse.REFUSE_REASON}}</span></p>
                 <p v-if='data.startTime'>开始时间：<span>{{data.startTime}}</span></p>
+                <p v-if='data.endTime'>结束时间：<span>{{data.endTime}}</span></p>
                 <p v-if='data.noticeAdress'>会议地点：<span>{{data.noticeAdress}}</span></p>
             </div>
             <div class="active-content">
@@ -49,7 +50,7 @@
                     label="姓名">
                     </el-table-column>
                     <el-table-column
-                    prop="appName"
+                    prop="DUTY"
                     align="center"
                     label="职务">
                     </el-table-column>
@@ -220,7 +221,7 @@
                     label="姓名">
                     </el-table-column>
                     <el-table-column
-                    prop="appName"
+                    prop="DUTY"
                     align="center"
                     label="职务">
                     </el-table-column>
@@ -236,14 +237,15 @@
                     label="所属部门">
                     </el-table-column>
                     <el-table-column
-                    prop="ORG_ALL_NAME"
+                    prop="REFUSE_TIME"
                     align="center"
-                    label="报名人员">
+                    label="拒签时间">
                     </el-table-column>
                     <el-table-column
-                    prop="ORG_ALL_NAME"
+                    prop="REFUSE_REASON"
                     align="center"
-                    label="报名时间">
+                    show-overflow-tooltip
+                    label="拒签原因">
                     </el-table-column>
                 </el-table>
             </div>
@@ -311,7 +313,10 @@
               <div>
                 <el-button type="success" 
                 @click="re_tip_user"
-                :disabled="!tableData.length" size="small" icon="el-icon-message" style="font-size:14px">再次提醒</el-button>
+                :disabled="!tableData.filter(res=>{
+                  return res.SEND_FLAG === 0
+                }).length"
+                size="small" icon="el-icon-message" style="font-size:14px">再次提醒</el-button>
               </div>
             </div>
         </div>
@@ -454,7 +459,8 @@ export default {
       desc_loading: false
     };
   },
-  beforeDestroy(e) {
+  beforeDestroy() {
+    this.$store.commit("DEL_VIEW_BY_NAME", "已发通知详情");
     sessionStorage.removeItem("active-desc/index/pageNo");
     sessionStorage.removeItem("active-desc/index/total");
   },
@@ -468,11 +474,11 @@ export default {
     this.pageSize = pageSize ? pageSize - 0 : 5;
     this.$store.dispatch("readSession", SET_MESSAGE_DATA);
     this.status = this.message_data.REC_STATUS;
-
+    this.filter_nav();
+    console.log(JSON.stringify(this.message_data, {}, 4));
     this.get_meeting_data();
     this.init_file(this.message_data.NOTICE_ID);
     this.get_type_nmuber();
-    this.filter_nav();
     this.init();
   },
   computed: {
@@ -512,11 +518,17 @@ export default {
         } else if (this.dataType === 5) {
           this.tableData = res.data.tbNoticeSmsNoticeFailedPageBean.datas || [];
           this.total = res.data.tbNoticeSmsNoticeFailedPageBean.totalCount - 0;
+          this.tabCounts.smsNoticeFailedUsers = res.data.totalCount;
         } else {
           this.tableData = res.data.tbNoticeItemPageBean.datas;
           this.total = res.data.tbNoticeItemPageBean.totalCount - 0;
+          if(this.dataType === 4){
+          this.tabCounts.unSignUsers = res.data.SEND_COUNT;
+          }
         }
-      });
+      }).catch(res=>{
+        console.log(res)
+      })
     },
     //再次提醒用户
     re_tip_user() {
@@ -528,7 +540,22 @@ export default {
         "json"
       )
         .then(res => {
-          console.log(res);
+          if (res.result !== "0000") {
+            Vue.swal({
+              title: "操作失败！",
+              text: res.msg,
+              type: "error",
+              confirmButtonColor: "#DD6B55",
+              confirmButtonText: "确定",
+              showConfirmButton: true
+            });
+            return;
+          }
+          this.$message({
+            message: "",
+            type: "success"
+          });
+          this.init(this.pageSize, this.pageNo);
         })
         .catch(res => {
           console.log(res);
@@ -639,7 +666,7 @@ export default {
     },
     one_file_download(item) {
       var data = {
-        id: item.id
+        id: item
       };
       var object = Base64.encode(JSON.stringify(data));
       var sign = md5(object + this.$store.getters.sign);
@@ -654,30 +681,28 @@ export default {
     //批量下载
     download_file(item) {
       var data = {
-        fileIds: this.fileIds.map(res => res + "").join(","),
-        dirIds: this.dirIds.map(res => res + "").join(","),
-        orgId: this.folderform.orgId
+        inIdAry: item.ATTA_INFOS.map(res => res.id).join(",")
       };
       var object = Base64.encode(JSON.stringify(data));
       var sign = md5(object + this.$store.getters.sign);
       window.open(
-        `gwt/cloudisk/cloudiskAttachment/BatchDownload?${qs.stringify({
+        `gwt/system/tbNoticeAttachment/batchDownload?${qs.stringify({
           object,
           sign,
           token: this.$store.getters.token
         })}`
       );
-      this.$post(
-        "gwt/system/tbNoticeAttachment/batchDownload",
-        {
-          inIdAry: item.ATTA_INFOS.map(res => {
-            return res.id;
-          }).join(",")
-        },
-        "json"
-      ).then(res => {
-        console.log(res);
-      });
+      // window.open(
+      //   `gwt/system/tbNoticeAttachment/batchDownload`,
+      //   {
+      //     inIdAry: item.ATTA_INFOS.map(res => {
+      //       return res.id;
+      //     }).join(",")
+      //   },
+      //   "json"
+      // ).then(res => {
+      //   console.log(res);
+      // });
     },
     fileType(name) {
       return fileType(name);
@@ -716,10 +741,12 @@ export default {
       localStorage.setItem("active-desc/index/pageSize", e);
       this.pageNo = 1;
       this.pageSize = e;
+      this.init(e, 1);
     },
     handleCurrentChange(e) {
       sessionStorage.setItem("active-desc/indexpageNo", e);
       this.pageNo = e;
+      this.init(this.pageSize, e);
     },
     //获取 init 数据
     get_meeting_data() {
