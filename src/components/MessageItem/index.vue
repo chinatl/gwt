@@ -18,6 +18,8 @@
                 </span>
             </div>
             <div class="user-message-info">
+                <little-button name=' 变更 ' v-if="data.FROM_NOTICE_ID"></little-button>
+                <little-button name='转发' v-if="data.FORWARD_ID "></little-button>
                 <little-button :name='data.TYPE_DESC'></little-button>
                 <span class="current">{{data.CREATE_USER_NAME}}</span>
                 <span class="current">{{data.DEPT}}</span>
@@ -114,6 +116,9 @@ export default {
       }
     }
     .user-message-info {
+      .zhuanfa {
+        background-color: #fab858;
+      }
       .current {
         letter-spacing: 0.5px;
         color: #54cfde;

@@ -138,6 +138,9 @@ export default {
               for (var i = 0; i < tableData.length; i++) {
                 tableData[i].REC_STATUS = res.data.stateList[i].REC_STATUS;
                 tableData[i].NOTICE_ID = res.data.stateList[i].NOTICE_ID;
+                tableData[i].FROM_NOTICE_ID =
+                  res.data.stateList[i].FROM_NOTICE_ID;
+                tableData[i].FORWARD_ID = res.data.stateList[i].FORWARD_ID;
               }
               this.tableData = tableData;
             })
@@ -150,29 +153,28 @@ export default {
         });
     },
     go_desc(item) {
-      console.log(JSON.stringify(item, {}, 4));
-      this.$post(
-        "gwt/business/msgRecvUser/update",
-        {
-          id: item.RECV_ID,
-          state: "1"
-        },
-        "json"
-      )
-        .then(res => {
-          console.log(res);
-        })
-        .catch(res => {
-          console.log(res);
-        });
       if (item.TYPE_DESC === "举报") {
-        // if (item.STATE === 0) {
-        //   this.$message({
-        //     message: "该举报已被删除",
-        //     type: "info"
-        //   });
-        //   return;
-        // }
+        this.$post(
+          "gwt/business/msgRecvUser/update",
+          {
+            id: item.RECV_ID,
+            state: "1"
+          },
+          "json"
+        )
+          .then(res => {
+            console.log(res);
+          })
+          .catch(res => {
+            console.log(res);
+          });
+        if (item.TITLE.includes("被管理员删除，请知悉")) {
+          this.$message({
+            message: "已处理",
+            type: "info"
+          });
+          return;
+        }
         this.$store.dispatch("get_report_desc", item.MSG_ID);
         this.$router.push({
           path: "/report/index"
@@ -196,12 +198,10 @@ export default {
           if (res.result !== "0000") {
             return;
           }
-
           if (res.data.tbNotice.noticeStatus === "1002") {
             this.$swal({
               title: "操作失败！",
-              text:
-                '该文件因为“' + res.data.tbNotice.deleteReason + '”被删除',
+              text: "该文件因为“" + res.data.tbNotice.deleteReason + "”被删除",
               type: "error",
               confirmButtonColor: "#DD6B55",
               confirmButtonText: "确定",
@@ -209,6 +209,21 @@ export default {
             });
             return;
           }
+          this.$post(
+            "gwt/notice/tbNotice/changStatus",
+            {
+              recvId: item.RECV_ID,
+              messageId: res.data.tbNoticeMessage.messageId,
+              receOrgId: res.data.tbNoticeReceive.receiveOrgId
+            },
+            "json"
+          )
+            .then(res => {
+              console.log(res);
+            })
+            .catch(res => {
+              console.log(res);
+            });
           item.RECEIVE_ID = res.data.tbNoticeReceive.id;
           this.$store.commit(SET_MESSAGE_DATA, item);
           if (item.TYPE_DESC === "通知") {

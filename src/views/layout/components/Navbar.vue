@@ -9,14 +9,13 @@
         </div>
         <div class="right-part">
           <span>当前部门：</span>
-          <el-dropdown>
+          <el-dropdown @command='check_part'>
             <span class="el-dropdown-link">
               <span class="value">{{user_info.sysOrgUserX.orgName}}</span>
               <svg-icon icon-class="刷新" />
             </span>
             <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item>其他部门1</el-dropdown-item>
-              <el-dropdown-item>其他部门2</el-dropdown-item>
+              <el-dropdown-item v-for="(item,index) in group_list" :key="index" :command='item.orgId'>{{item.orgName}}</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
           <span class="user-pic">
@@ -62,7 +61,13 @@ export default {
     };
   },
   computed: {
-    ...mapGetters(["sidebar", "avatar", "visitedViews", "user_info"])
+    ...mapGetters([
+      "sidebar",
+      "avatar",
+      "visitedViews",
+      "user_info",
+      "group_list"
+    ])
   },
   watch: {
     visible(value) {
@@ -74,6 +79,35 @@ export default {
     }
   },
   methods: {
+    check_part(orgId) {
+      this.$post(
+        "gwt/system/sysOrg/saveRedisOrgAndUserXId",
+        {
+          orgId
+        },
+        "json"
+      )
+        .then(res => {
+          if (res.result !== "0000") {
+            this.$swal({
+              title: "操作失败！",
+              text: res.msg,
+              type: "error",
+              confirmButtonColor: "#DD6B55",
+              confirmButtonText: "确定",
+              showConfirmButton: true
+            });
+            return;
+          }
+          this.$message({
+            message: "切换部门成功",
+            type: "success"
+          });
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
     has_command(e) {
       if (e === "user") {
         this.$router.push({

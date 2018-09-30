@@ -59,6 +59,23 @@ a:focus,
 a:active {
   outline: none;
 }
+.forward-notice {
+  p{
+    font-size: 14px;
+    font-weight: 700;
+    color: #273240;
+    padding-left: 10px;
+  }
+  ul {
+    padding: 4px 10px;
+    li {
+      display: flex;
+      justify-content: space-between;
+      color: #3BA4F5;
+      line-height: 2
+    }
+  }
+}
 .swal2-container.swal2-shown {
   z-index: 2200;
 }

@@ -28,7 +28,7 @@
   
     </div>
     <div class="stuff-common">
-        <t-title>人员报名</t-title>
+        <t-title>签收信息</t-title>
          <div class="common-action">
             <div class="common-table-bar">
               <span v-for='(item,index) in receive_type'
@@ -286,6 +286,62 @@
                     label="所属部门	">
                     </el-table-column>
                     <el-table-column
+                      align="center"
+                      label="接收人信息"
+                    >
+                      <template slot-scope="scope">
+                          <el-popover
+                            placement="top"
+                            align='center'
+                            width="400"
+                            trigger="hover"
+                            v-loading='reve_loading'
+                             @show='find_data(scope.row)'
+                            >
+                            <div style="text-align:center;font-size:16px;padding:10px">{{scope.row.ORG_ALL_NAME}}</div>
+                            <div class="common-table">
+                              <el-table
+                                :data="reveive_data"
+                                border
+                                v-loading ='loading'
+                                style="width: 100%">
+                                <el-table-column
+                                  prop="REAL_NAME"
+                                  align="center"
+                                  show-overflow-tooltip
+                                  label="姓名	">
+                                </el-table-column>
+                                <el-table-column
+                                  prop="READ_FLAG"
+                                  align="center"
+                                  show-overflow-tooltip
+                                  label="读取状态	">
+                                </el-table-column>
+                                <el-table-column
+                                  prop="MOBILE_PHONE"
+                                  align="center"
+                                  show-overflow-tooltip
+                                  label="电话	">
+                                </el-table-column>
+                              </el-table>
+                            </div>
+                            <div class="common-page">
+                              <el-pagination
+                              @size-change="handleSizeChange_unreceive"
+                              @current-change="handleCurrentChange_unreceive"
+                              :current-page.sync="pageNo_unreceive"
+                              :page-sizes="[5]"
+                              :page-size="pageSize_unreceive"
+                              layout="total,  prev, pager, next, jumper"
+                              background
+                              :total="total_unreceive">
+                              </el-pagination>
+                            </div>
+                            <div slot="reference"><little-button name='接收人信息'></little-button></div>
+                          </el-popover>
+                      </template>
+                    </el-table-column>
+                    <!-- <el-table-column
                     prop="RECEIVE_NAME"
                     align="center"
                     label="接收人姓名">
@@ -294,7 +350,7 @@
                     prop="MOBILE_PHONE"
                     align="center"
                     label="电话">
-                    </el-table-column>
+                    </el-table-column> -->
                 </el-table>
             </div>
             <div class="common-page">
@@ -382,39 +438,12 @@ export default {
   },
   data() {
     return {
+      pageSize_unreceive: 5,
+      pageNo_unreceive: 1,
+      total_unreceive: 0,
+      reveive_data: [],
       dataType: 0,
-      receive_type: [
-        {
-          name: "attachment",
-          value: "附件",
-          dataType: 0
-        },
-        {
-          name: "registUsers",
-          value: "已报名",
-          dataType: 1
-        },
-        {
-          name: "signUsers",
-          value: "已签收",
-          dataType: 2
-        },
-        {
-          name: "refuseUsers",
-          value: "已拒签",
-          dataType: 3
-        },
-        {
-          name: "unSignUsers",
-          value: "未签收",
-          dataType: 4
-        },
-        {
-          name: "smsNoticeFailedUsers",
-          value: "短信通知失败",
-          dataType: 5
-        }
-      ],
+      receive_type: [],
       add_user_dialog: false,
       dialog: false,
       current: 0,
@@ -456,7 +485,10 @@ export default {
       add_form: {},
       tabCounts: {},
       loading: false,
-      desc_loading: false
+      desc_loading: false,
+      reve_data: {},
+      reve_loading: false,
+      forwardId: ""
     };
   },
   beforeDestroy() {
@@ -473,24 +505,67 @@ export default {
     var pageSize = localStorage.getItem("active-desc/index/pageSize");
     this.pageSize = pageSize ? pageSize - 0 : 5;
     this.$store.dispatch("readSession", SET_MESSAGE_DATA);
+    this.forwardId = this.message_data.forwardId || "";
     this.status = this.message_data.REC_STATUS;
     this.filter_nav();
-    console.log(JSON.stringify(this.message_data, {}, 4));
     this.get_meeting_data();
     this.init_file(this.message_data.NOTICE_ID);
     this.get_type_nmuber();
+    //查列表
     this.init();
   },
   computed: {
     ...mapGetters(["message_data", "user_info"])
   },
   methods: {
+    init_reve(pageSize, currentPage) {
+      this.reve_loading = true;
+      this.$post(
+        `gwt/notice/tbNotice/orgReceiveList?${qs.stringify({
+          currentPage,
+          pageSize
+        })}`,
+        {
+          orgId: this.reve_data.RECEIVE_OBJ_ID,
+          noticeId: this.reve_data.NOTICE_ID,
+          forwardId: this.forwardId
+        },
+        "json"
+      )
+        .then(res => {
+          this.reve_loading = false;
+          if (res.result !== "0000") {
+            return;
+          }
+          this.reveive_data = res.data.tbOrgReceivePageBean.datas;
+          this.total_unreceive = res.data.tbOrgReceivePageBean.totalCount - 0;
+        })
+        .catch(res => {
+          this.reve_loading = false;
+          console.log(res);
+        });
+    },
+    handleSizeChange_unreceive(e) {
+      this.pageNo = 1;
+      this.init_reve(e, 1);
+    },
+    handleCurrentChange_unreceive(e) {
+      this.pageNo = e;
+      this.init_reve(this.pageSize, e);
+    },
+    find_data(item) {
+      this.reveive_data = [];
+      this.reve_data = item;
+      this.pageNo = 1;
+      this.init_reve(this.pageSize, 1);
+    },
     init(pageSize, currentPage) {
       var url = "";
       var data = {
         noticeId: this.message_data.NOTICE_ID,
         dataType: this.dataType,
-        attaUploadNode: undefined
+        attaUploadNode: undefined,
+        forwardId: this.forwardId
       };
       if (this.dataType === 0) {
         url = `gwt/system/tbNoticeAttachment/attachmentList`;
@@ -508,27 +583,31 @@ export default {
         })}`,
         data,
         "json"
-      ).then(res => {
-        if (res.result !== "0000") {
-          return;
-        }
-        if (this.dataType === 0) {
-          this.tableData = res.data.tbNoticeAttachmentPageBean;
-          this.total = res.data.totalCount;
-        } else if (this.dataType === 5) {
-          this.tableData = res.data.tbNoticeSmsNoticeFailedPageBean.datas || [];
-          this.total = res.data.tbNoticeSmsNoticeFailedPageBean.totalCount - 0;
-          this.tabCounts.smsNoticeFailedUsers = res.data.totalCount;
-        } else {
-          this.tableData = res.data.tbNoticeItemPageBean.datas;
-          this.total = res.data.tbNoticeItemPageBean.totalCount - 0;
-          if(this.dataType === 4){
-          this.tabCounts.unSignUsers = res.data.SEND_COUNT;
+      )
+        .then(res => {
+          if (res.result !== "0000") {
+            return;
           }
-        }
-      }).catch(res=>{
-        console.log(res)
-      })
+          if (this.dataType === 0) {
+            this.tableData = res.data.tbNoticeAttachmentPageBean;
+            this.total = res.data.totalCount;
+          } else if (this.dataType === 5) {
+            this.tableData =
+              res.data.tbNoticeSmsNoticeFailedPageBean.datas || [];
+            this.total =
+              res.data.tbNoticeSmsNoticeFailedPageBean.totalCount - 0;
+            this.tabCounts.smsNoticeFailedUsers = res.data.totalCount;
+          } else {
+            this.tableData = res.data.tbNoticeItemPageBean.datas;
+            this.total = res.data.tbNoticeItemPageBean.totalCount - 0;
+            if (this.dataType === 4) {
+              this.tabCounts.unSignUsers = res.data.tbNoticeItemPageBean.totalCount;
+            }
+          }
+        })
+        .catch(res => {
+          console.log(res);
+        });
     },
     //再次提醒用户
     re_tip_user() {
@@ -719,7 +798,7 @@ export default {
         "gwt/notice/tbNotice/tabCounts",
         {
           noticeId: this.message_data.NOTICE_ID,
-          forwardId: "",
+          forwardId: this.forwardId,
           attaUploadNode: 2
         },
         "json"

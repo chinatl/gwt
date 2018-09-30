@@ -67,7 +67,6 @@
         <el-dialog :close-on-click-modal='false'
           :title="role_type === 'add' ? '新增角色':'编辑角色'"
           class="common-dialog padding0"
-          v-drag
           :visible.sync="role_visible">
           <el-form ref="form" :model="form" label-width="80px" :rules="rules"  v-loading='form_loading'>
               <el-form-item label="角色名称" prop='roleName' maxlength='10'>

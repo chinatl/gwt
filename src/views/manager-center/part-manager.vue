@@ -238,10 +238,13 @@ export default {
     add_part_all_name() {
       if (this.temp_data.nodeType === "ORG") {
         this.form.orgAllName = this.temp_data.name + this.form.orgName;
+      } else {
+        this.form.orgAllName = this.form.orgName;
       }
     },
     filterNode(value, data) {
       if (!value) return true;
+      if (data.name) return true;
       return data.name.indexOf(value) !== -1;
     },
     change_option1(e) {
@@ -325,6 +328,7 @@ export default {
       var orgParentId = this.temp_data.id;
       if (this.temp_data.nodeType === "ORG") {
         orgParentId = orgParentId.replace(/\D/g, "");
+        areaId = areaId.replace(/\D/g, "");
       } else {
         orgParentId = "";
         areaId = "";
@@ -336,7 +340,7 @@ export default {
         })}`,
         {
           orgParentId,
-          areaId: areaId.replace(/\D/g, "")
+          areaId
         },
         "json"
       )

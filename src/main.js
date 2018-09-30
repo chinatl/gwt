@@ -36,8 +36,10 @@ import {
   Collapse,
   CollapseItem,
   Switch,
-  Radio
+  Radio,
+  Popover
 } from 'element-ui';
+Vue.use(Popover);
 Vue.use(Radio);
 Vue.use(Switch);
 Vue.use(Collapse);

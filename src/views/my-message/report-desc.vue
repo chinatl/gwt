@@ -17,7 +17,7 @@
             <div class="active-content">
                 {{data.noticeProfile}}
             </div>
-            <div class="file-info">
+            <div class="file-info" v-if="file_list.length">
                 附件： <span>{{file_list.length}} 个附件，共{{file_list | folderSize}}</span>
             </div>
             <file-list :list='file_list' @delete='delete_file' :remove='true'></file-list>
@@ -95,7 +95,7 @@ export default {
         this.$post(
           "gwt/notice/tbNotice/del",
           {
-            noticeId: this.report_data.id,
+            noticeId: this.report_data.contentId,
             msgTitle: `标题为“${this.data.noticeTitle}”的公告因“${
               this.form.deleteReason
             }”被管理员删除，请知悉`,
@@ -166,7 +166,9 @@ export default {
           if (res.result !== "0000") {
             return;
           }
-             this.file_list = res.data.tbNoticeAttachmentPageBean[0].ATTA_INFOS;
+          if (res.data.tbNoticeAttachmentPageBean.length) {
+            this.file_list = res.data.tbNoticeAttachmentPageBean[0].ATTA_INFOS;
+          }
           // this.get_file_by_id(
           //   res.data.tbNoticeAttachmentPageBean.map(res => res.ATTA_IDS).join(",")
           // );

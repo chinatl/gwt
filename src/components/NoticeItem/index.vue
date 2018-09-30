@@ -15,9 +15,10 @@
                 </span>
             </div>
             <div class="user-message-info">
-                <span class="reportColor" 
+                <span class="reportColor1" 
                       v-if="data.FROM_NOTICE_ID"
                       style="background-color: #fab858;">{{data.FROM_NOTICE_ID ?'变更':null}}</span>
+              <little-button name='转发' v-if="data.FORWARD_ID"></little-button>
                 <little-button :name='data.NOTICE_TYPE_NAME'></little-button>
                 <span class="current">{{data.REAL_NAME}}</span>
                 <span class="current">{{data.ORG_ALL_NAME}}</span>
@@ -113,12 +114,11 @@ export default {
       }
     }
     .user-message-info {
-      .reportColor {
+      .reportColor1 {
         font-weight: 100;
         vertical-align: baseline;
         padding: 4px 6px;
         border-radius: 5px;
-        margin-right: 15px;
         font-size: 11px;
         color: #fff;
       }

@@ -4,6 +4,8 @@
         <div class="article-title">
             <h3>{{data.noticeTitle}}</h3>
             <p>
+                <span v-if="message_data.FORWARD_ID">【转发】</span>
+                <span v-if="message_data.FROM_NOTICE_ID">【变更】</span>
                 <span>【{{data.noticeTypeName}}】</span>
                 <span>{{data.userName}}</span>
                 <span>{{data.orgName}}</span>
@@ -20,6 +22,31 @@
                 {{status === '1001' ? "签收": null}}
                 {{status === '1002' ? "拒签": null}}
               </p>
+              <p v-if="message_data.FORWARD_ID">转发自：
+                <span>
+                  {{forward_list.map(res=> res.REAL_NAME).join('、')}}
+                </span>
+                <el-popover
+                  placement="bottom-start"
+                  width="360"
+                  trigger="hover">
+                  <div class="forward-notice">
+                    <p>转发信息</p>
+                    <ul>
+                      <li v-for="(item,index) in forward_list" :key="index"> 
+                        <div>
+                          <span>{{item.REAL_NAME}}</span>
+                          <span>{{item.TYPE_NAME}}</span>
+                        </div>
+                        <div>
+                          {{item.CREATE_TIME}}
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                  <span slot="reference"><little-button name='转发详情'></little-button></span>
+                </el-popover>
+                </p>
             </div>
         </div>
         <div class="article-main">
@@ -189,7 +216,8 @@ export default {
       total: 0,
       is_upload: false,
       isTimeOut: true,
-      change_status: ""
+      change_status: "",
+      forward_list: []
     };
   },
   beforeDestroy(e) {
@@ -212,11 +240,34 @@ export default {
     if (this.status == 1001) {
       this.get_user_sign_table(this.pageSize, this.pageNo);
     }
+    this.get_forward_info();
   },
   computed: {
     ...mapGetters(["message_data", "user_info"])
   },
   methods: {
+    get_forward_info() {
+      if (!this.message_data.FORWARD_ID) {
+        return;
+      }
+      this.$post(
+        "gwt/notice/tbNoticeForward/getForwardHistory",
+        {
+          noticeId: this.message_data.NOTICE_ID,
+          forwardId: this.message_data.FORWARD_ID
+        },
+        "json"
+      )
+        .then(res => {
+          if (res.result !== "0000") {
+            return;
+          }
+          this.forward_list = res.data.forwardHistoryList;
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
     fileType(name) {
       return fileType(name);
     },
@@ -444,7 +495,7 @@ export default {
           this.tbNoticeSign = res.data.tbNoticeSign;
           this.tbNoticeRefuse = res.data.tbNoticeRefuse;
           this.status = res.data.tbNoticeReceive.recStatus;
-          this.change_status  = res.data.tbNotice.noticeStatus;
+          this.change_status = res.data.tbNotice.noticeStatus;
           if (this.status == 1001) {
             this.get_user_sign_table(this.pageSize, this.pageNo);
           }

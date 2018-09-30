@@ -4,6 +4,8 @@
         <div class="article-title">
             <h3>{{data.noticeTitle}}</h3>
             <p>
+                <span v-if="message_data.FORWARD_ID">【转发】</span>
+                <span v-if="message_data.FROM_NOTICE_ID">【变更】</span>
                 <span>【{{data.noticeTypeName}}】</span>
                 <span>{{data.userName}}</span>
                 <span>{{data.orgName}}</span>
@@ -27,6 +29,31 @@
                 <p v-if='status === "1002"'>拒签理由：<span>{{tbNoticeRefuse.REFUSE_REASON}}</span></p>
                 <p v-if='data.startTime'>开始时间：<span>{{data.startTime}}</span></p>
                 <p v-if='data.noticeAdress'>会议地点：<span>{{data.noticeAdress}}</span></p>
+                <p v-if="message_data.FORWARD_ID">转发自：
+                <span>
+                  {{forward_list.map(res=> res.REAL_NAME).join('、')}}
+                </span>
+                <el-popover
+                  placement="bottom-start"
+                  width="360"
+                  trigger="hover">
+                  <div class="forward-notice">
+                    <p>转发信息</p>
+                    <ul>
+                      <li v-for="(item,index) in forward_list" :key="index"> 
+                        <div>
+                          <span>{{item.REAL_NAME}}</span>
+                          <span>{{item.TYPE_NAME}}</span>
+                        </div>
+                        <div>
+                          {{item.CREATE_TIME}}
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                  <span slot="reference"><little-button name='转发详情'></little-button></span>
+                </el-popover>
+                </p>
             </div>
             <div class="active-content">
                 {{data.noticeProfile}}
@@ -107,6 +134,7 @@
                     label="操作">
                         <template slot-scope="scope">
                             <el-button
+                            v-if="scope.row.createUser == user_info.sysOrgUserX.id"
                             size="mini"
                             type="danger"
                             icon="el-icon-delete"
@@ -225,6 +253,7 @@ import { mapGetters } from "vuex";
 import formButton from "@/components/Button/formButton";
 import AddUser from "@/components/AddUser";
 import uploadButton from "@/components/Button/uploadButton";
+import littleButton from "@/components/Button/littleButton";
 import { action_fail, delete_item } from "@/utils/user";
 import { fileType } from "@/utils";
 import qs from "qs";
@@ -235,7 +264,8 @@ export default {
     fileList,
     formButton,
     AddUser,
-    uploadButton
+    uploadButton,
+    littleButton
   },
   data() {
     return {
@@ -296,7 +326,8 @@ export default {
       add_user_loading: false,
       add_form: {},
       isTimeOut: false,
-      change_status: ''
+      change_status: "",
+      forward_list: []
     };
   },
   beforeDestroy(e) {
@@ -316,11 +347,38 @@ export default {
     this.get_meeting_data();
     this.init_file(this.message_data.NOTICE_ID);
     this.status = this.message_data.REC_STATUS;
+
+    console.log(JSON.stringify(this.message_data, {}, 4));
+    this.get_forward_info();
   },
   computed: {
     ...mapGetters(["message_data", "user_info"])
   },
   methods: {
+    //获取转发详情
+    get_forward_info() {
+      if (!this.message_data.FORWARD_ID) {
+        return;
+      }
+      this.$post(
+        "gwt/notice/tbNoticeForward/getForwardHistory",
+        {
+          noticeId: this.message_data.NOTICE_ID,
+          forwardId: this.message_data.FORWARD_ID
+        },
+        "json"
+      )
+        .then(res => {
+          if (res.result !== "0000") {
+            return;
+          }
+          this.forward_list = res.data.forwardHistoryList;
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
+    //增加新用户
     add_new_user() {
       this.$refs.add_form.validate(res => {
         if (!res) return;
@@ -681,7 +739,7 @@ export default {
           this.tbNoticeSign = res.data.tbNoticeSign;
           this.tbNoticeRefuse = res.data.tbNoticeRefuse;
           this.status = res.data.tbNoticeReceive.recStatus;
-          this.change_status  = res.data.tbNotice.noticeStatus;
+          this.change_status = res.data.tbNotice.noticeStatus;
           this.isTimeOut =
             +new Date(res.data.tbNotice.startTime) - Date.now() > 0;
           if (

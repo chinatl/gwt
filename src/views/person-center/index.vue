@@ -2,7 +2,7 @@
     <div>
         <div class="common">
             <t-title title="基本信息">
-                <el-button style="float:right" size='small' type="success" v-wave @click="getUserInfo">编辑</el-button>
+                <el-button style="float:right" size='small' type="success" v-wave @click="isHide = false">编辑</el-button>
             </t-title>
             <div class="page-form" style="width:700px">
                 <el-form label-width="120px" :model="userform" :rules="editrules" ref="userform">
@@ -22,21 +22,23 @@
                     <el-form-item label="人员级别：" class="page-form-item">
                         <span>{{userform.userLevelName}}</span>
                     </el-form-item>
-                    <el-form-item label="职 务：" prop='duty' class="page-form-item">
+                    <el-form-item label="职 务："  class="page-form-item">
                         <span v-if="isHide" >{{userform.duty}}</span>
                         <el-input v-model="userform.duty" size="mini" v-else></el-input>
                     </el-form-item>
-                    <el-form-item label="固定电话:" prop='phone' class="page-form-item">
+                    <el-form-item label="固定电话:"  class="page-form-item">
                         <span v-if="isHide">{{userform.phone}}</span>
                         <el-input v-model="userform.phone" size="mini" v-else></el-input>
                     </el-form-item>
-                    <el-form-item label="备 注:" prop='remark' class="page-form-item">
+                    <el-form-item label="备 注:"  class="page-form-item">
                         <span v-if="isHide">{{userform.remark}}</span>
                         <el-input type="textarea" v-model="userform.remark" :autosize="{ minRows: 4, maxRows: 6}" v-else></el-input>
                     </el-form-item>
-                    <el-form-item style="float:right" size='small' class="itemBtn" v-if="!isHide">
-                      <el-button @click="resetForm('userform')">取消</el-button>
-                      <el-button type="primary" @click="oneditSubmit('userform')">提交</el-button>
+                    <el-form-item style="float:right" size='small' class="itemBtn">
+                      <div  v-if="!isHide">
+                        <el-button @click="resetForm('userform')">取消</el-button>
+                        <el-button type="primary" @click="oneditSubmit('userform')">提交</el-button>
+                      </div>
                     </el-form-item>
                 </el-form>
                 <div class="user-img" @click="upload_img">
@@ -296,8 +298,7 @@ export default {
 
       //编辑信息
       currentform: {},
-      isShow: false,
-      isHide: false,
+      isHide: true,
       //编辑验证
       editrules: {
         duty: [
@@ -348,12 +349,22 @@ export default {
   created() {
     this.getUserInfo();
     this.getloginTable();
-    this.get_head();
+    // this.get_head();
+    this.get_user_img();
   },
   computed: {
     ...mapGetters(["user_info"])
   },
   methods: {
+    get_user_img() {
+      this.$post("gwt/system/sysUserAttachRelation/getHead", {}, "json")
+        .then(res => {
+          console.log(res);
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
     open_edit_pwd() {
       this.role_visible = true;
       this.$nextTick(res => {
@@ -394,17 +405,13 @@ export default {
           this.userform.mobilePhone = res.data.user.mobilePhone;
           this.userform.password = res.data.user.password.replace(/\w/g, "*");
           this.userform.pwd = res.data.user.password;
-
           this.resetform.duty = res.data.user.sysOrgUserX.duty;
           this.resetform.userLevelName =
             res.data.user.sysOrgUserX.userLevelName;
           this.resetform.phone = res.data.user.sysOrgUserX.phone;
           this.resetform.remark = res.data.user.sysOrgUserX.remark;
-
-          // this.attachId = res.data.AttrHeadId[0].attachId;
           this.user_img = res.data.AttrHeadId;
-          this.isShow = !this.isShow;
-          this.isHide = !this.isHide;
+          this.isHide = true;
         }
       });
     },
@@ -415,7 +422,6 @@ export default {
           this.$post(
             `gwt/system/sysUserZone/updateUser`,
             {
-              userId: this.userId,
               sex: this.userform.sex,
               sysOrgUserX: {
                 id: this.userform.id,
@@ -425,15 +431,17 @@ export default {
               }
             },
             "json"
-          ).then(res => {
-            console.log(res);
-            if (res.result === "0000") {
-              this.isHide = false;
-              this.getUserInfo();
-            }
-          });
+          )
+            .then(res => {
+              if (res.result === "0000") {
+                this.getUserInfo();
+                this.isHide = false;
+              }
+            })
+            .catch(res => {
+              console.log(res);
+            });
         } else {
-          console.log("error submit!!");
           return false;
         }
       });
@@ -464,7 +472,6 @@ export default {
       ).then(res => {
         if (res.result === "0000") {
           this.tableData = res.data.sysEquipmentAuthList;
-          console.log(this.tableData);
         }
       });
     },
@@ -507,7 +514,6 @@ export default {
               this.userform.password = this.pwdform.newpwd1.replace(/\w/g, "*");
               this.role_visible = false;
               this.$router.push({ path: "/login" });
-              // this.getUserInfo();
             }
           });
         } else {
@@ -667,12 +673,15 @@ export default {
     //上传头像
     download() {
       this.$refs.cropper.getCropData(data => {
-        var formData = new FormData();
-        formData.append("ownerSystem", "gwt-platform");
-        formData.append("ownerModule", "user");
-        formData.append("userId", this.userform.id);
-        formData.append("selectHeadFile", data);
-        this.$post("gwt/uploadFile/uploadHead", formData, "form")
+        this.$post(
+          "gwt/uploadFile/uploadHead",
+          {
+            ownerSystem: "gwt-platform",
+            ownerModule: "user",
+            selectHeadFile: data
+          },
+          "json"
+        )
           .then(res => {
             if (res.result === "0000") {
               this.upload_img_dialog = false;

@@ -56,6 +56,11 @@ export default {
             className: "shanchu",
             iconName: "编辑"
           };
+        case "接收人信息":
+          return {
+            className: "rukediaochan",
+            iconName: "编辑"
+          };
         case "拒签人信息":
           return {
             className: "tongzhibiangeng",
@@ -196,9 +201,21 @@ export default {
             className: "rukediaochan",
             iconName: "眼睛"
           };
+        case "转发":
+          return {
+            className: "rukediaochan",
+          };
+        case " 变更 ":
+          return {
+            className: "tongzhibiangeng",
+          };
         case "批量下载":
           return {
             className: "shangjia",
+          };
+        case "转发详情":
+          return {
+            className: "ziyuanguanli",
           };
         default:
           return {

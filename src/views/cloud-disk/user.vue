@@ -4,7 +4,8 @@
         <div class="common-action">
             <div class="disk-cloud">
                 <upload-button icon="el-icon-upload2" @on-change="upload_img" size='medium' type="success" :pan='true' >上传</upload-button>
-                <el-button type="success" icon="el-icon-plus" size='medium' v-wave @click="dialogFolderVisible = true">新建文件夹</el-button>
+                <!-- <el-button type="success" icon="el-icon-plus" size='medium' v-wave @click="dialogFolderVisible = true">新建文件夹</el-button> -->
+                <el-button type="success" icon="el-icon-plus" size='medium' v-wave @click="add_new_folder">新建文件夹</el-button>
                 <el-button type="primary" icon="el-icon-download" size='medium' v-wave @click="download_file">下载</el-button>
                 <el-button type="danger" icon="el-icon-close" size='medium' v-wave @click="delete_btn">删除</el-button>
             </div>
@@ -176,37 +177,50 @@ export default {
           this.loading = false;
         });
     },
-    //新建文件夹
-    add_older(formName) {
-      this.$refs[formName].validate(valid => {
-        if (valid) {
+
+    add_new_folder() {
+      this.$swal({
+        confirmButtonText: "确定",
+        showCancelButton: true,
+        cancelButtonText: "取消",
+        title: "请输入新建文件夹名称",
+        input: "text",
+        showCancelButton: true,
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        inputValidator: value => {
+          return !value && "文件夹名不能为空！";
+        }
+      }).then(res => {
+        if (res.value) {
           this.$post(
             `gwt/cloudisk/cloudiskAttaDir/addFolder`,
             {
               type: "user",
               orgId: this.folderform.orgId,
-              name: this.folderform.foldername,
+              name: res.value,
               parentId: this.parentId === "" ? "" : this.dirId
             },
             "json"
-          ).then(res => {
-            // console.log(res)
-            if (res.result === "0000") {
-              this.dialogFolderVisible = false;
-              this.init_usercloudisk();
-              this.$message({
-                type: "success",
-                message: "新建成功"
-              });
-              this.folderform = {};
-            } else {
-              this.$message.error(res.msg);
-            }
-            // console.log(this.tableData.type)
-          });
-        } else {
-          console.log("error submit!!");
-          return false;
+          )
+            .then(res => {
+              // console.log(res)
+              if (res.result === "0000") {
+                this.dialogFolderVisible = false;
+                this.init_usercloudisk();
+                this.$message({
+                  type: "success",
+                  message: "新建成功"
+                });
+                this.folderform = {};
+              } else {
+                this.$message.error(res.msg);
+              }
+              // console.log(this.tableData.type)
+            })
+            .catch(res => {
+              console.log(res);
+            });
         }
       });
     },
@@ -337,6 +351,7 @@ export default {
       // this.tableData = this.pageData;
       this.file_nav = [];
       this.parentId = "";
+      this.dirId = "";
       this.pageNo = 1;
       this.init_usercloudisk(this.pageSize, 1);
     },
@@ -427,7 +442,6 @@ export default {
     },
     //上传
     upload_img(e) {
-      console.log(e);
       var formData = new FormData();
       formData.append("ownerSystem", "gwt-platform");
       formData.append("ownerModule", "cloudisk");
@@ -435,14 +449,12 @@ export default {
       formData.append("orgId", this.folderform.orgId);
       formData.append("uploadOpt", "add");
       formData.append("cloudiskType", 1);
-      formData.append("dirId", this.dirId === "" ? "" : this.dirId);
+      formData.append("dirId", this.dirId);
       formData.append("cloudiskType", "user");
       formData.append("file", e.raw);
       console.log(this.dirId);
-      // console.log(this.folderform.userId)
       this.$post("gwt/uploadFile/uploadCloudisk", formData, "form")
         .then(res => {
-          console.log(res);
           if (res.result === "0000") {
             this.init_usercloudisk();
             this.$message({

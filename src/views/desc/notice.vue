@@ -4,6 +4,8 @@
         <div class="article-title">
             <h3>{{data.noticeTitle}}</h3>
             <p>
+                <span v-if="message_data.FORWARD_ID">【转发】</span>
+                <span v-if="message_data.FROM_NOTICE_ID">【变更】</span>
                 <span>【{{data.noticeTypeName}}】</span>
                 <span>{{data.userName}}</span>
                 <span>{{data.orgName}}</span>
@@ -27,6 +29,31 @@
                 <p v-if='status === "1002"'>拒签理由：<span>测试拒签</span></p>
                 <p v-if='data.startTime'>开始时间：<span>{{data.startTime}}</span></p>
                 <p v-if='data.noticeAdress'>会议地点：<span>{{data.noticeAdress}}</span></p>
+                <p v-if="message_data.FORWARD_ID">转发自：
+                <span>
+                  {{forward_list.map(res=> res.REAL_NAME).join('、')}}
+                </span>
+                <el-popover
+                  placement="bottom-start"
+                  width="360"
+                  trigger="hover">
+                  <div class="forward-notice">
+                    <p>转发信息</p>
+                    <ul>
+                      <li v-for="(item,index) in forward_list" :key="index"> 
+                        <div>
+                          <span>{{item.REAL_NAME}}</span>
+                          <span>{{item.TYPE_NAME}}</span>
+                        </div>
+                        <div>
+                          {{item.CREATE_TIME}}
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                  <span slot="reference"><little-button name='转发详情'></little-button></span>
+                </el-popover>
+                </p>
             </div>
             <div class="active-content">
                 {{data.noticeProfile}}
@@ -121,13 +148,15 @@ export default {
       tbNoticeSign: {}, //签收详情
       tbNoticeRefuse: {}, //签收详情
       isTimeOut: true,
-      change_status: ''
+      change_status: "",
+      forward_list: []
     };
   },
   created() {
     this.$store.dispatch("readSession", SET_MESSAGE_DATA);
     this.get_meeting_data();
     this.init_file(this.message_data.NOTICE_ID);
+    this.get_forward_info();
   },
   computed: {
     ...mapGetters(["message_data"])
@@ -136,6 +165,29 @@ export default {
     this.$store.commit("DEL_VIEW_BY_NAME", "通知详情");
   },
   methods: {
+    //获取转发详情
+    get_forward_info() {
+      if (!this.message_data.FORWARD_ID) {
+        return;
+      }
+      this.$post(
+        "gwt/notice/tbNoticeForward/getForwardHistory",
+        {
+          noticeId: this.message_data.NOTICE_ID,
+          forwardId: this.message_data.FORWARD_ID
+        },
+        "json"
+      )
+        .then(res => {
+          if (res.result !== "0000") {
+            return;
+          }
+          this.forward_list = res.data.forwardHistoryList;
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
     //导入部门
     select_nav(index) {
       this.current = index;
@@ -255,7 +307,7 @@ export default {
           this.tbNoticeSign = res.data.tbNoticeSign;
           this.tbNoticeRefuse = res.data.tbNoticeRefuse;
           this.status = res.data.tbNoticeReceive.recStatus;
-          this.change_status  = res.data.tbNotice.noticeStatus;
+          this.change_status = res.data.tbNotice.noticeStatus;
         })
         .catch(res => {
           this.loading = false;
