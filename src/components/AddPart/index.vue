@@ -10,6 +10,7 @@
             </div>
             <div class="select-part-bottom common-temp scrollbar" style="overflow:auto">
                 <el-tree
+                :expand-on-click-node='false'
                 :data="allData"
                 show-checkbox
                 node-key="id"

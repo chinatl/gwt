@@ -22,9 +22,17 @@
                 {{status === '1001' ? "签收": null}}
                 {{status === '1002' ? "拒签": null}}
               </p>
-              <p v-if="message_data.FORWARD_ID">转发自：
+            </div>
+        </div>
+        <div class="article-main">
+            <div class="artive-address">
+                <p v-if='status === "1002"'>拒签理由：<span>{{tbNoticeRefuse.REFUSE_REASON}}</span></p>
+                <p v-if='data.endTime'>结束时间：<span>{{data.endTime}}</span></p>
+                <p v-if='data.noticeAdress'>会议地点：<span>{{data.noticeAdress}}</span></p>
+                 <p v-if="message_data.FORWARD_ID">转发自：
                 <span>
-                  {{forward_list.map(res=> res.REAL_NAME).join('、')}}
+                   {{ forward_list[forward_list.length-1] && forward_list[forward_list.length-1].REAL_NAME}} 
+                  {{ forward_list[forward_list.length-1] && forward_list[forward_list.length-1].DEPT_ALLNAME}}
                 </span>
                 <el-popover
                   placement="bottom-start"
@@ -34,13 +42,16 @@
                     <p>转发信息</p>
                     <ul>
                       <li v-for="(item,index) in forward_list" :key="index"> 
-                        <div>
-                          <span>{{item.REAL_NAME}}</span>
-                          <span>{{item.TYPE_NAME}}</span>
+                        <div class="li">
+                          <div>
+                            <span>{{item.REAL_NAME}}</span>
+                            <span>{{item.TYPE_NAME}}</span>
+                          </div>
+                          <div>
+                            {{item.CREATE_TIME}}
+                          </div>
                         </div>
-                        <div>
-                          {{item.CREATE_TIME}}
-                        </div>
+                        <p class="text-indent" style="color:#333;font-weight:normal" v-if="item.FORWARD_DESC">{{item.FORWARD_DESC}}</p>
                       </li>
                     </ul>
                   </div>
@@ -48,16 +59,7 @@
                 </el-popover>
                 </p>
             </div>
-        </div>
-        <div class="article-main">
-            <div class="artive-address">
-                <p v-if='status === "1002"'>拒签理由：<span>{{tbNoticeRefuse.REFUSE_REASON}}</span></p>
-                <p v-if='data.endTime'>结束时间：<span>{{data.endTime}}</span></p>
-                <p v-if='data.noticeAdress'>会议地点：<span>{{data.noticeAdress}}</span></p>
-            </div>
-            <div class="active-content">
-                {{data.noticeProfile}}
-            </div>
+            <div class="active-content2" v-text="data.noticeProfile"></div>
             <div class="file-info" v-if="file_length">
                 附件： <span>{{file_length}} 个附件，共{{file_list | folderSize}}</span>
             </div>
@@ -67,9 +69,10 @@
           <el-button type="warning" size="medium" @click="report_notice" v-if='change_status !== "1003"'><svg-icon icon-class='警察'></svg-icon>举报</el-button>
           <el-button type="danger" size="medium"  @click="refuse"  v-if='status == "1000" && !isTimeOut && change_status !== "1003"'><svg-icon icon-class='拒签'></svg-icon>拒签</el-button>
           <el-button type="primary" size="medium" @click="reveive_report" v-if='status == "1000" && !isTimeOut && change_status !== "1003"'><svg-icon icon-class='签收'></svg-icon>签收</el-button>
-          <el-button type="success" size="medium" @click="forward_report" v-if='(status == "1004" || status == "1001") && !isTimeOut && change_status !== "1003"'><svg-icon icon-class='转发'></svg-icon>转发</el-button>
+          <el-button type="success" size="medium" @click="forward_report" v-if='( status == "1003" || status == "1004" || status == "1001") && !isTimeOut && change_status !== "1003"'><svg-icon icon-class='转发'></svg-icon>转发</el-button>
         </p>
         <p class="change-notice" v-if="change_status === '1003'">该通知已变更，请查看变更后信息</p>
+        <p class="change-notice" v-if="isTimeOut">该通知已过期，不可操作</p>
         <el-dialog :close-on-click-modal='false'
             title="举报信息"
             class="common-dialog "
@@ -90,8 +93,8 @@
             </el-form>
         </el-dialog>  
     </div>
-    <div class="stuff-common" v-if="status == 1001">
-        <t-title>人员报名</t-title>
+    <div class="stuff-common" v-if="status == 1001" v-loading='uploading'>
+        <t-title>材料上传</t-title>
          <div class="common-action">
             <div class="common-table-bar">
                 <span class="current">附件上传</span>
@@ -169,22 +172,27 @@ import AddUser from "@/components/AddUser";
 import uploadButton from "@/components/Button/uploadButton";
 import { action_fail, delete_item } from "@/utils/user";
 import { fileType } from "@/utils";
+import littleButton from "@/components/Button/littleButton";
 import qs from "qs";
 export default {
   components: {
     fileList,
     formButton,
     AddUser,
-    uploadButton
+    uploadButton,
+    littleButton
   },
   data() {
     return {
+      uploading: false,
       dialog: false,
       current: false,
       table_loading: false,
       tableData: [],
       file_list: [],
-      data: {},
+      data: {
+        noticeProfile:''
+      },
       tbNoticeReceive: {},
       file_length: 0,
       file_size: 0,
@@ -215,12 +223,13 @@ export default {
       pageNo: 1,
       total: 0,
       is_upload: false,
-      isTimeOut: true,
+      isTimeOut: false,
       change_status: "",
       forward_list: []
     };
   },
   beforeDestroy(e) {
+    sessionStorage.setItem("send_status", 3);
     this.$store.commit("DEL_VIEW_BY_NAME", "材料征集详情");
     sessionStorage.removeItem("stuff-desc/index/pageNo");
     sessionStorage.removeItem("stuff-desc/index/total");
@@ -287,7 +296,7 @@ export default {
         "gwt/system/tbNoticeAttachment/addFiles",
         {
           noticeId: this.message_data.NOTICE_ID,
-          forwardId: "",
+          forwardId: this.message_data.FORWARD_ID,
           attaUploadNode: 2,
           attaIds: this.user_upload_list
             .filter(res => res.is_normal)
@@ -320,6 +329,7 @@ export default {
       });
     },
     upload_img(e) {
+      this.uploading = true;
       var formData = new FormData();
       formData.append("selectFile", e.raw);
       formData.append("ownerSystem", "gwt-platform");
@@ -329,6 +339,7 @@ export default {
       formData.append("editFileId", undefined);
       this.$post("gwt/uploadFile/upload", formData, "form")
         .then(res => {
+          this.uploading = false;
           if (action_fail(res, "上传成功！", "上传失败！")) return;
           res.data.attachment.url = e.url;
           res.data.attachment.is_normal = true;
@@ -336,6 +347,7 @@ export default {
           this.is_upload = true;
         })
         .catch(res => {
+          this.uploading = false;
           console.log(res);
         });
     },
@@ -499,8 +511,14 @@ export default {
           if (this.status == 1001) {
             this.get_user_sign_table(this.pageSize, this.pageNo);
           }
-          this.isTimeOut =
-            +new Date(res.data.tbNotice.endTime) - Date.now() < 0;
+          if (!res.data.tbNotice.endTime) {
+            this.isTimeOut = false;
+          } else {
+            this.isTimeOut =
+              +new Date(res.data.tbNotice.endTime.replace(/-/g, "/")) -
+                Date.now() <
+              0;
+          }
         })
         .catch(res => {
           this.loading = false;
@@ -683,11 +701,13 @@ export default {
         }
       }
     }
-    .active-content {
+    .active-content2 {
       font-size: 15px;
       line-height: 28px;
-      margin: 12px 0;
-      text-indent: 2em;
+      margin: 0px 0;
+      overflow: hidden;
+      white-space: pre-wrap;
+      padding: 10px 20px;
     }
     .file-info {
       span {

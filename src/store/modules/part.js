@@ -27,7 +27,6 @@ const app = {
                 if (res.result !== '0000') {
                     return
                 };
-
                 post("gwt/system/sysUser/loadOrgUser",
                     {
                         orgId: "",
@@ -52,7 +51,13 @@ const app = {
                 if (res.result !== '0000') {
                     return
                 };
-                commit(SET_MANAGER_TREE, generate_tree(res.data.nodes))
+                var arr = res.data.nodes.map(res => {
+                    if (res.nodeType === "DOMAIN" || res.nodeType === "DOMAIN_GROUP") {
+                        res.disabled = true;
+                    }
+                    return res
+                })
+                commit(SET_MANAGER_TREE, generate_tree(arr))
             })
         }
     }

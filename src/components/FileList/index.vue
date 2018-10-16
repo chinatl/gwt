@@ -42,11 +42,72 @@ export default {
   },
   methods: {
     preview(item) {
-      window.open(item.fullAttaPath);
+      this.$axios({
+        methods: "post",
+        url: config + item.attaPath + "/" + item.storeName,
+        headers: {
+          Authorization: this.$store.getters.token,
+          userAgent:'PC'
+        },
+        responseType: "blob"
+      })
+        .then(res => {
+          if (res.data.size === 36 && res.data.type === "application/json") {
+            this.$confirm(
+              "用户身份已过期（导致附件无法预览），是否重新登录?",
+              "提示",
+              {
+                confirmButtonText: "确定",
+                cancelButtonText: "取消",
+                type: "warning"
+              }
+            )
+              .then(() => {
+                this.$store.dispatch("LogOut").then(() => {
+                  this.$router.push({
+                    path: "/login"
+                  });
+                  this.$store.commit("DEL_ALL_VIEWS");
+                  this.$store.dispatch("reset_slider_list");
+                  sessionStorage.clear();
+                  // location.reload(); // 为了重新实例化vue-router对象 避免bug
+                });
+              })
+              .catch(() => {});
+            return;
+          }
+          if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+            window.navigator.msSaveOrOpenBlob(res.data, item.originalName);
+          } else {
+            var a = document.createElement("a");
+            // console.log(encodeURI(res.data))
+            var href = window.URL.createObjectURL(res.data);
+            a.href = href;
+            a.target = "_blank";
+            a.click();
+          }
+        })
+        .catch(res => {
+          console.log(res);
+        });
     },
     //删除文件
     delete_file(index) {
-      this.$emit("delete", index);
+      this.$swal({
+        title: "您确定要删除附件吗",
+        text: "删除后将无法恢复，请谨慎操作！",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#DD6B55",
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        confirmButtonClass: "btn btn-success"
+      }).then(res => {
+        if (!res.value) {
+          return;
+        }
+        this.$emit("delete", index);
+      });
     },
     //点击下载
     download_file(item) {
@@ -107,7 +168,7 @@ export default {
         color: #000;
         padding-left: 12px;
         font-size: 12px;
-        text-overflow:ellipsis;
+        text-overflow: ellipsis;
         overflow: hidden;
       }
       .cnclosure-mask-action {

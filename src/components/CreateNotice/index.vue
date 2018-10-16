@@ -1,22 +1,23 @@
 <template>
 <div class="common">
     <t-title :title="title" warning></t-title>
-    <div class="page-form">
-        <el-form ref="form" :model="form" label-width="80px" :rules="rules">
+    <div class="page-form" >
+      <div class="script_bgc">
+        <el-form ref="form" :model="form" label-width="80px" :rules="rules" v-loading='loading'>
             <el-form-item 
             v-for="(item,index) in formArray" 
             :key="index"
             :prop="item.prop"
             v-if="!(item.type === 'part' && !is_permisssion)"
             :label="item.label">
-              <el-input v-model="form[item.prop]" v-if="item.type === 'input'" size='small'></el-input>
+              <el-input v-model="form[item.prop]" v-if="item.type === 'input'" size='small' maxlength="50"></el-input>
               <el-date-picker v-model="form[item.prop]" type="datetime" size="small" placeholder="选择日期时间" v-if="item.type =='date'"></el-date-picker>
               <div class="flex" v-if="item.type === 'part'">
-                <el-input v-model="form.part" size="small" placeholder="请选择接收部门" readonly></el-input>
-                <add-user-button @click="dialog= true">选择接收人</add-user-button>
+                <el-input v-model="form.part" size="small" placeholder="请选择接收部门" readonly @click.native="yield_dialog= true"></el-input>
+                <add-user-button @click="yield_dialog= true">选择部门</add-user-button>
               </div>
               <div class="flex" v-if="item.type === 'user'">
-                <el-input v-model="form.name" size="small" placeholder="请选择接收人" readonly></el-input>
+                <el-input v-model="form.name" size="small" placeholder="请选择接收人" readonly @click.native="dialog= true"></el-input>
                 <add-user-button @click="dialog= true">选择接收人</add-user-button>
               </div>
               <el-input type="textarea" v-model="form[item.prop]" :autosize="{ minRows: 6, maxRows: 10}" v-if="item.type === 'textarea'"></el-input>
@@ -24,8 +25,7 @@
             <el-form-item label="附件">
                 <div class="flex">
                     <upload-button @on-change="upload_img">添加附件</upload-button>
-                    <span style="margin-left:20px" v-if="file_list.length">{{file_list.length}} 个附件，共{{file_list |
-                        folderSize}} </span>
+                    <span style="margin-left:20px" v-if="file_list.length">{{file_list.length}} 个附件，共{{file_list | folderSize}} </span>
                 </div>
                 <file-list :list='file_list' @delete='delete_file'></file-list>
             </el-form-item>
@@ -35,8 +35,9 @@
             <form-button cancel_name='保存草稿' submit_name='发送' @submit="onSubmit" @cancel='save_message'></form-button>
         </el-form>
     </div>
-    <add-yield :show="yield_dialog" @submit='submit_yield' @cancel='yield_dialog = false' :user-list='has_select_part_list'  @close='yield_dialog = false'></add-yield>
-    <add-user :show='dialog' @close='dialog = false' :user-list='has_select_user_list' @cancel='dialog = false' @submit="submit_user_dialog"></add-user>
+    <add-yield :show="yield_dialog" @submit='submit_yield'  :user-list='has_select_part_list'  @close='cancel_yield'></add-yield>
+    <add-user :show='dialog' @close='cancel_user_dialog' :user-list='has_select_user_list' @cancel='cancel_user_dialog' @submit="submit_user_dialog"></add-user>
+  </div>
 </div>
 </template>
 <script>
@@ -61,7 +62,6 @@ export default {
   },
   data() {
     return {
-      loading: false,
       form: {
         noticeTitle: "",
         noticeAdress: "",
@@ -73,7 +73,8 @@ export default {
       has_select_user_list: [],
       has_select_part_list: [],
       yield_dialog: false, //部门管理弹窗
-      dialog: false
+      dialog: false,
+      loading: false
     };
   },
   props: {
@@ -106,6 +107,15 @@ export default {
     this.$store.dispatch("get_user_send_permission");
   },
   methods: {
+    cancel_user_dialog(list) {
+      this.dialog = false;
+      this.form.name = list.map(res => res.REAL_NAME).join("、");
+      this.has_select_user_list = list;
+    },
+    cancel_yield(list) {
+      this.yield_dialog = false;
+      this.has_select_part_list = list;
+    },
     submit_yield(list) {
       this.yield_dialog = false;
       this.form.part = list.map(res => res.name).join("、");
@@ -140,6 +150,7 @@ export default {
         });
         return;
       }
+      this.loading = true;
       var formData = new FormData();
       formData.append("selectFile", e.raw);
       formData.append("ownerSystem", "gwt-platform");
@@ -150,11 +161,13 @@ export default {
       formData.append("editFileId", undefined);
       this.$post("gwt/uploadFile/upload", formData, "form")
         .then(res => {
+          this.loading = false;
           if (action_fail(res, "上传成功！", "上传失败！")) return;
           res.data.attachment.url = e.url;
           this.file_list.push(res.data.attachment);
         })
         .catch(res => {
+          this.loading = false;
           console.log(res);
         });
     },
@@ -164,7 +177,7 @@ export default {
         !this.has_select_part_list.length
       ) {
         this.$message({
-          message: "请选择一个接收人或接受部门",
+          message: "请选择一个接收人或接收部门",
           type: "warning"
         });
         return;
@@ -190,12 +203,12 @@ export default {
           inputValidator: value => {
             return !value && "请输入密码！";
           }
-        }).then(res => {
-          if (res.value) {
+        }).then(response => {
+          if (response.value) {
             this.$post(
               "gwt/system/sysUserZone/judgePhone",
               {
-                password: res.value
+                password: response.value
               },
               "json"
             )
@@ -214,6 +227,7 @@ export default {
                 this.$post(
                   "gwt/notice/tbNotice/save",
                   {
+                    publishPwd: response.value,
                     noticeId: "",
                     noticeTitle: this.form.noticeTitle,
                     noticeType: this.noticeType, //会议 2//通知 3//材料
@@ -232,7 +246,7 @@ export default {
                       .join(","),
                     attrArray: this.file_list.map(res => res.id).join(","),
                     orgArray: this.has_select_part_list
-                      .map(res => res.id.replace(/\D*/g, ""))
+                      .map(res => res.id.replace(/.*\D/g, ""))
                       .join(",")
                   },
                   "json"
@@ -285,7 +299,7 @@ export default {
           selectedUsers: this.has_select_user_list.map(res => res.ID).join(","),
           attrArray: this.file_list.map(res => res.id).join(","),
           orgArray: this.has_select_part_list
-            .map(res => res.id.replace(/\D*/g, ""))
+            .map(res => res.id.replace(/.*\D/g, ""))
             .join(",")
         },
         "json"
@@ -295,7 +309,6 @@ export default {
           this.$router.push({
             path: "/drafts/index"
           });
-          console.log(res);
         })
         .catch(res => {
           console.log(res);

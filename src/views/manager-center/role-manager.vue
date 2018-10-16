@@ -94,6 +94,7 @@
           </div>
           <div class="part-content common-temp scrollbar">
               <el-tree
+                  :expand-on-click-node='false'
                   :data="tree_data"
                   node-key="id"
                   :filter-node-method="filterNode"
@@ -109,7 +110,7 @@
              <t-title>角色管理</t-title>
              <div class="common-action">
                <div>
-                  <el-input v-model="Q_roleName_SL" placeholder="请输入姓名/手机号" style="width:160px" size='medium'></el-input>
+                  <el-input v-model="Q_roleName_SL" placeholder="请输入角色名" style="width:160px" size='medium'></el-input>
                   <el-button type="primary" icon="el-icon-search" size='medium' style="margin:0 8px" v-wave @click="condition_search">搜索</el-button>
                </div>
                <div>
@@ -133,16 +134,19 @@
                     label="人员">
                     <template slot-scope="scope">
                       {{scope.row.sysUserList.map(res=>res.realName).join('、')}}
+                      <little-button name='添加' @click="open_add_user_dialog(scope.row)"></little-button>
                     </template>
                   </el-table-column>
                   <el-table-column
                   prop="name"
                   label="操作"
                   align="center"
+                  width="240"
                   >
                   <template slot-scope="scope">
-                      <little-button name='添加' @click="open_add_user_dialog(scope.row)"></little-button>
-                      <little-button name='查看' @click="edit_role(scope.row)"></little-button>
+                      <little-button name='查看' @click="edit_role(scope.row)" v-if='!scope.row.belongDept || scope.row.belongDept === "-1"'></little-button>
+                      <little-button name='编辑' @click="has_edit_role(scope.row)" v-if='scope.row.belongDept && scope.row.belongDept !== "-1"'></little-button>
+                      <little-button name='删除' @click="handleDelete(scope.row.roleId)" v-if='scope.row.belongDept && scope.row.belongDept !== "-1"'></little-button>
                   </template>
                   </el-table-column>
               </el-table>
@@ -160,12 +164,12 @@
             </el-pagination>
             </div>
             <el-dialog :close-on-click-modal='false'
-            :title="role_type === 'add' ? '新增角色':'编辑角色'"
+            :title="role_type === 'add' ? '新增角色': temp_type === 'update' ?'编辑角色':'查看角色'"
             class="common-dialog padding0"
             :visible.sync="role_visible">
             <el-form ref="form" :model="form" label-width="80px" :rules="rules"  v-loading='form_loading'>
                 <el-form-item label="角色名称" prop='roleName' maxlength='10'>
-                    <el-input v-model="form.roleName" size="small" :readonly='role_type === "update"'></el-input>
+                    <el-input v-model="form.roleName" size="small" :readonly='temp_type === "see"'></el-input>
                 </el-form-item>
                 <el-form-item :label="item.appName" v-for="(item,index) in checked_list" :key="index +'00'">
                     <el-checkbox-group v-model="item.checked">
@@ -175,9 +179,9 @@
                     </el-checkbox-group>
                 </el-form-item>
                 <el-form-item label="角色描述">
-                        <el-input type="textarea" v-model="form.remark" :autosize="{ minRows: 4, maxRows: 6}" :readonly='role_type === "update"'></el-input>
+                        <el-input type="textarea" v-model="form.remark" :autosize="{ minRows: 4, maxRows: 6}" :readonly='temp_type === "see"'></el-input>
                 </el-form-item>
-                <form-button @cancel='onCancel' @submit="onSubmit" v-if="is_admin || role_type=== 'add'"></form-button>
+                <form-button @cancel='onCancel' @submit="onSubmit" v-if="is_admin || temp_type=== 'update'"></form-button>
                 <div style='height:20px' v-else></div>
             </el-form>
         </el-dialog>
@@ -201,7 +205,6 @@ import qs from "qs";
 import { mapGetters } from "vuex";
 import AddRole from "@/components/AddRole";
 import { generate_tree } from "@/utils";
-
 export default {
   components: {
     formButton,
@@ -245,7 +248,8 @@ export default {
       dialog_loading: false,
       form_data: {},
       user_list: [],
-      expand_arr:[]
+      expand_arr: [],
+      temp_type: "update"
     };
   },
   created() {
@@ -269,7 +273,7 @@ export default {
     sessionStorage.removeItem("user-manager/role/total");
   },
   computed: {
-    ...mapGetters(["is_admin","group_list",'user_info'])
+    ...mapGetters(["is_admin", "group_list", "user_info", "org_role_list"])
   },
   watch: {
     filterText(val) {
@@ -306,10 +310,6 @@ export default {
       this.add_dialog = true;
     },
     submit_add_user(res) {
-      if (!res.length) {
-        this.add_dialog = false;
-        return;
-      }
       this.dialog_loading = true;
       this.$post(
         "gwt/system/sysUserRoleOrg/saveUserForSysUserRoleOrg",
@@ -336,7 +336,7 @@ export default {
           }
           this.add_dialog = false;
           this.$message({
-            message: "新增成功",
+            message: "操作成功！",
             type: "success"
           });
           this.search_role_by_part(this.pageSize, this.pageNo);
@@ -384,10 +384,7 @@ export default {
     },
     //点击左边树事件
     handleNodeClick(data) {
-      if (
-        !this.is_admin &&
-        !this.group_list.map(res => res.orgId).includes(data.id)
-      ) {
+      if (!this.is_admin && !this.org_role_list.includes(data.id)) {
         this.$message({
           message: "您没有操作权限！",
           type: "warning",
@@ -409,13 +406,13 @@ export default {
             return;
           }
           this.tree_data = generate_tree(res.data.nodes);
-            this.expand_arr = [this.user_info.sysOrgUserX.orgId];
-            this.temp_data = JSON.parse(
-              JSON.stringify(this.user_info.sysOrgUserX)
-            );
-            this.temp_data.id = this.temp_data.orgId;
-            this.temp_data.name = this.temp_data.orgAllName;
-            this.handleNodeClick(this.temp_data);
+          this.expand_arr = [this.user_info.sysOrgUserX.orgId];
+          this.temp_data = JSON.parse(
+            JSON.stringify(this.user_info.sysOrgUserX)
+          );
+          this.temp_data.id = this.temp_data.orgId;
+          this.temp_data.name = this.temp_data.orgAllName;
+          this.handleNodeClick(this.temp_data);
         })
         .catch(res => {
           console.log(res);
@@ -465,7 +462,7 @@ export default {
         `gwt/system/sysRole/list?${qs.stringify({
           currentPage: pageNo,
           pageSize: pageSize,
-          Q_roleName_SL: this.Q_name_SL
+          Q_roleName_SL: this.$filterText(this.Q_name_SL)
         })}`,
         {
           normal: true
@@ -551,7 +548,11 @@ export default {
               type: "success",
               message: res.msg
             });
-            this.init(this.pageSize, this.pageNo);
+            if (this.is_admin) {
+              this.init(this.pageSize, this.pageNo);
+            } else {
+              this.search_role_by_part(this.pageSize, this.pageNo);
+            }
           })
           .catch(res => {
             console.log(res);
@@ -631,6 +632,7 @@ export default {
       this.role_visible = false;
     },
     add_role() {
+      this.temp_type = "update";
       this.checked_list = this.checked_list.map(res => {
         res.checked = [];
         return res;
@@ -643,7 +645,47 @@ export default {
         this.form.remark = "";
       });
     },
+    has_edit_role(item) {
+      this.temp_type = "update";
+      this.role_type = "update";
+      this.role_visible = true;
+      this.form.roleName = item.roleName;
+      this.form.remark = item.remark;
+      this.form.roleId = item.roleId;
+      this.$post(
+        "gwt/system/sysRole/editResRole",
+        {
+          roleId: item.roleId
+        },
+        "json"
+      )
+        .then(res => {
+          if (res.result !== "0000") {
+            return;
+          }
+          this.checked_list.forEach(res => {
+            res.checked = [];
+          });
+
+          for (var i = 0; i < res.data.sysRoleResList.length; i++) {
+            for (var j = 0; j < this.checked_list.length; j++) {
+              if (
+                res.data.sysRoleResList[i].appId + "" ===
+                this.checked_list[j].appId + ""
+              ) {
+                this.checked_list[j].checked.push(
+                  res.data.sysRoleResList[i].resId
+                );
+              }
+            }
+          }
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
     edit_role(item) {
+      this.temp_type = "see";
       this.role_type = "update";
       this.role_visible = true;
       this.form.roleName = item.roleName;

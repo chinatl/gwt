@@ -8,7 +8,7 @@
                     <el-option :value="1" label="部门"></el-option>
                     <el-option :value="0" label="姓名"></el-option>
                 </el-select>
-                <el-input v-model="filterText" size="small">
+                <el-input v-model.trim="filterText" size="small">
                     <i slot="suffix" class="el-input__icon el-icon-search"></i>
                 </el-input>
             </div>
@@ -16,7 +16,7 @@
                 <div v-show="part">
                     <div class="select-part-tree common-temp scrollbar" style="overflow-y:auto;overflow-x: hidden">
                         <el-tree :data="part_tree"
-                        :filter-node-method="filterNode"
+                        :filter-node-method="filterNode" :expand-on-click-node='false'
                         :props="defaultProps" @node-click="handleNodeClick" ref='tree'></el-tree>
                     </div>
                     <div class="select-part-checkbox">
@@ -62,7 +62,10 @@
                             <span class="user-name">{{item.REAL_NAME}}</span>
                         </div>
                         <div class="flex">
-                            <span class="part-name">{{item.ORG_NAME}}</span>
+                            <el-tooltip class="item" effect="dark" :content="item.ORG_NAME" placement="top-start" v-if='item.ORG_NAME.length >5'>
+                              <span class="part-name">{{item.ORG_NAME}}</span>
+                            </el-tooltip>
+                            <span class="part-name" v-else>{{item.ORG_NAME}}</span>
                             <i class="el-icon-close" @click="delete_user(index,item.ID)"></i>
                         </div>
                     </li>
@@ -96,7 +99,8 @@ export default {
       user_all_checked: false,
       has_user_data: [],
       user_list: [],
-      part_tree: []
+      part_tree: [],
+      part_user_list: []
     };
   },
   props: {
@@ -109,20 +113,43 @@ export default {
       default: false
     },
     userList: {
-      // type: Array,
+      type: Array,
       default: []
     },
     address: {
-      default: false
+      default: false,
+      type: Boolean
+    },
+    role: {
+      default: false,
+      type: Boolean
     }
   },
   watch: {
     filterText(val) {
+      if (!val) {
+        var len = this.has_user_data.filter(res => res.checked).length;
+        this.all_checked = len === this.has_user_data.length;
+      }
       this.$refs.tree.filter(val);
     },
     show(res) {
       if (res) {
-        this.has_select_user = this.userList;
+        this.part = 1;
+        this.has_select_user = [...this.userList];
+        var index = 0;
+        for (var i = 0; i < this.user_list.length; i++) {
+          this.user_list[i].checked = false;
+          if (this.userList.map(res => res.ID).includes(this.user_list[i].ID)) {
+            index++;
+            this.user_list[i].checked = true;
+          }
+        }
+        if (index === this.user_list.length && index !== 0) {
+          this.all_checked = true;
+        } else {
+          this.all_checked = false;
+        }
       }
     }
   },
@@ -142,11 +169,47 @@ export default {
       "json"
     )
       .then(res => {
-        console.log(res.data.nodes)
         if (res.result !== "0000") {
           return;
         }
         this.part_tree = generate_tree(res.data.nodes);
+      })
+      .catch(res => {
+        console.log(res);
+      });
+    this.$post(
+      "gwt/system/sysOrg/getRootOrgByOrgId",
+      {
+        orgId: this.user_info.sysOrgUserX.orgId
+      },
+      "json"
+    )
+      .then(res => {
+        if (res.result !== "0000") {
+          return;
+        }
+        if (!res.data.sysOrg.orgId) return;
+        this.$post(
+          "gwt/system/sysUser/loadOrgUser",
+          {
+            orgId: res.data.sysOrg.orgId,
+            fromCommon: "Y",
+            fromPerson: "Y",
+            realName: ""
+          },
+          "json"
+        )
+          .then(res => {
+            if (res.result !== "0000") {
+              return;
+            }
+            this.part_user_list = res.data.userOrgs;
+          })
+          .catch(res => {
+            if (res.result !== "0000") {
+              return;
+            }
+          });
       })
       .catch(res => {
         console.log(res);
@@ -158,10 +221,10 @@ export default {
         return this.show;
       },
       set(res) {
-        this.$emit("close");
+        this.$emit("close", this.userList);
       }
     },
-    ...mapGetters(["part_user_list"])
+    ...mapGetters(["org_role_list", "user_info"])
   },
   methods: {
     show_item(REAL_NAME) {
@@ -169,7 +232,11 @@ export default {
     },
     filterNode(value, data) {
       if (!value) return true;
-      return data.name.indexOf(value) !== -1;
+      if (data.ORG_ALL_NAME) {
+        return data.ORG_ALL_NAME.indexOf(value) !== -1;
+      } else {
+        return data.name.indexOf(value) !== -1;
+      }
     },
     //切换筛选条件
     checkout_type(e) {
@@ -186,6 +253,7 @@ export default {
         }
         this.has_user_data = [...this.part_user_list];
       }
+      this.change_all_checked();
     },
     //用户查询单点选择框
     user_select_checkbox(e, index, ID) {
@@ -202,16 +270,22 @@ export default {
     },
     //用户查询全选
     all_user_box(e) {
+      var has_user_data = this.has_user_data.filter(item => {
+        return item.REAL_NAME.includes(this.filterText);
+      });
       if (e) {
-        for (var i = 0; i < this.has_user_data.length; i++) {
-          this.has_user_data[i].checked = true;
-          this.has_select_user.push(this.has_user_data[i]);
+        var id_list = this.has_select_user.map(res => res.ID);
+        for (var i = 0; i < has_user_data.length; i++) {
+          has_user_data[i].checked = true;
+          if (!id_list.includes(has_user_data[i].ID)) {
+            this.has_select_user.push(has_user_data[i]);
+          }
         }
       } else {
-        for (var j = 0; j < this.has_user_data.length; j++) {
-          this.has_user_data[j].checked = false;
+        for (var j = 0; j < has_user_data.length; j++) {
+          has_user_data[j].checked = false;
           for (var i = 0; i < this.has_select_user.length; i++) {
-            if (this.has_select_user[i].ID === this.has_user_data[j].ID) {
+            if (this.has_select_user[i].ID === has_user_data[j].ID) {
               this.has_select_user.splice(i, 1);
             }
           }
@@ -220,8 +294,9 @@ export default {
     },
     //清空按钮
     clear_all_user() {
-      this.has_select_user = [];
       //part 用来区分部门和用户
+      this.has_select_user = [];
+      // this.userList = [];
       if (this.part) {
         this.all_checked = false;
         for (var i = 0; i < this.user_list.length; i++) {
@@ -255,9 +330,12 @@ export default {
     //全选
     all_select_checkbox(e) {
       if (e) {
-        for (var i = 0; i < this.user_list.length; i++) {
-          this.user_list[i].checked = true;
-          this.has_select_user.push(this.user_list[i]);
+        var id_list = this.has_select_user.map(res => res.ID);
+        for (var j = 0; j < this.user_list.length; j++) {
+          this.user_list[j].checked = true;
+          if (!id_list.includes(this.user_list[j].ID)) {
+            this.has_select_user.push(this.user_list[j]);
+          }
         }
       } else {
         for (var j = 0; j < this.user_list.length; j++) {
@@ -284,6 +362,9 @@ export default {
         } else {
           this.all_checked = false;
         }
+        if (this.user_list.length === 0) {
+          this.all_checked = false;
+        }
       } else {
         for (var i = 0; i < this.has_user_data.length; i++) {
           if (this.has_user_data[i].checked) {
@@ -294,6 +375,9 @@ export default {
           this.user_all_checked = true;
         } else {
           this.user_all_checked = false;
+        }
+        if (this.user_list.length === 0) {
+          this.all_checked = false;
         }
       }
     },
@@ -312,39 +396,93 @@ export default {
     },
     //点击部门事件
     handleNodeClick(data) {
-      this.$post(
-        "gwt/system/sysUser/loadOrgUser",
-        {
-          orgId: data.id,
-          fromCommon: "Y"
-        },
-        "json"
-      )
-        .then(res => {
-          if (res.result !== "0000") {
-            return;
-          }
-          for (var j = 0; j < res.data.userOrgs.length; j++) {
-            res.data.userOrgs[j].checked = false;
-            for (var i = 0; i < this.has_select_user.length; i++) {
-              if (res.data.userOrgs[j].ID === this.has_select_user[i].ID) {
-                res.data.userOrgs[j].checked = true;
+      if (this.role && !this.org_role_list.includes(data.id)) {
+        this.$message({
+          message: "您没有操作权限！",
+          type: "warning",
+          showClose: true
+        });
+        return;
+      }
+      if (data.nodeType === "ORG") {
+        this.$post(
+          "gwt/system/sysUser/loadOrgUser",
+          {
+            orgId: data.id,
+            fromCommon: "Y"
+          },
+          "json"
+        )
+          .then(res => {
+            if (res.result !== "0000") {
+              return;
+            }
+            for (var j = 0; j < res.data.userOrgs.length; j++) {
+              res.data.userOrgs[j].checked = false;
+              for (var i = 0; i < this.has_select_user.length; i++) {
+                if (res.data.userOrgs[j].ID === this.has_select_user[i].ID) {
+                  res.data.userOrgs[j].checked = true;
+                }
               }
             }
-          }
-          this.user_list = [...res.data.userOrgs];
-          this.change_all_checked();
-        })
-        .catch(res => {
-          console.log(res);
-        });
+            this.user_list = [...res.data.userOrgs];
+            this.change_all_checked();
+          })
+          .catch(res => {});
+      } else {
+        if (data.nodeType === "USER_GROUP_CHILD") {
+          this.$post(
+            // "gwt/system/sysAddressBookUser/getAllUserGroup",
+            "gwt/system/sysUser/getAddressGroupUser",
+            {
+              groupId:
+                data.id.replace(/.*\D/g, "") === "0"
+                  ? ""
+                  : data.id.replace(/.*\D/g, "")
+            },
+            "json"
+          )
+            .then(res => {
+              if (res.result !== "0000") {
+                return;
+              }
+              // for (var j = 0; j < res.data.groupUserList.length; j++) {
+              //   res.data.groupUserList[j].checked = false;
+              //   for (var i = 0; i < this.has_select_user.length; i++) {
+              //     if (res.data.groupUserList[j].userxId === this.has_select_user[i].ID) {
+              //       res.data.groupUserList[j].checked = true;
+              //     }
+              //   }
+              // }
+              for (var j = 0; j < res.data.userOrgs.length; j++) {
+                res.data.userOrgs[j].checked = false;
+                for (var i = 0; i < this.has_select_user.length; i++) {
+                  if (res.data.userOrgs[j].ID === this.has_select_user[i].ID) {
+                    res.data.userOrgs[j].checked = true;
+                  }
+                }
+              }
+              this.user_list = res.data.userOrgs;
+
+              // this.user_list = res.data.userOrgs.map(res=>{
+              //   res.REAL_NAME = res.realName;
+              //   res.ORG_NAME = res.orgAllName;
+              //   res.ID = res.userxId
+              //   return res
+              // })
+              this.change_all_checked();
+            })
+            .catch(res => {
+              console.log(res);
+            });
+        }
+      }
     },
     onSubmit() {
-      console.log(this.has_select_user);
       this.$emit("submit", this.has_select_user);
     },
     save_message() {
-      this.$emit("cancel", this.has_select_user);
+      this.$emit("cancel", this.userList);
     }
   }
 };

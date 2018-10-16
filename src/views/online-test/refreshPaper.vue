@@ -155,8 +155,6 @@ export default {
     submit() {
       this.$refs.form.validate(res => {
         if (!res) return;
-        console.log(this.date[0] + "");
-        console.log(new Date(this.date[0]) + "");
         this.$post("api/exam/test/updatePaper.do", {
           paperName: this.paperName,
           examLong: this.examLong,

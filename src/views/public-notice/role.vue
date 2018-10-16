@@ -23,7 +23,9 @@
                 <div class="scrollbar ROLE-TABLE" :style="{
                   height:current === 2 ? '460px':'490px'
                 }">
-                  <el-tree :data="tree_data" :props="defaultProps"
+                  <el-tree
+                  :expand-on-click-node='false'
+                  :data="tree_data" :props="defaultProps"
                   :highlight-current = 'true'
                   :filter-node-method="filterNode"
                   ref="tree"
@@ -38,7 +40,7 @@
                     <el-input size="medium" placeholder="请输入姓名/手机号"  v-model="searchParam"  style="width:200px" @keyup.native.enter="condition"></el-input>
                     <el-button type="primary" icon="el-icon-search" size="medium"  style="margin-right:8px" v-wave @click="condition">搜索</el-button>
                 </div>
-                <div v-if='current === 2'>
+                <div v-if='current === 2 && has_role'>
                     <el-button type="success" icon="el-icon-plus" size="medium"  style="margin-right:8px" @click="add_user_dialog" v-wave>新增接收人</el-button>
                 </div>
             </div>
@@ -97,20 +99,24 @@
         </div> 
         <div slot="else">
           <add-user 
-          :show='dialog' @close='dialog = false' 
+          :role="true"
+          :address='true'
+          :show='dialog' @close='cancel_user_dialog' 
           :user-list='has_select_user_list'
-          @cancel='dialog = false'
+          @cancel='cancel_user_dialog'
+          :has-role-user='add_children_data'
           @submit="submit_user_dialog"></add-user>
         </div>
     </t-layout>
 </template>
 <script>
 import addUserButton from "@/components/Button/addUserButton";
-import addUser from "@/components/AddUser";
+import addUser from "@/components/AddRoleUser";
 import { generate_tree } from "@/utils";
 import littleButton from "@/components/Button/littleButton";
 import { action_fail, delete_item } from "@/utils/user";
 import qs from "qs";
+import { mapGetters } from "vuex";
 export default {
   components: {
     addUserButton,
@@ -119,7 +125,7 @@ export default {
   },
   data() {
     return {
-      filterText:'',
+      filterText: "",
       dialog: false,
       has_select_user_list: [],
       pageSize: 5,
@@ -138,7 +144,9 @@ export default {
       select: {
         type: "0"
       },
-      temp_data: {}
+      temp_data: {},
+      has_role: false,
+      add_children_data: []
     };
   },
   watch: {
@@ -146,16 +154,39 @@ export default {
       this.$refs.tree.filter(val);
     }
   },
+  computed: {
+    ...mapGetters(["org_role_list", "user_info", "is_admin"])
+  },
   created() {
     this.get_tree_data();
-  },
-  beforeDestroy() {
-    this.$store.commit("DEL_VIEW_BY_NAME", "权限维护");
+    this.get_all_child_part();
   },
   methods: {
+      cancel_user_dialog(list) {
+      this.dialog = false;
+      this.has_select_user_list = list;
+    },
+    get_all_child_part() {
+      this.$post(
+        "gwt/system/sysOrg/getSysOrgsBypId",
+        {
+          orgId: this.user_info.sysOrgUserX.orgId
+        },
+        "json"
+      )
+        .then(res => {
+          if (res.result !== "0000") {
+            return;
+          }
+          this.add_children_data = res.data.sysOrgs.map(res => res.orgId);
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
     filterNode(value, data) {
       if (!value) return true;
-      return data.name.indexOf(value) !== -1;
+      return data.allName.indexOf(value) !== -1;
     },
     //增加用户弹窗
     add_user_dialog() {
@@ -198,8 +229,9 @@ export default {
           this.has_select_user_list = res.data.sysUserList.map(res => {
             res.REAL_NAME = res.realName;
             res.ORG_ID = res.sysOrgUserX.orgId;
-            res.ID = res.sysOrgUserX.id;
-            res.USER_ID = res.sysOrgUserX.userId;
+            res.ID = res.sysOrgUserX.id - 0;
+            res.USER_ID = res.sysOrgUserX.userId - 0;
+            res.ORG_NAME = res.sysOrgUserX.orgName;
             return res;
           });
         })
@@ -293,7 +325,7 @@ export default {
           )}`,
           {
             orgId,
-            searchParam: this.searchParam,
+            searchParam: this.$filterText(this.searchParam),
             selectedUsers: "",
             receiveNoticeType: "0"
           },
@@ -317,7 +349,7 @@ export default {
           })}`,
           {
             selectedUsers: "+",
-            searchParam: this.searchParam,
+            searchParam: this.$filterText(this.searchParam),
             orgId: orgId,
             receiveNoticeType: this.select.type
           },
@@ -344,7 +376,7 @@ export default {
           )}`,
           {
             orgId,
-            searchParam: this.searchParam,
+            searchParam: this.$filterText(this.searchParam),
             selectedUsers: "",
             receiveNoticeType: "0"
           },
@@ -378,7 +410,17 @@ export default {
       this.init(this.pageSize, 1);
     },
     handleNodeClick(data) {
-      console.log(data);
+      if (!this.is_admin) {
+        if (!this.add_children_data.includes(data.id)) {
+          this.$message({
+            message: "您没有操作权限！",
+            type: "warning",
+            showClose: true
+          });
+          return;
+        }
+      }
+      this.has_role = true;
       this.temp_data = data;
       this.init(this.pageSize, this.pageNo);
     },

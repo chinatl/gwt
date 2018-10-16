@@ -14,6 +14,9 @@ export default {
   components: {
     CreateNotice
   },
+  created() {
+    sessionStorage.setItem("send_status", 1);
+  },
   data() {
     return {
       rules: {

@@ -1,5 +1,5 @@
 <template>
-  <div class="nav-class" :style="{left:!sidebar.opened ? '36px':'180px'}">
+  <div class="nav-class" :style="{left: get_width}">
       <div class="user-info">
         <div class="left-part">
             <div class="hamburger-containe" @click="toggleSideBar"> 
@@ -11,15 +11,16 @@
           <span>当前部门：</span>
           <el-dropdown @command='check_part'>
             <span class="el-dropdown-link">
-              <span class="value">{{user_info.sysOrgUserX.orgName}}</span>
+              <span class="value">{{user_info.sysOrgUserX.orgAllName}}</span>
               <svg-icon icon-class="刷新" />
             </span>
             <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item v-for="(item,index) in group_list" :key="index" :command='item.orgId'>{{item.orgName}}</el-dropdown-item>
+              <el-dropdown-item v-for="(item,index) in group_list" :key="index" :command='item'>{{item.orgAllName}}</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
           <span class="user-pic">
-            <svg-icon icon-class="头像" />
+            <svg-icon icon-class="头像"  v-if="!user_img"/>
+            <img :src="user_img" alt="" v-else>
           </span>
            <el-dropdown  @command='has_command'>
             <span class="el-dropdown-link" style="cursor:pointer">
@@ -44,7 +45,7 @@ import Breadcrumb from "@/components/Breadcrumb";
 import Hamburger from "@/components/Hamburger";
 import ScrollPane from "@/components/ScrollPane";
 import tagsView from "./TagsView";
-
+import config from "@/config";
 export default {
   components: {
     Breadcrumb,
@@ -66,8 +67,22 @@ export default {
       "avatar",
       "visitedViews",
       "user_info",
-      "group_list"
-    ])
+      "group_list",
+      "user_img",
+      "device"
+    ]),
+    get_position() {},
+    get_width() {
+      if (this.device === "mobile") {
+        return "0px";
+      } else {
+        if (this.sidebar.opened) {
+          return "180px";
+        } else {
+          return "36px";
+        }
+      }
+    }
   },
   watch: {
     visible(value) {
@@ -78,12 +93,18 @@ export default {
       }
     }
   },
+  created() {
+    this.$store.dispatch("get_user_head");
+  },
   methods: {
-    check_part(orgId) {
+    check_part(item) {
+      this.$store.getters.user_info.sysOrgUserX.orgId = item.orgId;
+      this.$store.getters.user_info.sysOrgUserX.orgName = item.orgName;
+      this.$store.getters.user_info.sysOrgUserX.orgAllName = item.orgAllName;
       this.$post(
         "gwt/system/sysOrg/saveRedisOrgAndUserXId",
         {
-          orgId
+          orgId: item.orgId
         },
         "json"
       )
@@ -99,9 +120,19 @@ export default {
             });
             return;
           }
+          this.$store.getters.user_info.sysOrgUserX.id = res.data.userXId;
+          this.$store.commit("SET_USER_INFO", this.$store.getters.user_info);
           this.$message({
             message: "切换部门成功",
             type: "success"
+          });
+          this.$store.dispatch("get_slider_list");
+          this.$store.commit("DEL_ALL_VIEWS");
+          this.$router.push({
+            path: "/user-message/index",
+            query: {
+              t: Date.now()
+            }
           });
         })
         .catch(res => {
@@ -153,6 +184,8 @@ export default {
           path: "/login"
         });
         this.$store.commit("DEL_ALL_VIEWS");
+        this.$store.dispatch("reset_slider_list");
+        sessionStorage.clear();
         // location.reload(); // 为了重新实例化vue-router对象 避免bug
       });
     }
@@ -233,6 +266,11 @@ export default {
       .user-pic {
         font-size: 32px;
         margin: 0 10px;
+        img {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+        }
       }
     }
   }

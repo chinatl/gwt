@@ -7,17 +7,20 @@
                     <el-option v-for="(item,index) in meeting_type_list" :key='index' :label="item.itemName" :value="item.sn"></el-option>
                 </el-select>
                 <el-date-picker
-                    v-model="date"
-                    type="daterange"
+                    v-model="beginendTime"
+                    type="date"
                     align="right"
                     size="medium"
-                    unlink-panels
-                    style="margin-right:8px;"
-                    range-separator="至"
-                    start-placeholder="开始日期"
-                    end-placeholder="结束日期"
-                    @change="condition"
-                   >
+                    placeholder="开始日期"
+                    @change="condition(0)">
+                </el-date-picker>
+                <el-date-picker
+                  v-model="endendTime"
+                  @change="condition(1)"
+                  style="margin-right:8px;"
+                  type="date"
+                  size="medium"
+                  placeholder="结束日期">
                 </el-date-picker>
                 <el-input v-model="Q_noticeTitle_SL" placeholder="请输入名称" style="width:200px" size='medium' @keyup.native.enter="condition"></el-input>
                 <el-button type="primary" icon="el-icon-search" size='medium' v-wave @click="condition">搜索</el-button>
@@ -30,8 +33,9 @@
               :key='index'
               @click="go_desc(item)"
               ></notice-item>
+            <no-data v-if="!tableData.length"></no-data>
         </div>
-        <div class="common-page">
+        <div class="common-page" v-if="tableData.length">
             <el-pagination
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
@@ -64,7 +68,9 @@ export default {
       noticeType: "",
       date: "",
       Q_noticeTitle_SL: "",
-      tableData: []
+      tableData: [],
+      beginendTime: "",
+      endendTime: ""
     };
   },
   created() {
@@ -82,11 +88,25 @@ export default {
   computed: {
     ...mapGetters(["meeting_type_list"])
   },
-   beforeDestroy() {
+  beforeDestroy() {
     // this.$store.commit("DEL_VIEW_BY_NAME", "通知签收");
   },
   methods: {
-    condition() {
+    condition(index) {
+      if (this.beginendTime && this.endendTime) {
+        if (+this.beginendTime > +this.endendTime) {
+          this.$message({
+            message: "开始时间应小于结束时间",
+            type: "warning"
+          });
+          if (index) {
+            this.endendTime = "";
+          } else {
+            this.beginendTime = "";
+          }
+          return;
+        }
+      }
       sessionStorage.setItem(
         "public-notice/signin/noticeType",
         this.noticeType
@@ -96,6 +116,18 @@ export default {
       this.init(this.pageSize, 1);
     },
     go_desc(item) {
+      this.$post(
+        "gwt/notice/tbNotice/changStatus",
+        {
+          receId: item.RECEIVE_ID
+        },
+        "json"
+      )
+        .then(res => {
+        })
+        .catch(res => {
+          console.log(res);
+        });
       this.$store.commit(SET_MESSAGE_DATA, item);
       if (item.NOTICE_TYPE === 2) {
         this.$router.push({
@@ -115,14 +147,14 @@ export default {
       }
     },
     init(pageSize, pageNo) {
-      console.log(this.date);
       this.loading = true;
-      var begincreateTime = "";
-      var endcreateTime = "";
-      if (this.date) {
-        console.log(this.date, "-------------");
-        begincreateTime = parseTime(this.date[0], "{y}-{m}-{d} {h}:{i}:{s}");
-        endcreateTime = parseTime(this.date[1], "{y}-{m}-{d} {h}:{i}:{s}");
+      var endendTime = "";
+      var beginendTime = "";
+      if (this.endendTime) {
+        endendTime = parseTime(this.endendTime, "{y}-{m}-{d}");
+      }
+      if (this.beginendTime) {
+        beginendTime = parseTime(this.beginendTime, "{y}-{m}-{d}");
       }
       this.$post(
         `gwt/notice/tbNotice/getUserReceiveNoticeList?${qs.stringify({
@@ -131,9 +163,9 @@ export default {
         })}`,
         {
           noticeType: this.noticeType,
-          begincreateTime,
-          endcreateTime,
-          noticeTitle: this.Q_noticeTitle_SL
+          begincreateTime: beginendTime,
+          endcreateTime: endendTime,
+          noticeTitle: this.$filterText(this.Q_noticeTitle_SL)
         },
         "json"
       )

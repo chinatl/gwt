@@ -76,7 +76,8 @@ export default {
             {
               realName: sessionStorage.getItem("login-user-name"),
               passWord: this.form.passWord,
-              mobilePhone: sessionStorage.getItem("login-user-phone")
+              mobilePhone: sessionStorage.getItem("login-user-phone"),
+              code: sessionStorage.getItem("login-user-code")
             },
             "json"
           )

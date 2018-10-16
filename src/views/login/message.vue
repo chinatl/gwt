@@ -23,6 +23,8 @@
 
 <script>
 import Cookies from "js-cookie";
+import { Base64 } from "js-base64";
+import md5 from "js-md5";
 export default {
   data() {
     return {
@@ -69,48 +71,75 @@ export default {
       }
       this.loading = true;
       this.$post(
-        "gwt/getPhoneValidateCode",
+        "gwt/getEquipRandom",
         {
+          id: md5(
+            Base64.encode(
+              this.$store.getters.user_info.mobilePhone
+                .slice(-6)
+                .split("")
+                .reverse()
+                .join("") -
+                0 +
+                123
+            )
+          ),
           phone: this.$store.getters.user_info.mobilePhone
         },
         "json"
       )
         .then(res => {
-          this.loading = false;
           if (res.result !== "0000") {
-            this.$swal({
-              title: "操作失败！",
-              text: res.msg,
-              type: "error",
-              showConfirmButton: true
-            });
             return;
           }
-          clearInterval(this.timer);
-          this.isSendPhone = true;
-          this.$message({
-            message: "短信验证码已发送，请注意查收",
-            type: "success"
-          });
-          this.isSend = true;
-          var isSend = sessionStorage.setItem("login-isSend", "true");
-          var a = 0;
-          this.send_message = 60 - a + "秒";
-          this.timer = setInterval(res => {
-            a++;
-            this.send_message = 60 - a + "秒";
-            sessionStorage.setItem("login-message", this.send_message);
-            if (a == 60) {
-              this.send_message = "获取验证码";
-              this.isSend = false;
+          this.$post(
+            "gwt/getPhoneValidateCode",
+            {
+              id: res.data.uuid,
+              phone: this.$store.getters.user_info.mobilePhone
+            },
+            "json"
+          )
+            .then(res => {
+              this.loading = false;
+              if (res.result !== "0000") {
+                this.$swal({
+                  title: "操作失败！",
+                  text: res.msg,
+                  type: "error",
+                  showConfirmButton: true
+                });
+                return;
+              }
               clearInterval(this.timer);
-              var isSend = sessionStorage.setItem("login-isSend", "false");
-              sessionStorage.setItem("login-message", this.send_message);
-            }
-          }, 1000);
+              this.isSendPhone = true;
+              this.$message({
+                message: "短信验证码已发送，请注意查收",
+                type: "success"
+              });
+              this.isSend = true;
+              var isSend = sessionStorage.setItem("login-isSend", "true");
+              var a = 0;
+              this.send_message = 60 - a + "秒";
+              this.timer = setInterval(res => {
+                a++;
+                this.send_message = 60 - a + "秒";
+                sessionStorage.setItem("login-message", this.send_message);
+                if (a == 60) {
+                  this.send_message = "获取验证码";
+                  this.isSend = false;
+                  clearInterval(this.timer);
+                  var isSend = sessionStorage.setItem("login-isSend", "false");
+                  sessionStorage.setItem("login-message", this.send_message);
+                }
+              }, 1000);
+            })
+            .catch(res => {
+              this.loading = false;
+            });
         })
         .catch(res => {
-          this.loading = false;
+          console.log(res);
         });
     },
     return_login() {
@@ -167,14 +196,12 @@ export default {
           });
           this.isSend = false;
           sessionStorage.setItem("login-info", Math.random());
-          this.$router.push({ path: "/user-message/index" });
-
           clearInterval(this.timer);
           sessionStorage.setItem("login-message", "获取验证码");
           sessionStorage.setItem("login-isSend", "false");
-
           this.$store.dispatch("get_meeting_type_list");
           this.$store.dispatch("get_part_tree");
+          this.$router.push({ path: "/user-message/index" });
         })
         .catch(res => {
           this.loading = false;

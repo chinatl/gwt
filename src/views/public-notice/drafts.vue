@@ -7,16 +7,20 @@
                     <el-option v-for="(item,index) in meeting_type_list" :key='index' :label="item.itemName" :value="index"></el-option>
                 </el-select>
                 <el-date-picker
-                    v-model="date"
-                    type="daterange"
+                    v-model="beginendTime"
+                    type="date"
                     align="right"
                     size="medium"
-                    unlink-panels
-                     style="margin-right:8px;"
-                    range-separator="至"
-                    start-placeholder="开始日期"
-                    end-placeholder="结束日期"
-                    @change="condition_search">
+                    placeholder="开始日期"
+                    @change="condition_search(0)">
+                </el-date-picker>
+                <el-date-picker
+                  v-model="endendTime"
+                  @change="condition_search(1)"
+                  style="margin-right:8px;"
+                  type="date"
+                  size="medium"
+                  placeholder="结束日期">
                 </el-date-picker>
                 <el-input v-model="noticeTitle" placeholder="请输入标题" style="width:200px" size='medium' @keyup.native.enter='condition_search'></el-input>
                 <el-button type="primary" icon="el-icon-search" size='medium' v-wave @click="condition_search">搜索</el-button>
@@ -98,7 +102,9 @@ export default {
       date: null,
       loading: false,
       tableData: [],
-      noticeTitle: ""
+      noticeTitle: "",
+      beginendTime: "",
+      endendTime: ""
     };
   },
   created() {
@@ -127,7 +133,21 @@ export default {
         path: "/re-drafts/index"
       });
     },
-    condition_search() {
+    condition_search(index) {
+      if (this.beginendTime && this.endendTime) {
+        if (+this.beginendTime > +this.endendTime) {
+          this.$message({
+            message: "开始时间应小于结束时间",
+            type: "warning"
+          });
+          if (index) {
+            this.endendTime = "";
+          } else {
+            this.beginendTime = "";
+          }
+          return;
+        }
+      }
       sessionStorage.setItem("public-notice/drafts/pageNo", 1);
       this.pageNo = 1;
       this.init(this.pageSize, 1);
@@ -135,9 +155,11 @@ export default {
     init(pageSize, pageNo) {
       var endendTime = "";
       var beginendTime = "";
-      if (this.date) {
-        endendTime = parseTime(this.date[0], "{y}-{m}-{d}");
-        beginendTime = parseTime(this.date[1], "{y}-{m}-{d}");
+      if (this.endendTime) {
+        endendTime = parseTime(this.endendTime, "{y}-{m}-{d}");
+      }
+      if (this.beginendTime) {
+        beginendTime = parseTime(this.beginendTime, "{y}-{m}-{d}");
       }
       this.loading = true;
       this.$post(
@@ -149,11 +171,11 @@ export default {
           noticeStatus: 1001,
           createUser: 1,
           account: this.type,
-          noticeTitle: this.noticeTitle,
+          noticeTitle: this.$filterText(this.noticeTitle),
           receiveNoticeType: "",
           noticeStatus: 1001,
-          beginupdateTime: endendTime,
-          endupdateTime: beginendTime,
+          beginupdateTime: beginendTime,
+          endupdateTime: endendTime
         },
         "json"
       )
@@ -186,7 +208,7 @@ export default {
     },
     handleDelete(noticeId) {
       this.$swal({
-        title: "您确定要删除的信息吗？",
+        title: "您确定要删除信息吗？",
         text: "删除后将无法恢复，请谨慎操作！",
         type: "warning",
         showCancelButton: true,

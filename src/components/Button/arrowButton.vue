@@ -49,14 +49,15 @@ export default {
     display: inline-block;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 18px;
+    font-size: 24px;
     line-height: 30px;
     margin-left: 4px;
+    opacity: 1;
     &:hover {
-      background-color: rgba(35, 198, 200, 0.8);
+      opacity: 0.7;
     }
     &:active {
-      background-color: rgba(35, 198, 200, 1);
+      opacity: 1;
     }
   }
 }

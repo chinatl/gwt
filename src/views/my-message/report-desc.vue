@@ -15,7 +15,9 @@
                 <p v-if="data.noticeAdress">会议地点：<span>{{data.noticeAdress}}</span></p>
             </div>
             <div class="active-content">
-                {{data.noticeProfile}}
+                <div v-for="(item,index) in data.noticeProfile.split('\n')" :key="index">
+                  {{item}}
+                </div>
             </div>
             <div class="file-info" v-if="file_list.length">
                 附件： <span>{{file_list.length}} 个附件，共{{file_list | folderSize}}</span>
@@ -134,7 +136,6 @@ export default {
     },
     //查内容
     init(noticeId) {
-      console.log(noticeId);
       this.$post(
         "gwt/notice/tbNotice/get",
         {

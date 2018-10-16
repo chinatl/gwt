@@ -7,19 +7,20 @@
                     <el-option v-for="(item,index) in meeting_type_list" :key='index' :label="item.itemName" :value="index"></el-option>
                 </el-select>
                 <el-date-picker
-                    v-model="date"
-                    type="daterange"
+                    v-model="beginendTime"
+                    type="date"
                     align="right"
                     size="medium"
-                    unlink-panels
-                     style="margin-right:8px;"
-                    range-separator="至"
-                    start-placeholder="开始日期"
-                    end-placeholder="结束日期"
-                    format="yyyy-MM-dd "
-                    value-format="yyyy-MM-dd"
-                    @change="condition"
-                   >
+                    placeholder="开始日期"
+                    @change="condition(0)">
+                </el-date-picker>
+                <el-date-picker
+                  v-model="endendTime"
+                  @change="condition(1)"
+                  style="margin-right:8px;"
+                  type="date"
+                  size="medium"
+                  placeholder="结束日期">
                 </el-date-picker>
                 <el-input v-model="Q_noticeTitle_SL" placeholder="请输入标题"
                 @keyup.native.enter="condition"
@@ -34,9 +35,9 @@
               :key='index'
               @click="get_active_desc(item)"
               ></notice-item>
+              <no-data v-if="!tableData.length"></no-data>
         </div>
-        
-        <div class="common-page">
+        <div class="common-page" v-if="tableData.length">
             <el-pagination
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
@@ -55,6 +56,7 @@ import { SET_MEETING_TYPE_LIST, SET_MESSAGE_DATA } from "@/store/mutations";
 import { mapGetters } from "vuex";
 import NoticeItem from "@/components/NoticeItem";
 import qs from "qs";
+import { parseTime } from "@/utils";
 export default {
   components: {
     NoticeItem
@@ -68,7 +70,9 @@ export default {
       noticeType: 0,
       date: "",
       Q_noticeTitle_SL: "",
-      tableData: []
+      tableData: [],
+      beginendTime: "",
+      endendTime: ""
     };
   },
   created() {
@@ -84,9 +88,7 @@ export default {
   computed: {
     ...mapGetters(["meeting_type_list"])
   },
-  beforeDestroy() {
-    this.$store.commit("DEL_VIEW_BY_NAME", "已转发通知");
-  },
+
   methods: {
     get_active_desc(item) {
       this.$store.commit(SET_MESSAGE_DATA, item);
@@ -94,12 +96,34 @@ export default {
         path: "/active-desc/index"
       });
     },
-    condition() {
+    condition(index) {
+      if (this.beginendTime && this.endendTime) {
+        if (+this.beginendTime > +this.endendTime) {
+          this.$message({
+            message: "开始时间应小于结束时间",
+            type: "warning"
+          });
+          if (index) {
+            this.endendTime = "";
+          } else {
+            this.beginendTime = "";
+          }
+          return;
+        }
+      }
       sessionStorage.setItem("public-notice/forwarded/pageNo", 1);
       this.pageNo = 1;
       this.init(this.pageSize, 1);
     },
     init(pageSize, pageNo) {
+      var endendTime = "";
+      var beginendTime = "";
+      if (this.endendTime) {
+        endendTime = parseTime(this.endendTime, "{y}-{m}-{d}");
+      }
+      if (this.beginendTime) {
+        beginendTime = parseTime(this.beginendTime, "{y}-{m}-{d}");
+      }
       this.loading = true;
       this.$post(
         `gwt/notice/tbNoticeForward/list?${qs.stringify({
@@ -109,9 +133,9 @@ export default {
         {
           account: this.noticeType == 0 ? "" : this.noticeType,
           noticeType: this.noticeType == 0 ? "" : this.noticeType,
-          begincreateTime: this.date[0],
-          endcreateTime: this.date[1],
-          noticeTitle: this.Q_noticeTitle_SL
+          begincreateTime: beginendTime,
+          endcreateTime: endendTime,
+          noticeTitle: this.$filterText(this.Q_noticeTitle_SL)
         },
         "json"
       )
@@ -131,6 +155,7 @@ export default {
                   : "材料征集";
             res.NOTICE_ID = res.dataMap.NOTICE_ID;
             res.NOTICE_TYPE = res.dataMap.NOTICE_TYPE;
+            res.ORDER_TIME = res.createTime
             return res;
           });
           sessionStorage.setItem(

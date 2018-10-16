@@ -3,8 +3,8 @@
       <transition name="fade" mode="out-in">
       <!-- <transition name="el-zoom-in-center" mode="out-in"> -->
       <!-- <transition name="el-zoom-in-top" mode="out-in"> -->
-        <!-- <router-view :key="key"></router-view> -->
-        <router-view></router-view>
+        <router-view :key="key"></router-view>
+        <!-- <router-view></router-view> -->
       </transition>
   </section>
 </template>
@@ -13,9 +13,9 @@
 export default {
   name: "AppMain",
   computed: {
-    // key() {
-    //   return this.$route.name !== undefined ? this.$route.name + +new Date() : this.$route + +new Date()
-    // }
+    key() {
+      return this.$route.name !== undefined ? this.$route.name + +new Date() : this.$route + +new Date()
+    }
   }
 };
 </script>

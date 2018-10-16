@@ -31,7 +31,8 @@
                 <p v-if='data.noticeAdress'>会议地点：<span>{{data.noticeAdress}}</span></p>
                 <p v-if="message_data.FORWARD_ID">转发自：
                 <span>
-                  {{forward_list.map(res=> res.REAL_NAME).join('、')}}
+                  {{ forward_list[forward_list.length-1] && forward_list[forward_list.length-1].REAL_NAME}} 
+                  {{ forward_list[forward_list.length-1] && forward_list[forward_list.length-1].DEPT_ALLNAME}}
                 </span>
                 <el-popover
                   placement="bottom-start"
@@ -41,13 +42,16 @@
                     <p>转发信息</p>
                     <ul>
                       <li v-for="(item,index) in forward_list" :key="index"> 
-                        <div>
-                          <span>{{item.REAL_NAME}}</span>
-                          <span>{{item.TYPE_NAME}}</span>
+                        <div class="li">
+                          <div>
+                            <span>{{item.REAL_NAME}}</span>
+                            <span>{{item.TYPE_NAME}}</span>
+                          </div>
+                          <div>
+                            {{item.CREATE_TIME}}
+                          </div>
                         </div>
-                        <div>
-                          {{item.CREATE_TIME}}
-                        </div>
+                        <p class="text-indent" style="color:#333;font-weight:normal" v-if="item.FORWARD_DESC">{{item.FORWARD_DESC}}</p>
                       </li>
                     </ul>
                   </div>
@@ -55,9 +59,7 @@
                 </el-popover>
                 </p>
             </div>
-            <div class="active-content">
-                {{data.noticeProfile}}
-            </div>
+            <div class="active-content2" v-text="data.noticeProfile"></div>
             <div class="file-info" v-if="file_length">
                 附件： <span>{{file_length}} 个附件，共{{file_list | folderSize}}</span>
             </div>
@@ -67,9 +69,11 @@
           <el-button type="warning" size="medium" @click="report_notice" v-if='change_status !== "1003"'><svg-icon icon-class='警察'></svg-icon>举报</el-button>
           <el-button type="danger" size="medium"  @click="refuse"  v-if='status === "1000" && isTimeOut && change_status !== "1003"'><svg-icon icon-class='拒签'></svg-icon>拒签</el-button>
           <el-button type="primary" size="medium" @click="reveive_report" v-if='status === "1000" && isTimeOut && change_status !== "1003"'><svg-icon icon-class='签收'></svg-icon>签收</el-button>
-          <el-button type="success" size="medium" @click="forward_report" v-if='(status == "1004" || status == "1001") && isTimeOut && change_status !== "1003"'><svg-icon icon-class='转发'></svg-icon>转发</el-button>
+          <el-button type="success" size="medium" @click="forward_report" v-if='( status == "1003" || status == "1004" || status == "1001") && isTimeOut && change_status !== "1003"'><svg-icon icon-class='转发'></svg-icon>转发</el-button>
         </p>
         <p class="change-notice" v-if="change_status === '1003'">该通知已变更，请查看变更后信息</p>
+        <p class="change-notice" v-if="!isTimeOut">该通知已过期，不可操作</p>
+
         <el-dialog :close-on-click-modal='false'
             title="举报信息"
             class="common-dialog "
@@ -121,7 +125,7 @@ export default {
         }
       ],
       file_list: [],
-      data: {},
+      data: { noticeProfile: "" },
       tbNoticeReceive: {},
       file_length: 0,
       file_size: 0,
@@ -153,6 +157,7 @@ export default {
     };
   },
   created() {
+    sessionStorage.setItem("send_status", 2);
     this.$store.dispatch("readSession", SET_MESSAGE_DATA);
     this.get_meeting_data();
     this.init_file(this.message_data.NOTICE_ID);
@@ -463,11 +468,13 @@ export default {
         }
       }
     }
-    .active-content {
+    .active-content2 {
       font-size: 15px;
       line-height: 28px;
-      margin: 12px 0;
-      text-indent: 2em;
+      margin: 0px 0;
+      overflow: hidden;
+      padding: 10px 20px;
+      white-space: pre-wrap;
     }
     .file-info {
       span {

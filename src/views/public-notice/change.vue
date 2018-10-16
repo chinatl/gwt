@@ -2,7 +2,8 @@
     <div class="common">
         <t-title :title="notice_data.ITEM_NAME" warning></t-title>
         <div class="page-form">
-              <el-form ref="form" :model="form" label-width="80px" :rules="rules">
+          <div class="script_bgc">
+              <el-form ref="form" :model="form" label-width="80px" :rules="rules" v-loading='loading'>
                     <el-form-item label="标题" prop='noticeTitle'>
                         <el-input v-model="form.noticeTitle" size="small" maxlength="50" readonly></el-input>
                     </el-form-item>
@@ -14,6 +15,7 @@
                             v-model="form.startTime"
                             type="datetime"
                             size="small"
+                            ref='start_time'
                             placeholder="选择日期时间">
                         </el-date-picker>
                     </el-form-item>
@@ -22,6 +24,7 @@
                             v-model="form.endTime"
                             type="datetime"
                             size="small"
+                            ref='end_time'
                             placeholder="选择日期时间">
                         </el-date-picker>
                     </el-form-item>
@@ -46,6 +49,7 @@
                     </el-form-item>
                     <form-button cancel_name='保存草稿' submit_name='发送' @submit="onSubmit" @cancel='save_message'></form-button>
             </el-form>
+          </div>
         </div>
     </div>
 </template>
@@ -100,13 +104,14 @@ export default {
   created() {
     this.$store.dispatch("readSession", SET_NOTICE_DATA);
     this.$store.dispatch("get_user_send_permission");
+    sessionStorage.setItem("send_status", this.notice_data.noticeType);
     this.init();
   },
   beforeDestroy() {
-    this.$store.commit("DEL_VIEW_BY_NAME", "通知变革");
+    this.$store.commit("DEL_VIEW_BY_NAME", "通知变更");
   },
   computed: {
-    ...mapGetters(["notice_data","is_permisssion"])
+    ...mapGetters(["notice_data", "is_permisssion"])
   },
   methods: {
     init() {
@@ -129,12 +134,17 @@ export default {
           this.form.part = res.data.receiveOrgNames.join("、");
           this.form.noticeProfile = res.data.tbNotice.noticeProfile;
           this.file_list = res.data.attrIds;
-
           if (res.data.tbNotice.startTime) {
-            this.form.startTime = new Date(res.data.tbNotice.startTime);
+            this.$refs.start_time.$children[0].currentValue = res.data.tbNotice.startTime;
+            this.form.startTime = +new Date(
+              res.data.tbNotice.startTime.replace(/-/g, "/")
+            );
           }
           if (res.data.tbNotice.endTime) {
-            this.form.endTime = new Date(res.data.tbNotice.endTime);
+            this.$refs.end_time.$children[0].currentValue = res.data.tbNotice.endTime;
+            this.form.endTime = +new Date(
+              res.data.tbNotice.endTime.replace(/-/g, "/")
+            );
           }
           var id_arr = res.data.tbNoticeDraft.draftOrgId.split(",");
           this.has_select_part_list = [];
@@ -191,6 +201,7 @@ export default {
         });
         return;
       }
+      this.loading = true;
       var formData = new FormData();
       formData.append("selectFile", e.raw);
       formData.append("ownerSystem", "gwt-platform");
@@ -201,11 +212,13 @@ export default {
       formData.append("editFileId", undefined);
       this.$post("gwt/uploadFile/upload", formData, "form")
         .then(res => {
+          this.loading = false;
           if (action_fail(res, "上传成功！", "上传失败！")) return;
           res.data.attachment.url = e.url;
           this.file_list.push(res.data.attachment);
         })
         .catch(res => {
+          this.loading = false;
           console.log(res);
         });
     },
@@ -232,12 +245,12 @@ export default {
           inputValidator: value => {
             return !value && "请输入密码！";
           }
-        }).then(res => {
-          if (res.value) {
+        }).then(response => {
+          if (response.value) {
             this.$post(
               "gwt/system/sysUserZone/judgePhone",
               {
-                password: res.value
+                password: response.value
               },
               "json"
             )
@@ -256,8 +269,9 @@ export default {
                 this.$post(
                   "gwt/notice/tbNotice/save",
                   {
+                    publishPwd: response.value,
                     changeNoticeId: this.notice_data.NOTICE_ID,
-                    noticeId: '',
+                    noticeId: "",
                     noticeTitle: this.form.noticeTitle,
                     noticeType: this.notice_data.NOTICE_TYPE, //会议 2//通知 3//材料
                     noticeAdress: this.form.noticeAdress,
@@ -276,7 +290,7 @@ export default {
                       .join(","),
                     attrArray: this.file_list.map(res => res.id).join(","),
                     orgArray: this.has_select_part_list
-                      .map(res => res.id.replace(/\D*/g, ""))
+                      .map(res => res.id.replace(/.*\D/g, ""))
                       .join(",")
                   },
                   "json"
@@ -325,13 +339,11 @@ export default {
           noticeAdress: this.form.noticeAdress,
           noticeProfile: this.form.noticeProfile,
           startTime: parseTime(this.form.startTime, "{y}-{m}-{d} {h}:{i}:{s}"),
-          endTime: "",
-          selectedUsers: this.has_select_user_list
-            .map(res => res.ID)
-            .join(","),
+          endTime: parseTime(this.form.endTime, "{y}-{m}-{d} {h}:{i}:{s}"),
+          selectedUsers: this.has_select_user_list.map(res => res.ID).join(","),
           attrArray: this.file_list.map(res => res.id).join(","),
           orgArray: this.has_select_part_list
-            .map(res => res.id.replace(/\D*/g, ""))
+            .map(res => res.id.replace(/.*\D/g, ""))
             .join(",")
         },
         "json"

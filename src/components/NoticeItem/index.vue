@@ -18,11 +18,11 @@
                 <span class="reportColor1" 
                       v-if="data.FROM_NOTICE_ID"
                       style="background-color: #fab858;">{{data.FROM_NOTICE_ID ?'变更':null}}</span>
-              <little-button name='转发' v-if="data.FORWARD_ID"></little-button>
-                <little-button :name='data.NOTICE_TYPE_NAME'></little-button>
+                <little-button name='转发' v-if="data.FORWARD_ID"></little-button>
+                <little-button :name='data.NOTICE_TYPE_NAME' v-if='data.NOTICE_TYPE_NAME'></little-button>
                 <span class="current">{{data.REAL_NAME}}</span>
                 <span class="current">{{data.ORG_ALL_NAME}}</span>
-                <span class="time">{{data.RECE_TIME}}</span>
+                <span class="time">{{data.ORDER_TIME}}</span>
             </div>
         </div>
     </div>

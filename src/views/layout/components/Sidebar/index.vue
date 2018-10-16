@@ -1,20 +1,26 @@
 <template>
   <el-scrollbar wrapClass="scrollbar-wrapper">
-    <div class="gwt-slider">
-      <div class="gwt-logo">
-          <img :src="require('@/assets/imgs/logox.png')" alt="">
+    <div class="gwt-slider" v-loading='slider_loading'
+    element-loading-background="rgba(0, 0, 0, 0.5)"
+    >
+      <div class="gwt-logo"  style="height:48px;text-align:center">
+          <img :src="require('@/assets/imgs/logox.png')" alt="" v-if="sidebar.opened" style="width:180px;padding:12px 12px 6px 12px">
+          <img :src="require('@/assets/imgs/glogo.png')" alt="" v-else style="margin-top:8px;cursor:pointer" @click="toggleSideBar">
       </div>
-      <div class="gwt-slider-item" v-for="(item,index) in silder_list" :key="index">
-        <div class="gwt-title" @click="go_route(item,index)" :class="current === index ? 'current':''">
-          <span></span>
-          {{item.resName}}
+      <div  v-for="(item,index) in slider_list" :key="index" :class="sidebar.opened ? 'gwt-slider-item' : 'hide-item'">
+        <div class="gwt-title" @click="go_route(item,index)" :class="get_current(item)">
+          <el-tooltip class="item" effect="dark" :content="item.resName" placement="right" v-if="!sidebar.opened">
+            <span class="title-icon"><svg-icon :icon-class='item.resName'></svg-icon></span>
+          </el-tooltip>
+          <span v-else><svg-icon :icon-class='item.resName'></svg-icon></span>
+          <span class="hide">{{item.resName}}</span>
           <i class="el-icon-arrow-right" v-if="item.children && !item.isShow && item.children.length"></i>
           <i class="el-icon-arrow-down" v-if="item.children && item.isShow &&  item.children.length"></i>
         </div>
         <collapse-transition>
-          <ul class="gwt-child" v-show="item.isShow">
+          <ul class="gwt-child" v-show="item.isShow && sidebar.opened">
             <li v-for="(li_item,li_index) in item.children"
-              :class="child_current === li_index ? 'current' : '' "
+              :class="get_current(li_item)"
              :key="li_index" @click="push_page(li_item,li_index)">{{li_item.resName}}</li>
           </ul>
       </collapse-transition>
@@ -27,7 +33,7 @@
 import { mapGetters } from "vuex";
 import "element-ui/lib/theme-chalk/base.css";
 import CollapseTransition from "element-ui/lib/transitions/collapse-transition";
-import { SET_SILDER_LIST, SET_IS_ADMIN } from "@/store/mutations";
+import { SET_IS_ADMIN } from "@/store/mutations";
 export default {
   components: {
     CollapseTransition
@@ -36,33 +42,56 @@ export default {
     return {
       current: 0,
       child_current: -1,
-      silder_list: []
+      silder_list: [],
+      loading: true
     };
   },
   computed: {
-    ...mapGetters(["sidebar", "slierbar_list", "is_admin"])
+    ...mapGetters([
+      "sidebar",
+      "is_admin",
+      "slider_list",
+      "slider_loading",
+      "levelList"
+    ])
   },
   methods: {
+    get_current(item) {
+      if (
+        this.$route.path === item.resUrl ||
+        this.levelList.map(res => res.path).includes(item.resUrl)
+      ) {
+        return "current";
+      } else {
+        return "";
+      }
+    },
+    toggleSideBar() {
+      this.$store.dispatch("ToggleSideBar");
+    },
     push_page(item, index) {
       this.child_current = index;
       sessionStorage.setItem("gwt-current-silder-child", index);
-      this.$router.push(item.resUrl);
+      this.$router.push(item.resUrl + "?t=" + Date.now());
     },
     go_route(item, index) {
+      if (!this.sidebar.opened) {
+        this.$store.dispatch("ToggleSideBar");
+      }
       this.current = index;
       this.child_current = -1;
       sessionStorage.setItem("gwt-current-silder-child", -1);
       sessionStorage.setItem("gwt-current-silder", index);
       if (item.children && item.children.length) {
-        for (var i = 0; i < this.silder_list.length; i++) {
+        for (var i = 0; i < this.slider_list.length; i++) {
           if (i !== index) {
-            this.silder_list[i].isShow = false;
+            this.slider_list[i].isShow = false;
           }
         }
-        this.silder_list[index].isShow = !this.silder_list[index].isShow;
-        this.$set(this.silder_list, index, this.silder_list[index]);
+        this.slider_list[index].isShow = !this.slider_list[index].isShow;
+        this.$set(this.slider_list, index, this.slider_list[index]);
       } else {
-        this.$router.push(item.resUrl);
+        this.$router.push(item.resUrl + "?t=" + Date.now());
       }
     }
   },
@@ -71,75 +100,8 @@ export default {
     var child_current = sessionStorage.getItem("gwt-current-silder-child");
     this.current = current ? current - 0 : 0;
     this.child_current = child_current ? child_current - 0 : -1;
-    this.$store.dispatch("readSession", SET_SILDER_LIST);
-    this.$store.dispatch("readSession", SET_SILDER_LIST);
-
-    var newArr = [];
-    var appArr = [];
-    for (var i = 0; i < this.slierbar_list.length; i++) {
-      if (this.slierbar_list[i].remark === "0") {
-        if (this.slierbar_list[i].parentId === "-1") {
-          newArr.push(this.slierbar_list[i]);
-        }
-      } else {
-        if (this.is_admin) {
-          if (this.slierbar_list[i].parentId === "0") {
-            appArr.push(this.slierbar_list[i]);
-          }
-        } else {
-          appArr.push(this.slierbar_list[i]);
-        }
-      }
-    }
-    for (var k = 0; k < appArr.length; k++) {
-      appArr[k].children = [];
-      appArr[k].isShow = false;
-      for (var i = 0; i < this.slierbar_list.length; i++) {
-        if (this.slierbar_list[i].parentId === appArr[k].resId) {
-          appArr[k].children.push(this.slierbar_list[i]);
-        }
-      }
-    }
-    for (var j = 0; j < newArr.length; j++) {
-      newArr[j].children = [];
-      newArr[j].isShow = false;
-      for (var i = 0; i < this.slierbar_list.length; i++) {
-        if (
-          this.slierbar_list[i].appId === newArr[j].resId &&
-          this.slierbar_list[i].resId !== newArr[j].resId
-        ) {
-          newArr[j].children.push(this.slierbar_list[i]);
-        }
-      }
-    }
-    this.silder_list = [
-      {
-        resName: "我的消息",
-        resUrl: "/user-message/index"
-      },
-      ...appArr,
-      ...newArr,
-      {
-        resName: "通讯录",
-        resUrl: "/mail-list/index"
-      },
-      {
-        resName: "云盘",
-        children: [
-          {
-            resName: "个人云盘",
-            resUrl: "/user-cloud-disk/index"
-          },
-          {
-            resName: "部门云盘",
-            resUrl: "/part-cloud-disk/index"
-          }
-        ]
-      }
-    ];
-    if (this.child_current !== -1) {
-      this.silder_list[this.current].isShow = true;
-    }
+    this.$store.dispatch("get_slider_list");
+    // this.get_menu_list();
   }
 };
 </script>
@@ -148,52 +110,87 @@ export default {
 .gwt-slider {
   width: 100%;
   height: 100%;
-  background-color: #273240;
+  background-color: rgb(48, 65, 86);
   color: rgb(191, 203, 217);
   font-size: 14px;
   .gwt-logo {
-    img {
-      width: 180px;
-      padding: 20px 10px;
+    // img {
+    //   width: 180px;
+    //   padding: 20px 10px;
+    // }
+  }
+  .hide-item {
+    .gwt-title {
+      background-color: rgb(48, 65, 86);
+      height: 56px;
+      line-height: 56px;
+      transition: backgroundColor 0.5s;
+      position: relative;
+      cursor: pointer;
+      .title-icon {
+        height: 56px;
+        width: 36px;
+        display: block;
+        text-align: center;
+        padding: 0 10px;
+      }
+      &.current {
+        color: rgb(64, 158, 255);
+        background-color: rgb(38, 52, 69);
+      }
+      .hide {
+        display: none;
+      }
+      i {
+        display: none;
+        float: right;
+        margin-top: 22px;
+      }
+      &:hover {
+        color: rgb(64, 158, 255);
+        background-color: rgb(38, 52, 69);
+      }
     }
   }
-  .gwt-title {
-    background-color: #273240;
-    height: 56px;
-    line-height: 56px;
-    padding-left: 30px;
-    padding-right: 20px;
-    transition: backgroundColor 0.5s;
-    &.current {
-      color: #fff;
-      background-color: #202e3e;
-    }
-    cursor: pointer;
-    i {
-      float: right;
-      margin-top: 16px;
-    }
-    &:hover {
-      color: #fff;
-      background-color: #202e3e;
+  .gwt-slider-item {
+    .gwt-title {
+      background-color: rgb(48, 65, 86);
+      height: 56px;
+      line-height: 56px;
+      padding-left: 20px;
+      padding-right: 20px;
+      transition: backgroundColor 0.5s;
+      position: relative;
+      cursor: pointer;
+      &.current {
+        color: rgb(64, 158, 255);
+        background-color: rgb(38, 52, 69);
+      }
+      cursor: pointer;
+      i {
+        float: right;
+        margin-top: 22px;
+      }
+      &:hover {
+        color: rgb(64, 158, 255);
+        background-color: rgb(38, 52, 69);
+      }
     }
   }
   .gwt-child {
-    background-color: #273240;
+    background-color: #1f2d3d;
     overflow: hidden;
     line-height: 56px;
     li {
       padding-left: 45px;
       height: 56px;
       cursor: pointer;
-
       &.current {
-        color: #fff;
-        background-color: #202e3e;
+        color: rgb(64, 158, 255);
       }
       &:hover {
-        color: #efefef;
-        background-color: #202e3e;
+        color: rgb(64, 158, 255);
+        background-color: rgb(0, 21, 40);
       }
     }
   }

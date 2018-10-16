@@ -1,7 +1,9 @@
 /**
  * Created by tanglan .
  */
-
+export function filterText(val) {
+  return val.replace(/[%_]/g, '\\%')
+}
 export function parseTime(time, cFormat) {
   if (!time) {
     return ''
@@ -152,7 +154,6 @@ export function scrollTo(element, to, duration) {
   const difference = to - element.scrollTop
   const perTick = difference / duration * 10
   setTimeout(() => {
-    console.log(new Date())
     element.scrollTop = element.scrollTop + perTick
     if (element.scrollTop === to) return
     scrollTo(element, to, duration - 10)
@@ -454,12 +455,12 @@ export function generate_tree1(arr) {//效率高 但是返回数据是反着的
       getTree(generate_arr[k].childrens)
     }
   }
-  console.log(arr)
   return newArr
 }
 
 export function generate_tree(arr) {//效率比上面的算法慢一点 因为是根据 arr.length 长度遍历 ，上面的每加一个会减少一次遍历
   var newArr = [];
+
   for (var i = 0; i < arr.length; i++) {
     if (arr[i].nodeType === 'USER_GROUP' || arr[i].nodeType === 'ORG_GROUP' || arr[i].nodeType === 'DOMAIN'
       || arr[i].nodeType === 'REGION'
@@ -474,7 +475,7 @@ export function generate_tree(arr) {//效率比上面的算法慢一点 因为�
     for (var k = 0, generate_arr_length = generate_arr.length; k < generate_arr_length; k++) {
       generate_arr[k].childrens = [];
       for (var j = 0, arr_lenth = arr.length; j < arr_lenth; j++) {
-        if (arr[j].pId === generate_arr[k].id ) {
+        if (arr[j].pId === generate_arr[k].id) {
           generate_arr[k].childrens.push(arr[j]);
         }
       }

@@ -2,6 +2,7 @@
     <div class="first-login-new" v-loading='loading'>
         <div class="first-login-edit">
             <el-form ref="form" :model="form" label-width="120px" :rules="rules" status-icon>
+                <input type="password" style="position:absolute;z-index:100;opacity:0;width:0;height:0">
                 <el-form-item label="新密码" prop='passWord'>
                     <el-input v-model="form.passWord" size="small" placeholder="请输入8-20位，字母与数字组合的新密码" type="password"></el-input>
                 </el-form-item>

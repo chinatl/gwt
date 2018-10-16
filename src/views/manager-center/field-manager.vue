@@ -225,7 +225,7 @@ export default {
           pageSize: pageSize
         })}`,
         {
-          name: this.Q_name_SL,
+          name: this.$filterText(this.Q_name_SL),
           o: 2,
           s: "DOMAIN_ID"
         },

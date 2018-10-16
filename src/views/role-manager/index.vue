@@ -121,7 +121,6 @@ export default {
   created() {
     //页数存到localstorage里面
     var total = sessionStorage.getItem("user-manager/role/total");
-    console.log(total);
     this.total = total ? total - 0 : 0;
     var pageNo = sessionStorage.getItem("user-manager/role/pageNo");
     this.pageNo = pageNo ? pageNo - 0 : 1;

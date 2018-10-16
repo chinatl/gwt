@@ -98,6 +98,8 @@ export default {
           if (arr.includes(this.allList[i].userId)) {
             index++;
             this.allList[i].checked = true;
+          } else {
+            this.allList[i].checked = false;
           }
         }
         if (index === this.allList.length && index) {
@@ -159,6 +161,7 @@ export default {
     //用户查询全选
     all_user_box(e) {
       if (e) {
+        this.has_select_user = [];
         for (var i = 0; i < this.allList.length; i++) {
           this.allList[i].checked = true;
           this.has_select_user.push(this.allList[i]);

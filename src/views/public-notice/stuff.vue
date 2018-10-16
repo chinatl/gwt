@@ -14,6 +14,9 @@ export default {
   components: {
     CreateNotice
   },
+  created() {
+    sessionStorage.setItem("send_status", 3);
+  },
   data() {
     return {
       rules: {
@@ -24,13 +27,14 @@ export default {
           { required: true, validator: validateEndTime, trigger: "change" }
         ]
       },
+
       form_array: [
         {
           label: "标题",
           type: "input",
           prop: "noticeTitle"
         },
-       
+
         {
           label: "结束时间",
           type: "date",

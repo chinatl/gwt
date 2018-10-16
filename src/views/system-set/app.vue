@@ -317,7 +317,7 @@ export default {
     },
     resource_manager() {
       this.$router.push({
-        path: "/system-set/resource"
+        path: "/resoure-manager/index"
       });
     },
     handleDelete() {},

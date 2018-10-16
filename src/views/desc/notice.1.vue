@@ -28,7 +28,9 @@
                 <p v-if='data.noticeAdress'>会议地点：<span>{{data.noticeAdress}}</span></p>
             </div>
             <div class="active-content">
-                {{data.noticeProfile}}
+                <div v-for="(item,index) in data.noticeProfile.split('\n')" :key="index" class="cont2">
+                {{item}}
+              </div>
             </div>
             <div class="file-info" v-if="file_length">
                 附件： <span>{{file_length}} 个附件，共{{file_list | folderSize}}</span>
@@ -116,12 +118,11 @@ export default {
             type: "array"
           }
         ]
-      },
+      }
     };
   },
   created() {
     this.$store.dispatch("readSession", SET_MESSAGE_DATA);
-    console.log(this.message_data)
     this.get_rece_id();
   },
   computed: {
@@ -242,8 +243,7 @@ export default {
     },
     get_rece_id() {
       // getMsgStateByMsgId
-      console.log(JSON.stringify(this.message_data,{},4))
-      return
+      return;
       this.loading = true;
       this.$post(
         "gwt/notice/tbNoticeMsgBizInfo/getMessageBizInfo ",

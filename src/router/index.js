@@ -25,6 +25,7 @@ export const constantRouterMap = [
   { path: '/login', component: () => import('@/views/login/index'), hidden: true },
   { path: '/login/message', component: () => import('@/views/login/message'), hidden: true },
   { path: '/404', component: () => import('@/views/404'), hidden: true },
+  { path: '/401', component: () => import('@/views/401'), hidden: true },
   {
     path: '/dashboard',
     redirect: '/user-message/index',
@@ -43,21 +44,65 @@ export const constantRouterMap = [
         path: 'phone',
         name: '验证手机号',
         component: () => import('@/views/forget-pwd/phone'),
+        beforeEnter(to, from, next) {
+          if (!sessionStorage.getItem("set-forget")) {
+            next('/')
+          }
+          if (from.fullPath === '/' ||
+            from.fullPath === '/login') {
+            next()
+          } else {
+            next('/')
+          }
+        }
       },
       {
         path: 'identity',
         name: '验证身份',
         component: () => import('@/views/forget-pwd/identity'),
+        beforeEnter(to, from, next) {
+          if (sessionStorage.getItem("set-forget") !== 'false') {
+            next('/')
+          }
+          if (from.fullPath === '/' ||
+            from.fullPath === '/forgetpwd/phone') {
+            next()
+          } else {
+            next('/')
+          }
+        }
       },
       {
         path: 'reset',
         name: '重置密码',
         component: () => import('@/views/forget-pwd/reset'),
+        beforeEnter(to, from, next) {
+          if (sessionStorage.getItem("set-forget") !== 'false') {
+            next('/')
+          }
+          if (from.fullPath === '/' ||
+            from.fullPath === '/forgetpwd/identity') {
+            next()
+          } else {
+            next('/')
+          }
+        }
       },
       {
         path: 'finish',
         name: '成功',
         component: () => import('@/views/forget-pwd/finish'),
+        beforeEnter(to, from, next) {
+          if (sessionStorage.getItem("set-forget") !== 'false') {
+            next('/')
+          }
+          if (from.fullPath === '/' ||
+            from.fullPath === '/forgetpwd/finish') {
+            next()
+          } else {
+            next('/')
+          }
+        }
       },
     ]
   },
@@ -101,7 +146,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '通知详情',
         component: () => import('@/views/desc/notice'),
-        meta: { title: '通知详情' },
+        meta: { title: '通知详情', requiresAuth: true, name: '通知详情', up: true },
       }
     ]
   },
@@ -113,7 +158,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '材料征集详情',
         component: () => import('@/views/desc/stuff'),
-        meta: { title: '材料征集详情' },
+        meta: { title: '材料征集详情', requiresAuth: true, name: '材料征集', up: true },
       }
     ]
   },
@@ -125,7 +170,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '会议通知详情',
         component: () => import('@/views/desc/meeting'),
-        meta: { title: '会议通知详情' },
+        meta: { title: '会议通知详情', requiresAuth: true, up: true },
       }
     ]
   },
@@ -137,7 +182,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '已发通知详情',
         component: () => import('@/views/desc/active'),
-        meta: { title: '通知详情' },
+        meta: { title: '通知详情', requiresAuth: true, up: true },
       }
     ]
   },
@@ -149,7 +194,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '转发通知',
         component: () => import('@/views/desc/forward-notice'),
-        meta: { title: '转发通知'  },
+        meta: { title: '转发通知', requiresAuth: true, up: true },
       }
     ]
   },
@@ -161,7 +206,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '文件举报详情',
         component: () => import('@/views/desc/file'),
-        meta: { title: '文件举报详情'  },
+        meta: { title: '文件举报详情', requiresAuth: true, up: true },
       }
     ]
   },
@@ -179,7 +224,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '我的消息',
         component: () => import('@/views/my-message'),
-        meta: { title: '我的消息' },
+        meta: { title: '我的消息', requiresAuth: true, icon: '消息' },
       }
     ]
   },
@@ -191,7 +236,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '举报详情',
         component: () => import('@/views/my-message/desc'),
-        meta: { title: '举报详情' },
+        meta: { title: '举报详情', requiresAuth: true },
       }
     ]
   },
@@ -203,7 +248,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '举报详情描述',
         component: () => import('@/views/my-message/report-desc'),
-        meta: { title: '举报详情', up: true },
+        meta: { title: '举报详情', up: true, requiresAuth: true },
       }
     ]
   },
@@ -215,7 +260,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '域管理',
         component: () => import('@/views/manager-center/field-manager'),
-        meta: { title: '域管理' }
+        meta: { title: '域管理', requiresAuth: true, name: '域管理', role: true }
       }
     ]
   },
@@ -227,7 +272,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '域详情',
         component: () => import('@/views/manager-center/field-manager-desc'),
-        meta: { title: '域详情' }
+        meta: { title: '域详情', requiresAuth: true, name: '域管理', role: true, up: true }
       }
     ]
   },
@@ -239,7 +284,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '授权管理',
         component: () => import('@/views/manager-center/field-manager-auth'),
-        meta: { title: '授权管理' }
+        meta: { title: '授权管理', requiresAuth: true, name: '域管理', role: true, up: true }
       }
     ]
   },
@@ -251,7 +296,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '部门管理',
         component: () => import('@/views/manager-center/part-manager'),
-        meta: { title: '部门管理' }
+        meta: { title: '部门管理', requiresAuth: true, name: '部门管理', role: true }
       }
     ]
   },
@@ -263,7 +308,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '角色管理',
         component: () => import('@/views/manager-center/role-manager'),
-        meta: { title: '角色管理' }
+        meta: { title: '角色管理', requiresAuth: true, name: '角色管理', role: true }
       }
     ]
   },
@@ -275,7 +320,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '用户管理',
         component: () => import('@/views/manager-center/user-manager'),
-        meta: { title: '用户管理' }
+        meta: { title: '用户管理', requiresAuth: true, name: '用户管理', role: true }
       }
     ]
   },
@@ -285,9 +330,9 @@ export const constantRouterMap = [
     children: [
       {
         path: 'index',
-        name: '应用字典',
+        name: '应用管理',
         component: () => import('@/views/system-set/app'),
-        meta: { title: '应用字典' }
+        meta: { title: '应用管理', requiresAuth: true, name: '应用管理', role: true }
       },
     ]
   },
@@ -297,9 +342,11 @@ export const constantRouterMap = [
     children: [
       {
         path: 'index',
-        name: '应用管理',
+        name: '资源管理',
         component: () => import('@/views/system-set/resource'),
-        meta: { title: '资源管理', up: true, },
+        meta: {
+          title: '资源管理', up: true, requiresAuth: true, name: '应用管理', role: true
+        },
       },
     ]
   },
@@ -311,7 +358,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '数据字典',
         component: () => import('@/views/system-set/data'),
-        meta: { title: '数据字典' }
+        meta: { title: '数据字典', requiresAuth: true, name: '数据字典', role: true }
       },
 
     ]
@@ -324,7 +371,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '创建会议',
         component: () => import('@/views/public-notice/meeting'),
-        meta: { title: '创建会议' }
+        meta: { title: '创建会议', requiresAuth: true, name: '创建会议', role: true }
       }
     ]
   },
@@ -336,7 +383,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '创建通知',
         component: () => import('@/views/public-notice/notice'),
-        meta: { title: '创建通知' }
+        meta: { title: '创建通知', requiresAuth: true, name: '创建通知', role: true }
       }
     ]
   },
@@ -348,7 +395,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '材料征集',
         component: () => import('@/views/public-notice/stuff'),
-        meta: { title: '材料征集' }
+        meta: { title: '材料征集', requiresAuth: true, name: '材料征集', role: true }
       }
     ]
   },
@@ -360,7 +407,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '草稿箱',
         component: () => import('@/views/public-notice/drafts'),
-        meta: { title: '草稿箱' }
+        meta: { title: '草稿箱', requiresAuth: true, name: '草稿箱', role: true }
       }
     ]
   },
@@ -372,7 +419,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '通知编辑',
         component: () => import('@/views/public-notice/re-drafts'),
-        meta: { title: '通知编辑' }
+        meta: { title: '通知编辑', requiresAuth: true, name: '草稿箱', role: true, up: true }
       }
     ]
   },
@@ -384,7 +431,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '通知签收',
         component: () => import('@/views/public-notice/signin'),
-        meta: { title: '通知签收' }
+        meta: { title: '通知签收', requiresAuth: true, name: '通知签收', role: true }
       }
     ]
   },
@@ -396,7 +443,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '已发通知',
         component: () => import('@/views/public-notice/active'),
-        meta: { title: '已发通知' }
+        meta: { title: '已发通知', requiresAuth: true, name: '已发通知', role: true }
       }
     ]
   },
@@ -408,7 +455,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '通知变更',
         component: () => import('@/views/public-notice/change'),
-        meta: { title: '通知变更' }
+        meta: { title: '通知变更', requiresAuth: true, name: '已发通知', role: true, up: true }
       }
     ]
   },
@@ -420,7 +467,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '已转发通知',
         component: () => import('@/views/public-notice/forwarded'),
-        meta: { title: '已转发通知' }
+        meta: { title: '已转发通知', requiresAuth: true, name: '已转发通知', role: true }
       }
     ]
   },
@@ -432,7 +479,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '权限维护',
         component: () => import('@/views/public-notice/role'),
-        meta: { title: '权限维护' }
+        meta: { title: '权限维护', requiresAuth: true, name: '权限维护', role: true }
       }
     ]
   },
@@ -444,7 +491,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '通知维护',
         component: () => import('@/views/public-notice/maintain'),
-        meta: { title: '通知维护' }
+        meta: { title: '通知维护', name: '通知维护', role: true }
       }
     ]
   },
@@ -456,7 +503,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '网站信息-创建通知',
         component: () => import('@/views/website/notice'),
-        meta: { title: '创建通知' }
+        meta: { title: '创建通知', requiresAuth: true }
       }
     ]
   },
@@ -468,7 +515,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '网站信息-材料征集',
         component: () => import('@/views/public-notice/stuff'),
-        meta: { title: '材料征集' }
+        meta: { title: '材料征集', requiresAuth: true }
       }
     ]
   },
@@ -480,7 +527,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '网站信息-草稿箱',
         component: () => import('@/views/public-notice/drafts'),
-        meta: { title: '草稿箱' }
+        meta: { title: '草稿箱', requiresAuth: true }
       }
     ]
   },
@@ -492,7 +539,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '网站信息-通知签收',
         component: () => import('@/views/public-notice/signin'),
-        meta: { title: '通知签收' }
+        meta: { title: '通知签收', requiresAuth: true }
       }
     ]
   },
@@ -504,7 +551,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '网站信息-已发通知',
         component: () => import('@/views/website/active'),
-        meta: { title: '已发通知' }
+        meta: { title: '已发通知', requiresAuth: true }
       }
     ]
   },
@@ -516,7 +563,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '网站信息-已转发通知',
         component: () => import('@/views/public-notice/forwarded'),
-        meta: { title: '已转发通知' }
+        meta: { title: '已转发通知', requiresAuth: true }
       }
     ]
   },
@@ -528,7 +575,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '网站信息-权限维护',
         component: () => import('@/views/public-notice/role'),
-        meta: { title: '权限维护' }
+        meta: { title: '权限维护', requiresAuth: true }
       }
     ]
   },
@@ -540,7 +587,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '网站信息-通知维护',
         component: () => import('@/views/public-notice/maintain'),
-        meta: { title: '通知维护' }
+        meta: { title: '通知维护', requiresAuth: true }
       }
     ]
   },
@@ -552,7 +599,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '课程列表',
         component: () => import('@/views/edu-train/list'),
-        meta: { title: '课程列表' }
+        meta: { title: '课程列表', requiresAuth: true }
       }
     ]
   },
@@ -564,7 +611,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '我的课程',
         component: () => import('@/views/edu-train/user'),
-        meta: { title: '我的课程' }
+        meta: { title: '我的课程', requiresAuth: true }
       }
     ]
   },
@@ -576,7 +623,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '课程类别',
         component: () => import('@/views/edu-train/category'),
-        meta: { title: '课程类别' }
+        meta: { title: '课程类别', requiresAuth: true }
       }
     ]
   },
@@ -588,7 +635,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '题库列表',
         component: () => import('@/views/online-test/questionlist'),
-        meta: { title: '题库列表' }
+        meta: { title: '题库列表', requiresAuth: true }
       }
     ]
   },
@@ -600,7 +647,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '题库列表',
         component: () => import('@/views/online-test/questionlist'),
-        meta: { title: '题库列表' }
+        meta: { title: '题库列表', requiresAuth: true }
       }
     ]
   },
@@ -612,7 +659,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '试卷管理',
         component: () => import('@/views/online-test/testpaper'),
-        meta: { title: '试卷管理' }
+        meta: { title: '试卷管理', requiresAuth: true }
       }
     ]
   },
@@ -624,7 +671,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '我的考试',
         component: () => import('@/views/online-test/user'),
-        meta: { title: '我的考试' }
+        meta: { title: '我的考试', requiresAuth: true }
       }
     ]
   },
@@ -636,7 +683,55 @@ export const constantRouterMap = [
         path: 'index',
         name: '历史考试',
         component: () => import('@/views/online-test/history'),
-        meta: { title: '历史考试' }
+        meta: { title: '历史考试', requiresAuth: true }
+      }
+    ]
+  },
+  {
+    path: '/anno-find',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        name: '公告管理',
+        component: () => import('@/views/anno/find'),
+        meta: { title: '公告管理', requiresAuth: true }
+      }
+    ]
+  },
+  {
+    path: '/anno-maintain',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        name: '公告维护',
+        component: () => import('@/views/anno/maintain'),
+        meta: { title: '公告维护', requiresAuth: true }
+      }
+    ]
+  },
+  {
+    path: '/anno-build',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        name: '公告',
+        component: () => import('@/views/anno/add'),
+        meta: { title: '创建公告', requiresAuth: true, name: '公告维护', up: true }
+      }
+    ]
+  },
+  {
+    path: '/anno-desc',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        name: '公告详情',
+        component: () => import('@/views/anno/desc'),
+        meta: { title: '公告详情', name: '公告维护', up: true }
       }
     ]
   },
@@ -648,7 +743,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '通讯录',
         component: () => import('@/views/mail-list'),
-        meta: { title: '通讯录' }
+        meta: { title: '通讯录', requiresAuth: true }
       }
     ]
   },
@@ -660,7 +755,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '个人云盘',
         component: () => import('@/views/cloud-disk/user'),
-        meta: { title: '个人云盘' }
+        meta: { title: '个人云盘', requiresAuth: true }
       }
     ]
   },
@@ -672,7 +767,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '部门云盘',
         component: () => import('@/views/cloud-disk/company'),
-        meta: { title: '部门云盘' }
+        meta: { title: '部门云盘', requiresAuth: true }
       }
     ]
   },
@@ -684,7 +779,7 @@ export const constantRouterMap = [
         path: 'index',
         name: '个人中心',
         component: () => import('@/views/person-center'),
-        meta: { title: '个人中心' },
+        meta: { title: '个人中心', requiresAuth: true },
       },
     ]
   },
@@ -953,56 +1048,7 @@ export const constantRouterMap = [
   //     }
   //   ]
   // },
-  {
-    path: '/mail-list',
-    component: Layout,
-    children: [
-      {
-        path: 'index',
-        name: '通讯录',
-        component: () => import('@/views/mail-list'),
-        meta: { title: '通讯录', icon: '通讯录', requiresAuth: true }
-      }
-    ]
-  },
-  {
-    path: '/cloud-disk',
-    component: Layout,
-    redirect: '/cloud-disk/user',
-    name: '云盘',
-    meta: { title: '云盘', icon: '云盘' },
-    children: [
-      {
-        path: 'user',
-        name: '个人云盘',
-        component: () => import('@/views/cloud-disk/user'),
-        meta: { title: '个人云盘' }
-      },
-      {
-        path: 'company',
-        name: '部门云盘',
-        component: () => import('@/views/cloud-disk/company'),
-        meta: { title: '部门云盘' }
-      }
-    ]
-  },
-  {
-    path: '/person-center',
-    component: Layout,
-    redirect: '/person-center/index',
-    name: '个人中心',
-    meta: { title: '', icon: '云盘' },
-    hidden: true,
-    children: [
-      {
-        path: 'index',
-        name: '个人中心-字属性',
-        component: () => import('@/views/person-center'),
-        meta: { title: '个人中心' },
-      },
-    ]
-  },
-  { path: '*', redirect: '/404', hidden: true }
+  // { path: '*', redirect: '/404', hidden: true }
 ]
 
 export default new Router({

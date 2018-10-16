@@ -7,47 +7,54 @@
                     <el-option v-for="(item,index) in meeting_type_list" :key='index' :label="item.itemName" :value="item.sn"></el-option>
                 </el-select>
                 <el-date-picker
-                    v-model="date"
-                    type="daterange"
+                    v-model="beginendTime"
+                    type="date"
                     align="right"
                     size="medium"
-                    unlink-panels
-                     style="margin-right:8px;"
-                    range-separator="至"
-                    start-placeholder="开始日期"
-                    end-placeholder="结束日期"
-                    @change="condition">
+                    placeholder="开始日期"
+                    @change="condition(0)">
+                </el-date-picker>
+                <el-date-picker
+                  v-model="endendTime"
+                  @change="condition(1)"
+                  style="margin-right:8px;"
+                  type="date"
+                  size="medium"
+                  placeholder="结束日期">
                 </el-date-picker>
                 <el-input v-model="noticeTitle" placeholder="请输入标题名称" style="width:200px" size='medium' @keyup.native.enter="condition"></el-input>
                 <el-button type="primary" icon="el-icon-search" size='medium' v-wave @click="condition">搜索</el-button>
             </div>
         </div>
-        <ul class="message-list" v-loading ='loading'>
-            <li v-for="(item,index) in message_list" :key="index" @click="get_active_desc(item)">
-              <div class="message-area">
-                  <img :src="require('@/assets/imgs/message.png')">
-              </div>
-              <div class="message-info">
-                  <div class="h3">
-                    {{item.NOTICE_TITLE}}
-                    <div class="message-action">
-                      <little-button name='撤销' @click="revoke_item(item)" :disabled='check_change_status(item)'></little-button>
-                      <little-button name='变更' @click="change_notice(item)" :disabled='check_endTime(item)'></little-button>
+        <div class="common-table" v-loading='loading' style="min-height:500px;padding:0 20px">
+          <ul class="message-list" >
+              <li v-for="(item,index) in message_list" :key="index" @click="get_active_desc(item)">
+                <div class="message-area">
+                    <img :src="require('@/assets/imgs/message.png')">
+                </div>
+                <div class="message-info">
+                    <div class="h3">
+                      {{item.NOTICE_TITLE}}
+                      <div class="message-action">
+                        <little-button name='撤销' @click="revoke_item(item)" :disabled='check_change_status(item)'></little-button>
+                        <little-button name='变更' @click="change_notice(item)" :disabled='check_endTime(item)'></little-button>
+                      </div>
                     </div>
-                  </div>
-                  <div class="caozuo">
-                      <span class="reportColor" 
-                      v-if="item.FROM_NOTICE_ID"
-                      style="background-color: #fab858;">{{item.FROM_NOTICE_ID ?'变更':null}}</span>
-                      <span class="reportColor">{{item.ITEM_NAME}}</span>
-                      <span class="info-detail">{{item.REAL_NAME}}</span>
-                      <span class="info-detail">{{item.ORG_ALL_NAME}}</span>
-                      <span class="info-time">{{item.CREATE_TIME}}</span>
-                  </div>
-              </div>
-            </li>
-        </ul>
-        <div class="common-page">
+                    <div class="caozuo">
+                        <span class="reportColor" 
+                        v-if="item.FROM_NOTICE_ID"
+                        style="background-color: #fab858;">{{item.FROM_NOTICE_ID ?'变更':null}}</span>
+                        <span class="reportColor">{{item.ITEM_NAME}}</span>
+                        <span class="info-detail">{{item.REAL_NAME}}</span>
+                        <span class="info-detail">{{item.ORG_ALL_NAME}}</span>
+                        <span class="info-time">{{item.CREATE_TIME}}</span>
+                    </div>
+                </div>
+              </li>
+          </ul>
+            <no-data v-if="!message_list.length"></no-data>
+        </div>
+        <div class="common-page"  v-if="message_list.length">
             <el-pagination
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
@@ -88,13 +95,14 @@ export default {
       date: null,
       message_list: [],
       noticeType: "",
-      noticeTitle: ""
+      noticeTitle: "",
+       beginendTime: "",
+      endendTime: ""
     };
   },
   beforeDestroy() {
     sessionStorage.removeItem("public-notice/active/pageNo");
     sessionStorage.removeItem("public-notice/active/total");
-    this.$store.commit("DEL_VIEW_BY_NAME", "已发通知");
   },
   created() {
     this.$store.dispatch("readSession", SET_MEETING_TYPE_LIST);
@@ -127,7 +135,7 @@ export default {
         });
         return;
       }
-      if (+new Date(item.CREATE_TIME) > Date.now() - 1000 * 60 * 2) {
+      if (+new Date(item.CREATE_TIME.replace(/-/g,"/")) > Date.now() - 1000 * 60 * 2) {
         this.$message({
           message: "通知发送不到2分钟，不能变更，请使用撤销功能",
           type: "warning"
@@ -141,9 +149,9 @@ export default {
     },
     check_endTime(item) {
       if (item.NOTICE_TYPE === 1) {
-        return +new Date(item.START_TIME) < Date.now();
+        return +new Date(item.START_TIME.replace(/-/g,"/")) < Date.now();
       } else if (item.NOTICE_TYPE === 3) {
-        return +new Date(item.END_TIME) < Date.now();
+        return +new Date(item.END_TIME.replace(/-/g,"/")) < Date.now();
       } else {
         return false;
       }
@@ -151,21 +159,21 @@ export default {
     check_change_status(item) {
       if (item.NOTICE_TYPE === 1) {
         return (
-          +new Date(item.START_TIME) < Date.now() ||
-          +new Date(item.CREATE_TIME) < Date.now() - 1000 * 60 * 2
+          +new Date(item.START_TIME.replace(/-/g,"/")) < Date.now() ||
+          +new Date(item.CREATE_TIME.replace(/-/g,"/")) < Date.now() - 1000 * 60 * 2
         );
       } else if (item.NOTICE_TYPE === 3) {
         return (
-          +new Date(item.END_TIME) < Date.now() ||
-          +new Date(item.CREATE_TIME) < Date.now() - 1000 * 60 * 2
+          +new Date(item.END_TIME.replace(/-/g,"/")) < Date.now() ||
+          +new Date(item.CREATE_TIME.replace(/-/g,"/")) < Date.now() - 1000 * 60 * 2
         );
       } else {
-        return +new Date(item.CREATE_TIME) < Date.now() - 1000 * 60 * 2;
+        return +new Date(item.CREATE_TIME.replace(/-/g,"/")) < Date.now() - 1000 * 60 * 2;
       }
     },
     //撤销
     revoke_item(item) {
-      if (+new Date(item.CREATE_TIME) < Date.now() - 1000 * 60 * 2) {
+      if (+new Date(item.CREATE_TIME.replace(/-/g,"/")) < Date.now() - 1000 * 60 * 2) {
         this.$message({
           message: "通知超过2分钟，不能撤销，请使用变更功能",
           type: "warning"
@@ -194,6 +202,20 @@ export default {
       });
     },
     condition() {
+      if (this.beginendTime && this.endendTime) {
+        if (+this.beginendTime > +this.endendTime) {
+          this.$message({
+            message: "开始时间应小于结束时间",
+            type: "warning"
+          });
+          if (index) {
+            this.endendTime = "";
+          } else {
+            this.beginendTime = "";
+          }
+          return;
+        }
+      }
       this.pageNo = 1;
       sessionStorage.setItem("public-notice/active/pageNo", 1);
       this.init(this.pageSize, 1);
@@ -210,13 +232,15 @@ export default {
       this.init(this.pageSize, e);
     },
     init(pageSize, pageNo) {
-      console.log(this.date);
-      var startTime = "";
-      var endTime = "";
-      if (this.date) {
-        startTime = parseTime(this.date[0], "{y}-{m}-{d} {h}:{i}:{s}");
-        endTime = parseTime(this.date[1], "{y}-{m}-{d} {h}:{i}:{s}");
+      var endendTime = "";
+      var beginendTime = "";
+      if (this.endendTime) {
+        endendTime = parseTime(this.endendTime, "{y}-{m}-{d}");
       }
+      if (this.beginendTime) {
+        beginendTime = parseTime(this.beginendTime, "{y}-{m}-{d}");
+      }
+      this.loading = true;
       this.$post(
         `gwt/notice/tbNotice/sendedList?${qs.stringify({
           currentPage: pageNo,
@@ -224,13 +248,14 @@ export default {
         })}`,
         {
           noticeType: this.noticeType,
-          startTime,
-          endTime,
-          noticeTitle: this.noticeTitle
+          startTime:beginendTime,
+          endTime:endendTime,
+          noticeTitle: this.$filterText(this.noticeTitle)
         },
         "json"
       )
         .then(res => {
+          this.loading = false;
           if (res.result !== "0000") {
             return;
           }
@@ -242,6 +267,7 @@ export default {
           );
         })
         .catch(res => {
+          this.loading = false;
           console.log(res);
         });
     },
@@ -288,7 +314,6 @@ export default {
   .message-list {
     padding: 0 20px;
     padding-bottom: 10px;
-    border-top: 1px solid #ccc;
     margin: 0 20px;
     li {
       list-style: none;

@@ -10,7 +10,7 @@ import part from './modules/part'
 
 import getters from './getters'
 import { setItem, getItem } from '@/utils/auth'
-import { SET_GROUP_LIST, SET_USER_INFO, SET_USER_SIGN, SET_USER_TOKEN, SET_FIELD_MANAGER_DATA, SET_FIELD_APP_LIST, SET_TREE_DATE, SET_SILDER_LIST, SET_IS_ADMIN } from './mutations'
+import { SET_ORG_ROLE_LIST, SET_GROUP_LIST, SET_USER_INFO, SET_USER_SIGN, SET_USER_TOKEN, SET_FIELD_MANAGER_DATA, SET_FIELD_APP_LIST, SET_TREE_DATE, SET_IS_ADMIN } from './mutations'
 Vue.use(Vuex);
 import { post } from '@/utils/fetch'
 const store = new Vuex.Store({
@@ -40,10 +40,10 @@ const store = new Vuex.Store({
     token: '',
     field_app_list: [],
     tree_data: [],
-    slierbar_list: [],
     group_list: [],
+    org_role_list: [],
     is_admin: false,
-    is_permisssion: false
+    is_permisssion: false,
   },
   mutations: {
     [SET_GROUP_LIST](state, data) {
@@ -90,20 +90,30 @@ const store = new Vuex.Store({
       state.tree_data = data;
       sessionStorage.setItem(SET_TREE_DATE, JSON.stringify(data));
     },
-    set_field_appList: (state, { index, isActive }) => {
-      state.field_app_list[index].isActive = isActive;
+    set_field_appList: (state, { index, isShow }) => {
+      state.field_app_list[index].isShow = isShow;
       sessionStorage.setItem(SET_FIELD_APP_LIST, JSON.stringify(state.field_app_list));
-    },
-    [SET_SILDER_LIST](state, data) {
-      state.slierbar_list = data;
-      sessionStorage.setItem(SET_SILDER_LIST, JSON.stringify(data));
     },
     [SET_IS_ADMIN](state, data) {
       state.is_admin = data;
       sessionStorage.setItem(SET_IS_ADMIN, JSON.stringify(data));
+    },
+    [SET_ORG_ROLE_LIST](state, data) {
+      state.org_role_list = data;
+      sessionStorage.setItem(SET_ORG_ROLE_LIST, JSON.stringify(data));
     }
   },
   actions: {
+    get_org_role_list({ commit }) {
+      post('gwt/system/sysOrg/getAllAdminOrgByUserId', {}, 'json').then(res => {
+        if (res.result !== '0000') {
+          return
+        }
+        commit(SET_ORG_ROLE_LIST, res.data.adminOrgs.map(res => res.orgId))
+      }).catch(res => {
+        console.log(res)
+      })
+    },
     get_user_send_permission({ state }) {
       post('gwt/notice/tbNotice/checkPermission', {}, 'json').then(res => {
         if (res.result !== '0000') {

@@ -98,7 +98,6 @@ export default {
   },
   methods: {
     condition_search() {
-      console.log(1)
       sessionStorage.setItem("website-notice/active/pageNo", 1);
       this.init(this.pageSize, 1);
     },

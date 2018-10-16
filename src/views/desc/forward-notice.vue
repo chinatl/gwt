@@ -3,34 +3,33 @@
         <t-title title="转发部门"></t-title>
         <div class="page-form" v-loading='loading'>
               <el-form ref="form" :model="form" label-width="80px">
-                    <el-form-item label="接收部门" v-if="is_permisssion">
-                        <div class="flex">
-                            <el-input v-model="form.part" size="small" placeholder="请选择接收部门" readonly></el-input>
-                            <add-user-button @click="yield_dialog= true">选择部门</add-user-button>
-                        </div>
-                    </el-form-item>
-                    <el-form-item label="接收人">
-                        <div class="flex">
-                            <el-input v-model="form.name" size="small" placeholder="请选择接收人" readonly></el-input>
-                            <add-user-button @click="dialog= true">选择接收人</add-user-button>
-                        </div>
-                    </el-form-item>
-                    <el-form-item label="转发说明">
-                        <el-input type="textarea" v-model="form.forwardDesc" :autosize="{ minRows: 6, maxRows: 10}"></el-input>
-                    </el-form-item>
-                    <form-button @submit="onSubmit" @cancel='save_message'></form-button>
+                <el-form-item label="接收部门" v-if="is_permisssion">
+                    <div class="flex">
+                        <el-input v-model="form.part" size="small" placeholder="请选择接收部门" readonly></el-input>
+                        <add-user-button @click="yield_dialog= true">选择部门</add-user-button>
+                    </div>
+                </el-form-item>
+                <el-form-item label="接收人">
+                    <div class="flex">
+                        <el-input v-model="form.name" size="small" placeholder="请选择接收人" readonly></el-input>
+                        <add-user-button @click="dialog= true">选择接收人</add-user-button>
+                    </div>
+                </el-form-item>
+                <el-form-item label="转发说明">
+                    <el-input type="textarea" v-model="form.forwardDesc" :autosize="{ minRows: 6, maxRows: 10}" maxlength="30" placeholder="请输入30字以内的转发说明"></el-input>
+                </el-form-item>
+                <form-button @submit="onSubmit" @cancel='save_message'></form-button>
             </el-form>
         </div>
         <add-yield 
         :show="yield_dialog" 
         @submit='submit_yield'
-        @cancel='yield_dialog = false'
         :user-list='has_select_part_list'
-        @close='yield_dialog = false'></add-yield>
+        @close='cancel_yield'></add-yield>
         <add-user 
-        :show='dialog' @close='dialog = false' 
+        :show='dialog' @close='cancel_user_dialog' 
         :user-list='has_select_user_list'
-        @cancel='dialog = false'
+        @cancel='cancel_user_dialog'
         @submit="submit_user_dialog"></add-user>
     </div>
 </template>
@@ -73,9 +72,18 @@ export default {
     this.$store.dispatch("get_user_send_permission");
   },
   computed: {
-    ...mapGetters(["message_data","is_permisssion"])
+    ...mapGetters(["message_data", "is_permisssion"])
   },
   methods: {
+    cancel_user_dialog(list) {
+      this.dialog = false;
+      this.form.name = list.map(res => res.REAL_NAME).join("、");
+      this.has_select_user_list = list;
+    },
+    cancel_yield(list) {
+      this.yield_dialog = false;
+      this.has_select_part_list = list;
+    },
     submit_yield(list) {
       this.yield_dialog = false;
       this.form.part = list.map(res => res.name).join("、");
@@ -87,16 +95,26 @@ export default {
       this.has_select_user_list = list;
     },
     onSubmit() {
+       if (
+        !this.has_select_user_list.length &&
+        !this.has_select_part_list.length
+      ) {
+        this.$message({
+          message: "请选择一个接收人或接收部门",
+          type: "warning"
+        });
+        return;
+      }
       this.loading = true;
       this.$post(
         "gwt/notice/tbNoticeForward/save",
         {
           orgArray: this.has_select_part_list
-            .map(res => res.id.replace(/\D*/g, ""))
+            .map(res => res.id.replace(/.*\D/g, ""))
             .join(","),
           selectedUsers: this.has_select_user_list.map(res => res.ID).join(","),
           noticeId: this.message_data.NOTICE_ID,
-          parentId: "",
+          parentId: this.message_data.FORWARD_ID,
           forwardDesc: this.form.forwardDesc
         },
         "json"

@@ -6,7 +6,7 @@
               <i slot="suffix" class="el-input__icon el-icon-search"></i>
             </el-input>
         </div>
-        <div class="part-content common-temp scrollbar">
+        <div class="part-content common-temp scrollbar" v-loading='tree_loading'>
             <el-tree
                 :data="tree_data"
                 node-key="id"
@@ -15,12 +15,14 @@
                 :default-expanded-keys="expand_arr"
                  @node-click="handleNodeClick"
                 :highlight-current= 'true'
+                :expand-on-click-node='false'
                 :props="defaultProps">
               </el-tree>
         </div>
     </div>
     <div slot="right" style="background-color:#f3f3f4">
         <add-user 
+          :org-id='temp_id'        
           :show='add_dialog' 
           @cancel='add_dialog = false'
           @close='add_dialog = false' 
@@ -33,12 +35,12 @@
             <t-title>用户管理</t-title>
             <div class="user-desc-info">
                 <h3>{{orgInfo.orgAllName}}</h3>
-                <p>
+                <p  v-if="orgInfo.orgTypeName">
                     <span class="span1">部门类型：</span>
                     <span class="blod"> {{orgInfo.orgTypeName}}</span>
                 </p>
                 <p v-if="orgInfo.orgParentName">
-                    <span class="span1">上级部门</span>
+                    <span class="span1">上级部门：</span>
                     <span class="blod"> {{orgInfo.orgParentName}}</span>
                 </p>
                 <p>
@@ -46,18 +48,19 @@
                     <span class="blod">{{userAndOrgList.map(res=>{
                       return  res.REAL_NAME
                       }).join('、')}}</span>
-                      <span style="margin-left:20px" v-if="temp_data.nodeType === 'ORG'"><el-button size="small" type="success" icon="el-icon-plus" @click="open_user_dialog">添加</el-button></span>
+                      <span style="margin-left:20px" v-if="temp_data.nodeType === 'ORG'"><el-button size="small" type="success" icon="el-icon-plus"
+                      @click="open_user_dialog">添加</el-button></span>
                 </p>
                 <p>
                     <span class="span1">部门地址：</span>
-                    <span class="blod">{{orgInfo.orgAddr}}</span>
+                    <span class="blod">{{orgInfo.orgAddr || '--'}}</span>
                 </p>
             </div>
         </div>
         <div class="part-bottom">
             <div class="part-action">
                 <div class="part-action-left">
-                    <el-input v-model="searchParam" placeholder="请输入姓名/手机号" style="width:160px" size='medium' @keyup.native.enter='condition_search'></el-input>
+                    <el-input v-model.trim="searchParam" placeholder="请输入姓名/手机号" style="width:160px" size='medium' @keyup.native.enter='condition_search'></el-input>
                     <el-button type="primary" icon="el-icon-search" size='medium' style="margin:0 8px" v-wave @click="condition_search">搜索</el-button>
                 </div>
                 <div class="part-action-right">
@@ -156,7 +159,7 @@
                     >
                     <template slot-scope="scope">
                       <little-button name='编辑' @click.native="edit_user(scope.row)"></little-button>
-                      <little-button name='转出'></little-button>
+                      <little-button name='转出' @click="transfer_user(scope.row)"></little-button>
                       <little-button name='停用' @click.native="stop_user(scope.row)"></little-button>
                       <little-button name='删除' @click.native="handle_delete(scope.row)"></little-button>
                     </template>
@@ -199,6 +202,11 @@
                     label="固定电话">
                     </el-table-column>
                     <el-table-column
+                    align="center"
+                    prop="logDesc"
+                    label="停用原因">
+                    </el-table-column>
+                    <el-table-column
                     label="操作"
                     align="center"
                     width="160"
@@ -226,12 +234,10 @@
         </div>
     </div>
     <!-- 弹窗 -->
-    
+    <template slot="else">
     <el-dialog :close-on-click-modal='false'
-        slot="else"
         :title="user_type ==='add' ?'添加用户':'编辑用户'"
         class="common-dialog"
-        v-drag
         :visible.sync="user_visible">
         <el-form ref="form" :model="form" label-width="80px" :rules="rules" v-loading='dialog_loading'>
             <el-form-item label="用户名">
@@ -241,9 +247,9 @@
                 <el-input v-model="form.mobilePhone" size="small" @blur="select_has_same_user" :disabled="can_edit"></el-input>
             </el-form-item>
             <el-form-item label="姓名" prop='realName'>
-                <el-input v-model="form.realName" size="small" :disabled="can_edit"></el-input>
+                <el-input v-model="form.realName" size="small" :disabled="can_edit" maxlength="12"></el-input>
             </el-form-item>
-            <el-form-item label="性别" prop="sex">
+            <el-form-item label="性别">
                 <el-select v-model="form.sex" placeholder="请选择性别" size="small" style="width:100%" :disabled="can_edit">
                     <el-option label="男" value="1"></el-option>
                     <el-option label="女" value="0"></el-option>
@@ -263,38 +269,139 @@
               </el-select>
             </el-form-item>
             <el-form-item label="职务">
-                <el-input v-model="form.duty" size="small"></el-input>
+                <el-input v-model="form.duty" size="small" maxlength="12"></el-input>
             </el-form-item>
             <el-form-item label="固定电话">
-                <el-input v-model="form.phone" size="small"></el-input>
+                <el-input v-model="form.phone" size="small" maxlength="16"></el-input>
             </el-form-item>
             <el-form-item label="备注">
-                <el-input type="textarea" v-model="form.remark" :autosize="{ minRows: 4, maxRows: 6}"></el-input>
+                <el-input type="textarea" v-model="form.remark" :autosize="{ minRows: 4, maxRows: 6}" maxlength="32"></el-input>
             </el-form-item>
-                <el-form-item align='right'>
+            <el-form-item v-if="user_type ==='add'">
+                <el-checkbox v-model="form.manager"><span>设置为部门管理员</span></el-checkbox>
+            </el-form-item>
+            <el-form-item align='right'>
                 <el-button size="small" v-wave @click="user_visible = false">取消</el-button>
                 <el-button type="primary" @click="onSubmit" size="small" v-wave>确定</el-button>
             </el-form-item>
         </el-form>
     </el-dialog>
+    <!-- 调岗 -->
+ <el-dialog 
+  :close-on-click-modal='false'
+  slot="else"
+  title="用户转出"
+  class="common-dialog"
+  v-drag
+  :visible.sync="transfer_dialog">
+  <div v-loading='transfer_dialog_loading'>
+
+    <div class="user_info_dialog">
+        <div class="user_photo">
+          <img :src="require('@/assets/imgs/a9.jpg')" alt="">
+        </div>
+        <div class="user_info">
+          <div class="outName">{{temp_user_data.realName}}</div>
+          <div class="outPhone">{{temp_user_data.mobilePhone}}</div>
+          <p>部门: <span>{{temp_user_data.sysOrgUserX.orgAllName || '--'}}</span></p>
+          <p>职务: <span>{{temp_user_data.sysOrgUserX.duty || '--'}}</span></p>
+          <p>级别: <span>{{temp_user_data.sysOrgUserX.userLevelName || '--'}}</span></p>
+          <p>角色: <span>{{temp_user_data.sysUserRoleOrgList.map(res=>res.sysRole.roleName).join('、') || '--'}}</span></p>
+          <p>固话: <span>{{temp_user_data.sysOrgUserX.phone || '--'}}</span></p>
+        </div>
+    </div>
+    <el-form ref="transfer_form" 
+        :model="transfer_form" label-width="80px" 
+        :rules="transfer_rules" 
+        >
+          <el-form-item label="调离类型">
+            <el-radio-group v-model="transfer_form.type">
+              <el-radio label="内部"></el-radio>
+              <el-radio label="外部"></el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item label="接收部门">
+              <div class="flex">
+                <el-input v-model="transfer_form.selectedDomainOrgInput" size="small" placeholder="请选择部门" readonly></el-input>
+                <add-user-button @click="open_add_part__dialog">选择部门</add-user-button>
+              </div>
+          </el-form-item>
+          <form-button  
+          @submit=" save_message_transfer " @cancel='cancel_transfer'></form-button>
+        </el-form>
+  </div>
+    </el-dialog>
+    <el-dialog 
+  :close-on-click-modal='false'
+  slot="else"
+  title="用户转出"
+  class="common-dialog"
+  :visible.sync="add_part_dialog">
+      <div class="add-part-dialog">
+         <div>
+            <el-input v-model.trim="filterText_add_part" size="small" placeholder="请选择部门名称">
+              <i slot="suffix" class="el-input__icon el-icon-search"></i>
+            </el-input>
+        </div>
+        <div class="part-content common-temp scrollbar">
+          <el-tree
+            :data="add_part_data"
+            node-key="id"
+            :filter-node-method="filterNodes"
+            ref="add_part_tree_part"
+            show-checkbox
+            @check="handleCheckChange"
+            :highlight-current= 'true'
+            :check-strictly = 'true'
+            :expand-on-click-node='false'
+            :props="defaultProps">
+          </el-tree>
+        </div>
+           <el-form>
+        <form-button  
+          @submit="save_message_transfer_part" @cancel='cancel_message_transfer_part'></form-button>
+        </el-form>
+      </div>
+    </el-dialog>
+    </template>
   </t-layout>
 </template>
 <script>
 import littleButton from "@/components/Button/littleButton";
 import arrowButton from "@/components/Button/arrowButton";
+import addUserButton from "@/components/Button/addUserButton";
+import formButton from "@/components/Button/formButton";
 import qs from "qs";
 import { validatePhone } from "@/utils/validate";
 import { generate_tree } from "@/utils";
-import AddUser from "@/components/AddUser";
+import AddUser from "@/components/NewAddUser";
 import { mapGetters } from "vuex";
 export default {
   components: {
     littleButton,
     arrowButton,
-    AddUser
+    AddUser,
+    addUserButton,
+    formButton
   },
   data() {
     return {
+      tree_loading: false,
+      temp_user_data: {
+        sysUserRoleOrgList: [],
+        sysOrgUserX: {}
+      },
+      has_select_part: {},
+      filterText_add_part: "",
+      add_part_data: [],
+      add_part_dialog: false,
+      transfer_form: {
+        selectedDomainOrgInput: "",
+        type: "内部"
+      },
+      transfer_rules: {},
+      transfer_dialog_loading: false,
+      transfer_dialog: false, //用户弹出弹窗
       add_dialog: false,
       user_dialog_loading: false,
       pageNo: 1,
@@ -302,7 +409,6 @@ export default {
       total: 0,
       searchParam: "",
       tree_data: [],
-      tree_loading: false,
       tableData: [],
       tableData1: [],
       table_loading: false,
@@ -314,7 +420,8 @@ export default {
         userLevel: "",
         duty: "",
         phone: "",
-        remark: ""
+        remark: "",
+        manager: false
       },
       user_visible: false,
       dialog_loading: false,
@@ -355,12 +462,16 @@ export default {
       select_arr: ["用户管理", "停用用户"],
       current: 0,
       can_edit: false,
-      expand_arr: []
+      expand_arr: [],
+      temp_id: ""
     };
   },
   watch: {
     filterText(val) {
       this.$refs.tree.filter(val);
+    },
+    filterText_add_part(val) {
+      this.$refs.add_part_tree_part.filter(val);
     }
   },
   created() {
@@ -371,9 +482,134 @@ export default {
     this.pageSize = pageSize ? pageSize - 0 : 5;
   },
   computed: {
-    ...mapGetters(["is_admin", "group_list", "user_info"])
+    ...mapGetters(["is_admin", "group_list", "user_info", "org_role_list"])
   },
   methods: {
+    transfer_user(item) {
+      if (
+        item.sysUserRoleOrgList
+          .map(res => res.sysRole.roleName)
+          .includes("部门管理员")
+      ) {
+        this.$message({
+          message: "该用户为部门管理员！",
+          type: "warning"
+        });
+        return;
+      }
+      if (
+        item.sysUserRoleOrgList
+          .map(res => res.sysRole.roleName)
+          .includes("一级部门管理员")
+      ) {
+        this.$message({
+          message: "该用户为部门管理员！",
+          type: "warning"
+        });
+        return;
+      }
+      this.transfer_form.selectedDomainOrgInput = "";
+      this.transfer_form.type = "内部";
+      this.temp_user_data = item;
+      this.transfer_dialog = true;
+    },
+    cancel_message_transfer_part() {
+      this.add_part_dialog = false;
+    },
+    save_message_transfer_part() {
+      if (this.temp_user_data.sysOrgUserX.orgId === this.has_select_part.id) {
+        this.$swal({
+          title: "操作失败！",
+          text: "该用户在本部门已存在！",
+          type: "error",
+          confirmButtonColor: "#DD6B55",
+          confirmButtonText: "确定",
+          showConfirmButton: true
+        });
+        return;
+      }
+      this.add_part_dialog = false;
+      this.transfer_form.selectedDomainOrgInput = this.has_select_part.allName;
+    },
+    open_add_part__dialog() {
+      this.add_part_dialog = true;
+      var url = "gwt/system/sysOrg/getDoaminOrgTree";
+      this.filterText_add_part = "";
+      this.$nextTick(res => {
+        this.$refs.add_part_tree_part.setCheckedKeys([]);
+      });
+      if (this.transfer_form.type === "内部") {
+      } else {
+        url = "gwt/system/sysOrg/getAreaOrgTreeData";
+      }
+      this.$post(
+        url,
+        {
+          addressBookUserFlag: "",
+          addressBookOrgFlag: "",
+          showAllOrgFlag: "N"
+        },
+        "json"
+      )
+        .then(res => {
+          if (res.result !== "0000") {
+            return;
+          }
+          if (this.transfer_form.type === "内部") {
+            this.add_part_data = generate_tree(res.data.nodes);
+          } else {
+            this.add_part_data = res.data.nodes;
+          }
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
+    cancel_transfer() {
+      this.transfer_dialog = false;
+    },
+    save_message_transfer() {
+      this.transfer_dialog_loading = true;
+      this.$post(
+        "gwt/system/sysUser/outUser",
+        {
+          outOrgId: this.temp_user_data.sysOrgUserX.orgId,
+          outOrgName: this.temp_user_data.sysOrgUserX.orgName,
+          outUserId: this.temp_user_data.userId,
+          outUserRealName: this.temp_user_data.realName,
+          opreationType: this.transfer_form.type === "内部" ? 0 : 1,
+          radioInline:
+            this.transfer_form.type === "内部" ? "option1" : "option2",
+          orgArray: this.has_select_part.id,
+          selectedDomainOrgInput: this.has_select_part.allName
+        },
+        "json"
+      )
+        .then(res => {
+          this.transfer_dialog_loading = false;
+          if (res.result !== "0000") {
+            this.$swal({
+              title: "操作失败！",
+              text: res.msg,
+              type: "error",
+              confirmButtonColor: "#DD6B55",
+              confirmButtonText: "确定",
+              showConfirmButton: true
+            });
+            return;
+          }
+          this.$message({
+            message: "转出成功！",
+            type: "success"
+          });
+          this.search_user_list(this.pageSize, this.pageNo);
+          this.transfer_dialog = false;
+        })
+        .catch(res => {
+          this.transfer_dialog_loading = false;
+          console.log(res);
+        });
+    },
     select_has_same_user(e) {
       if (this.user_type === "update") {
         return;
@@ -437,6 +673,7 @@ export default {
     },
     //查询用户管理部门配置
     get_tree_data() {
+      this.tree_loading = true;
       var url = "gwt/system/sysOrg/getAreaOrgTreeData";
       if (!this.is_admin) {
         url = "gwt/system/sysOrg/getOrgTreeData";
@@ -449,6 +686,7 @@ export default {
         "json"
       )
         .then(res => {
+          this.tree_loading = false;
           if (res.result !== "0000") {
             return;
           }
@@ -461,17 +699,33 @@ export default {
               JSON.stringify(this.user_info.sysOrgUserX)
             );
             this.temp_data.id = this.temp_data.orgId;
-            this.handleNodeClick(this.temp_data)
+            this.handleNodeClick(this.temp_data);
           }
         })
         .catch(res => {
+          this.tree_loading = false;
           console.log(res);
         });
     },
     open_user_dialog() {
-      this.user_and_orgList = [...this.userAndOrgList];
-      this.add_dialog = true;
-      console.log(this.add_dialog);
+      this.$post(
+        "gwt/system/sysOrg/getRootOrgByOrgId",
+        {
+          orgId: this.temp_data.id
+        },
+        "json"
+      )
+        .then(res => {
+          if (res.result !== "0000") {
+            return;
+          }
+          this.temp_id = res.data.sysOrg.orgId;
+          this.user_and_orgList = [...this.userAndOrgList];
+          this.add_dialog = true;
+        })
+        .catch(res => {
+          console.log(res);
+        });
     },
     submit_add_user(list) {
       this.can_edit = false;
@@ -575,17 +829,23 @@ export default {
           console.log(res);
         });
     },
+    handleCheckChange(checkedKeys) {
+      this.has_select_part = checkedKeys;
+      this.$refs.add_part_tree_part.setCheckedKeys([]);
+      this.$refs.add_part_tree_part.setCheckedKeys([checkedKeys.id]);
+    },
     //过滤节点
     filterNode(value, data) {
       if (!value) return true;
       return data.name.indexOf(value) !== -1;
     },
+    filterNodes(value, data) {
+      if (!value) return true;
+      return data.allName.indexOf(value) !== -1;
+    },
     //点击左边部门
     handleNodeClick(data) {
-      if (
-        !this.is_admin &&
-        !this.group_list.map(res => res.orgId).includes(data.id)
-      ) {
+      if (!this.is_admin && !this.org_role_list.includes(data.id)) {
         this.$message({
           message: "您没有操作权限！",
           type: "warning",
@@ -649,7 +909,7 @@ export default {
           }),
         {
           orgId: this.temp_data.id,
-          searchParam: this.searchParam
+          searchParam: this.$filterText(this.searchParam)
         },
         "json"
       )
@@ -729,6 +989,28 @@ export default {
       });
     },
     stop_user(item) {
+      if (
+        item.sysUserRoleOrgList
+          .map(res => res.sysRole.roleName)
+          .includes("部门管理员")
+      ) {
+        this.$message({
+          message: "该用户为部门管理员！",
+          type: "warning"
+        });
+        return;
+      }
+      if (
+        item.sysUserRoleOrgList
+          .map(res => res.sysRole.roleName)
+          .includes("一级部门管理员")
+      ) {
+        this.$message({
+          message: "该用户为部门管理员！",
+          type: "warning"
+        });
+        return;
+      }
       var _this = this;
       this.$swal({
         title: "停用原因",
@@ -782,8 +1064,30 @@ export default {
       });
     },
     handle_delete(item) {
+      if (
+        item.sysUserRoleOrgList
+          .map(res => res.sysRole.roleName)
+          .includes("部门管理员")
+      ) {
+        this.$message({
+          message: "该用户为部门管理员！",
+          type: "warning"
+        });
+        return;
+      }
+      if (
+        item.sysUserRoleOrgList
+          .map(res => res.sysRole.roleName)
+          .includes("一级部门管理员")
+      ) {
+        this.$message({
+          message: "该用户为部门管理员！",
+          type: "warning"
+        });
+        return;
+      }
       this.$swal({
-        title: "您确定要删除的信息吗？",
+        title: "您确定要删除信息吗？",
         text: "删除后将无法恢复，请谨慎操作！",
         type: "warning",
         showCancelButton: true,
@@ -841,6 +1145,9 @@ export default {
       this.can_edit = false;
       this.user_visible = true;
       this.user_type = "update";
+      this.form.manager = item.sysUserRoleOrgList
+        .map(res => res.sysRole.alias)
+        .includes("ROLE_PUBLIC");
       this.form.userName = item.userName;
       this.form.mobilePhone = item.mobilePhone;
       this.form.realName = item.realName;
@@ -851,9 +1158,9 @@ export default {
       this.form.duty = item.sysOrgUserX.duty;
       this.form.userLevel = item.sysOrgUserX.userLevel + "";
       this.form.part = this.orgInfo.orgAllName;
-      this.form.roleIds = item.sysUserRoleOrgList.map(
-        res => res.sysRole.roleId
-      );
+      this.form.roleIds = item.sysUserRoleOrgList
+        .filter(res => res.sysRole.alias !== "ROLE_PUBLIC")
+        .map(res => res.sysRole.roleId);
       this.form.orgUserxId = item.sysOrgUserX.id;
       this.form.userId = item.sysOrgUserX.userId;
       this.form.orgId = item.sysOrgUserX.orgId;
@@ -889,6 +1196,8 @@ export default {
         this.form.userId = "";
         this.form.orgId = "";
         this.form.id = "";
+        this.form.manager = false;
+        this.can_edit = false;
       });
     },
     onSubmit() {
@@ -910,7 +1219,6 @@ export default {
         } else {
           if (this.can_edit) {
             userId = this.form.userId;
-            // id = this.form.id;
           }
         }
         this.dialog_loading = true;
@@ -929,7 +1237,8 @@ export default {
             roleIds: this.form.roleIds.join(","),
             "sysOrgUserX.duty": this.form.duty,
             "sysOrgUserX.phone": this.form.phone,
-            "sysOrgUserX.remark": this.form.remark
+            "sysOrgUserX.remark": this.form.remark,
+            manager: this.form.manager
           },
           "json"
         )
@@ -952,6 +1261,24 @@ export default {
             });
             this.user_visible = false;
             this.search_user_list(this.pageSize, this.pageNo);
+            this.$store.dispatch("get_org_role_list");
+            this.$post(
+              "gwt/system/sysUser/getOrgInfo",
+              {
+                orgId: this.temp_data.id
+              },
+              "json"
+            )
+              .then(res => {
+                if (res.result !== "0000") {
+                  return;
+                }
+                this.orgInfo = res.data.orgInfo;
+                this.userAndOrgList = res.data.userAndOrgList;
+              })
+              .catch(res => {
+                console.log(res);
+              });
           })
           .catch(res => {
             console.log(res);
@@ -1035,7 +1362,49 @@ export default {
 };
 </script>
 
-<style rel="stylesheet/scss" lang="scss" >
+<style rel="stylesheet/scss" lang="scss">
+.add-part-dialog {
+  .part-content {
+    margin: 10px 0;
+    height: 500px;
+    border: 1px solid #dcdfe6;
+    box-sizing: border-box;
+    padding: 4px;
+    border-radius: 4px;
+    overflow: auto;
+  }
+}
+.user_info_dialog {
+  padding: 10px 40px;
+  overflow: hidden;
+  display: flex;
+  .user_photo {
+    padding: 0 30px;
+  }
+  .user_info {
+    padding: 0 30px;
+    .outName {
+      color: rgb(59, 164, 245);
+      font-size: 24px;
+      font-weight: 500;
+    }
+    .outPhone {
+      margin-top: 10px;
+      color: rgb(59, 164, 245);
+      font-size: 16px;
+      font-weight: 500;
+    }
+    p {
+      color: rgb(103, 106, 108);
+      font-size: 13px;
+      font-weight: 700;
+      margin-top: 10px;
+      span {
+        font-weight: normal;
+      }
+    }
+  }
+}
 .part-content {
   margin: 0 20px;
   height: 550px;

@@ -31,6 +31,7 @@ export default {
   },
   methods: {
     next_step() {
+      sessionStorage.removeItem("set-forget");
       this.$router.push({
         path: "/login"
       });

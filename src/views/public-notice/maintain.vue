@@ -6,7 +6,7 @@
                 <el-select v-model="noticeType" size="medium" style="margin-right:8px;" @change="condition">
                     <el-option v-for="(item,index) in meeting_type_list" :key='index' :label="item.itemName" :value="index"></el-option>
                 </el-select>
-               <el-date-picker
+               <!-- <el-date-picker
                     v-model="date"
                     type="daterange"
                     align="right"
@@ -19,6 +19,22 @@
                     format="yyyy 年 MM 月 dd 日"
                     value-format="yyyy-MM-dd"
                    >
+                </el-date-picker> -->
+                <el-date-picker
+                    v-model="beginendTime"
+                    type="date"
+                    align="right"
+                    size="medium"
+                    placeholder="开始日期"
+                    @change="condition(0)">
+                </el-date-picker>
+                <el-date-picker
+                  v-model="endendTime"
+                  @change="condition(1)"
+                  style="margin-right:8px;"
+                  type="date"
+                  size="medium"
+                  placeholder="结束日期">
                 </el-date-picker>
                 <el-input v-model="Q_noticeTitle_SL" placeholder="请输入标题" style="width:200px" size='medium'></el-input>
                 <el-button type="primary" icon="el-icon-search" size='medium' v-wave @click="condition">搜索</el-button>
@@ -28,7 +44,14 @@
         </div>
         <div class="common-table">
             <el-table  :data="tableData" border style="width: 100%" v-show="!is_del">
-                <el-table-column align="center" prop='noticeTypeName' label="通知类型"></el-table-column>
+                <el-table-column align="center" prop='noticeTypeName' label="通知类型">
+                   <template slot-scope="scope">
+                    <span class="reportColor" 
+                      v-if="scope.row.fromNoticeId"
+                      style="background-color: #fab858;">{{scope.row.fromNoticeId ?'变更':null}}</span>
+                    <span class="href">{{scope.row.noticeTypeName}}</span>
+                  </template>
+                </el-table-column>
                 <el-table-column align="center" prop='noticeTitle' label="通知标题">
                   <template slot-scope="scope">
                     <span class="href" @click="get_active_desc(scope.row)">{{scope.row.noticeTitle}}</span>
@@ -80,8 +103,13 @@
 import { SET_MEETING_TYPE_LIST, SET_MESSAGE_DATA } from "@/store/mutations";
 import { mapGetters } from "vuex";
 import NoticeItem from "@/components/NoticeItem";
+import littleButton from "@/components/Button/littleButton";
+import { parseTime } from "@/utils";
 import qs from "qs";
 export default {
+  components: {
+    littleButton
+  },
   data() {
     return {
       pageNo: 1,
@@ -95,7 +123,9 @@ export default {
       is_org: "",
       totalCount: "",
       delCount: 0, //删除总条数,
-      is_del: false
+      is_del: false,
+      beginendTime: "",
+      endendTime: ""
     };
   },
   created() {
@@ -112,7 +142,6 @@ export default {
     ...mapGetters(["meeting_type_list"])
   },
   beforeDestroy() {
-    this.$store.commit("DEL_VIEW_BY_NAME", "通知维护");
     sessionStorage.removeItem("public-notice/maintain/pageNo");
     sessionStorage.removeItem("public-notice/maintain/total");
   },
@@ -126,13 +155,35 @@ export default {
         path: "/active-desc/index"
       });
     },
-    condition() {
+    condition(e) {
+      if (this.beginendTime && this.endendTime) {
+        if (+this.beginendTime > +this.endendTime) {
+          this.$message({
+            message: "开始时间应小于结束时间",
+            type: "warning"
+          });
+          if (index) {
+            this.endendTime = "";
+          } else {
+            this.beginendTime = "";
+          }
+          return;
+        }
+      }
       this.pageNo = 1;
       sessionStorage.setItem("public-notice/maintain/pageNo", 1);
       this.init(this.pageSize, 1);
     },
     //初始化数据列表
     init(pageSize, pageNo) {
+      var endendTime = "";
+      var beginendTime = "";
+      if (this.endendTime) {
+        endendTime = parseTime(this.endendTime, "{y}-{m}-{d}");
+      }
+      if (this.beginendTime) {
+        beginendTime = parseTime(this.beginendTime, "{y}-{m}-{d}");
+      }
       this.loading = true;
       var url;
       if (this.is_del) {
@@ -141,6 +192,7 @@ export default {
         url = "gwt/notice/tbNoticeMaintenance/list";
       }
       this.$post(
+        
         `${url}?${qs.stringify({
           currentPage: pageNo,
           pageSize: pageSize
@@ -148,9 +200,9 @@ export default {
         {
           account: this.noticeType == 0 ? 0 : this.noticeType,
           noticeType: this.noticeType == 0 ? 0 : this.noticeType,
-          begincreateTime: this.date[0],
-          endcreateTime: this.date[1],
-          noticeTitle: this.Q_noticeTitle_SL
+          beginendTime : beginendTime,
+          endendTime: endendTime,
+          noticeTitle: this.$filterText(this.Q_noticeTitle_SL)
         },
         "json"
       )

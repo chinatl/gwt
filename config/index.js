@@ -11,10 +11,11 @@ module.exports = {
     assetsPublicPath: '/',
     proxyTable: {
       '/gwt': {
+        // target: 'http://47.104.168.31:8080',//阿里云
         // target: 'http://192.168.31.169:8080',  // 接口域名 -谢震
-        target: 'http://192.168.31.5:8080',  // 接口域名 - 陈普
+        target: 'http://192.168.31.10:8080',  // 接口域名 - 陈普
         // target: 'http://192.168.31.72:8080',  // 接口域名 - 尚旭光
-        // target: 'http://192.168.31.4:10000',  // 接口域名 - 景蒙
+        // target: 'http://192.168.31.8:7000',  // 接口域名 - 景蒙
         // target: 'http://192.168.31.8:8080',  // 接口域名 - 陈小东
         // changeOrigin: true,  //是否跨域
         // pathRewrite: {
@@ -22,10 +23,11 @@ module.exports = {
         // }
       },
       '/uploadfiles': {
+        // target: 'http://47.104.168.31:8080',//阿里云
         // target: 'http://192.168.31.169:8080',  // 接口域名 -谢震
-        target: 'http://192.168.31.5:8080',  // 接口域名 - 陈普
+        target: 'http://192.168.31.10:8080',  // 接口域名 - 陈普
         // target: 'http://192.168.31.72:8080',  // 接口域名 - 尚旭光
-        // target: 'http://192.168.31.4:8080',  // 接口域名 - 景蒙
+        // target: 'http://192.168.31.8:7000', // 接口域名 - 景蒙
         // target: 'http://192.168.31.8:8080',  // 接口域名 - 陈小东
         // changeOrigin: true,  //是否跨域
         // pathRewrite: {
@@ -43,7 +45,7 @@ module.exports = {
     },
 
     // Various Dev Server settings
-    host: '192.168.31.6', // can be overwritten by process.env.HOST
+    host: '192.168.31.7', // can be overwritten by process.env.HOST
     port: 80, // can be overwritten by process.env.PORT, if port is in use, a free one will be determined
     autoOpenBrowser: true,
     errorOverlay: true,

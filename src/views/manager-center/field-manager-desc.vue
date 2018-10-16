@@ -2,7 +2,7 @@
     <div>
         <div class="field-desc">
             <div class="common-title">{{field_manager_data.name}}
-                <el-button size='medium' type='success' icon="el-icon-edit-outline" @click="edit_role" v-if="is_admin">编辑域</el-button>
+                <el-button size='medium' type='success' icon="el-icon-edit-outline"  @click="edit_role" v-if="is_admin">编辑域</el-button>
             </div>
             <div class="field-con">
                 <h3>已授权应用</h3>
@@ -126,7 +126,7 @@
             :visible.sync="role_visible">
             <el-form ref="form" :model="form" label-width="80px" :rules="rules" @submit.native.prevent v-loading='role_loading'>
                 <el-form-item label="域名称" prop='name'>
-                    <el-input v-model="form.name" size="small" @keyup.native.enter='onSubmit_yield'></el-input>
+                    <el-input v-model="form.name" size="small" @keyup.native.enter='onSubmit_yield' maxlength='10'></el-input>
                 </el-form-item>
                 <form-button @cancel='onCancel_yidld' @submit="onSubmit_yield"></form-button>
             </el-form>
@@ -237,7 +237,6 @@ export default {
     this.init(this.pageSize, this.pageNo);
     this.$store.dispatch("get_all_tree_data");
     this.partList = this.tree_data;
-    this.search_has_select_part();
     this.search_group_list();
   },
   methods: {
@@ -284,7 +283,7 @@ export default {
         if (res.result !== "0000") {
           return;
         }
-        this.default_data = res.data.orgList.map(res => {
+        this.partList = res.data.orgList.map(res => {
           res.name = res.orgName;
           res.id = res.orgId;
           res.nodeType = "ORG";
@@ -315,6 +314,7 @@ export default {
         this.select_part = res.data.orgList.map(res => {
           res.name = res.orgName;
           res.id = res.orgId;
+          res.nodeType = "ORG";
           return res;
         });
       });
@@ -324,10 +324,9 @@ export default {
       if (index === -1) {
         this.partList = this.tree_data;
         this.search_group_list();
-        this.search_has_select_part();
       } else {
         this.temp_data = item;
-        this.partList = this.default_data;
+        this.search_has_select_part();
         this.search_group_list();
       }
       this.init(this.pageSize, 1);
@@ -349,7 +348,7 @@ export default {
         })}`,
         {
           domainId: this.field_manager_data.domainId,
-          orgName: this.orgName,
+          orgName: this.$filterText(this.orgName),
           groupId
         },
         "json"
@@ -367,7 +366,6 @@ export default {
         })
         .catch(res => {
           this.table_loading = false;
-          console.log(res);
         });
     },
     //描述
@@ -444,6 +442,13 @@ export default {
         });
     },
     add_part() {
+      if (this.app_list.length === 0) {
+        this.$message({
+          message: "请先给域添加授权应用！",
+          type: "warning"
+        });
+        return;
+      }
       this.part_visible = true;
     },
     //打开新增域分组弹窗
@@ -464,10 +469,10 @@ export default {
       this.group_form.name = this.category[this.current].name;
     },
     edit_role() {
-      this.form.name = this.field_manager_data.name;
       this.role_visible = true;
       this.$nextTick(res => {
         this.$refs.form.resetFields();
+        this.form.name = this.field_manager_data.name;
       });
     },
     //关闭域
@@ -583,6 +588,7 @@ export default {
           this.search_group_list();
         })
         .catch(res => {
+          console.log(res);
           this.loading = false;
         });
     },

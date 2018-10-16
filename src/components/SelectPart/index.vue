@@ -4,30 +4,26 @@
     <div class="select-user-container">
         <div class="select-left">
             <div class="select-part-top">
-                <el-select v-model="part" size="small" style="margin-right:6px;width:300px">
-                    <el-option value="22x3233" label="全部类型"></el-option>
-                    <el-option value="223233" label="区政府"></el-option>
-                    <el-option value="232233" label="省政府机构"></el-option>
-                    <el-option value="23x233" label="地市政府"></el-option>
-                    <el-option value="2323s233" label="驻陕单位"></el-option>
-                    <el-option value="232sa33" label="省属企业"></el-option>
-                    <el-option value="232s33" label="金融机构"></el-option>
-                    <el-option value="232x33" label="新闻单位"></el-option>
-                    <el-option value="23x2x33" label="省政府机构二级单位"></el-option>
+                <el-select v-model="select_part" size="small" style="margin-right:6px;width:300px" @change="change_type_part">
+                    <el-option :value="item.dicId" :label="item.itemName" v-for='(item,index) in all_options' :key="index"></el-option>
                 </el-select>
                 <el-input v-model="filterText" size="small" placeholder="请选择部门名称">
                     <i slot="suffix" class="el-input__icon el-icon-search"></i>
                 </el-input>
             </div>
-            <div class="select-part-bottom common-temp">
+            <div class="select-part-bottom common-temp scrollbar">
                 <el-tree
-                :data="manager_tree_list"
+                :check-strictly='true'
+                :expand-on-click-node='false'
+                :data="change_data"
                 show-checkbox
                 node-key="id"
                 @check="handleCheckChange"
+                :default-checked-keys='checked_keys'
                 :filter-node-method="filterNode"
                 ref="tree"
                 :highlight-current= 'true'
+                :default-expand-all='default_expand'
                 :props="defaultProps">
                 </el-tree>
             </div>
@@ -36,12 +32,12 @@
                 :default-checked-keys="[5]" -->
         <div class="select-right">
             <div class="has-selected">
-                <span>已选({{has_checked_item.length}})</span>
+                <span>已选({{has_select_arr.length}})</span>
                 <el-button size="mini" v-wave @click="remove_all"><span class="span">清空</span></el-button>
             </div>
             <div class="has-yield-list">
                 <ul>
-                    <li v-for='(item,index) in has_checked_item' :key="index">
+                    <li v-for='(item,index) in has_select_arr' :key="index">
                         <div>
                             <svg-icon icon-class='tree'></svg-icon>
                             <span class="user-name">{{item.name}}</span>
@@ -62,19 +58,23 @@
 </el-dialog>
 </template>
 <script>
-import { mapGetters } from "vuex";
+import { resolve_tree, generate_tree } from "@/utils";
 export default {
   data() {
     return {
-      part: "1",
+      select_part: "",
+      part: "",
       filterText: "",
       tree_data: [],
       defaultProps: {
         children: "childrens",
         label: "name"
       },
-      has_checked_item: [],
-      checkedKeys: []
+      has_select_arr: [],
+      checked_keys: [],
+      all_tree_data: [],
+      all_options: [],
+      default_expand: false
     };
   },
   props: {
@@ -87,14 +87,48 @@ export default {
       type: Boolean,
       default: false,
       required: true
+    },
+    userList: {
+      default: []
     }
   },
   watch: {
     filterText(val) {
       this.$refs.tree.filter(val);
+    },
+    show(res) {
+      if (res) {
+        this.has_select_arr = [...this.userList];
+        var arr = [];
+        for (var i = 0; i < this.has_select_arr.length; i++) {
+          var tempList = this.all_tree_data
+            .filter(res => res.originId == this.has_select_arr[i].originId)
+            .map(res => res.id);
+          arr.push(...tempList);
+        }
+        this.checked_keys = arr;
+        this.$nextTick(res => {
+          this.$refs.tree.setCheckedKeys(this.checked_keys);
+        });
+      }
     }
   },
   computed: {
+    change_data() {
+      if (this.select_part) {
+        return generate_tree(
+          this.all_tree_data.filter(res => {
+            if (res.nodeType === "ORG") {
+              return res.deptType == this.select_part;
+            } else {
+              return true;
+            }
+          })
+        );
+      } else {
+        return  generate_tree(this.all_tree_data)
+      }
+    },
     dialog: {
       get() {
         return this.show;
@@ -102,36 +136,73 @@ export default {
       set(res) {
         this.$emit("close");
       }
-    },
-    ...mapGetters(["manager_tree_list"])
+    }
   },
   created() {
-    this.$store.dispatch("get_manager_tree");
+    this.get_all_data();
+    this.get_all_dept();
   },
   methods: {
+    change_type_part(val) {
+      if (val) {
+        this.default_expand = true;
+      } else {
+        this.default_expand = false;
+      }
+    },
+    get_all_dept() {
+      this.$post("gwt/system/sysOrg/getDeptType", {}, "json")
+        .then(res => {
+          if (res.result !== "0000") {
+            return;
+          }
+          this.all_options =[{
+            itemName:'全部类型',
+            dicId:''
+          },...res.data.getDeptType] ;
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
+    get_all_data() {
+      this.$post("gwt/system/sysOrg/getSelfDoaminOrgTree", {}, "json").then(
+        res => {
+          if (res.result !== "0000") {
+            return;
+          }
+          this.all_tree_data = res.data.nodes;
+          var arr = res.data.nodes.map(res => {
+            if (res.nodeType === "DOMAIN" || res.nodeType === "DOMAIN_GROUP") {
+              res.disabled = true;
+            }
+            return res;
+          });
+          this.tree_data = generate_tree(arr);
+        }
+      );
+    },
     filterNode(value, data) {
       if (!value) return true;
       return data.name.indexOf(value) !== -1;
     },
-
-    //过滤
-
     // 清空
     remove_all() {
+      this.has_select_arr = [];
       this.$refs.tree.setCheckedKeys([]);
-      this.has_checked_item = [];
     },
     del_tree_node(id, index) {
       this.$refs.tree.setChecked(id, false);
-      this.has_checked_item.splice(index, 1);
+      this.has_select_arr.splice(index, 1);
     },
     handleCheckChange(e, { checkedKeys, checkedNodes }) {
+      console.log(e);
       this.checkedKeys = checkedKeys;
-      this.has_checked_item = checkedNodes;
+      this.has_select_arr = checkedNodes;
     },
     handleNodeClick() {},
     onSubmit() {
-      this.$emit("submit", this.checkedKeys);
+      this.$emit("submit", this.has_select_arr);
     },
     cancel() {
       this.$emit("close");

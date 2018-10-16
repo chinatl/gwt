@@ -17,15 +17,12 @@
                 <p v-if='data.endTime'>结束时间：<span>{{data.endTime}}</span></p>
                 <p v-if='data.noticeAdress'>会议地点：<span>{{data.noticeAdress}}</span></p>
             </div>
-            <div class="active-content">
-                {{data.noticeProfile}}
-            </div>
+            <div class="active-content2" v-text="data.noticeProfile"></div>
             <div class="file-info" v-if="file_length">
-                附件： <span>{{file_length}} 个附件，共{{file_list | folderSize}}</span>
+                附件：<span>{{file_length}} 个附件，共{{file_list | folderSize}}</span>
             </div>
             <file-list :list='file_list' @delete='delete_file' :remove='true'></file-list>
         </div>
-  
     </div>
     <div class="stuff-common">
         <t-title>签收信息</t-title>
@@ -277,6 +274,7 @@
                     <el-table-column
                     prop="READ_FLAG"
                     align="center"
+                    width="240"
                     label="阅读状态">
                     </el-table-column>
                     <el-table-column
@@ -288,18 +286,20 @@
                     <el-table-column
                       align="center"
                       label="接收人信息"
+                      width="160"
                     >
                       <template slot-scope="scope">
                           <el-popover
-                            placement="top"
+                            placement="left"
                             align='center'
                             width="400"
                             trigger="hover"
+                            :manual='false'
                             v-loading='reve_loading'
                              @show='find_data(scope.row)'
                             >
                             <div style="text-align:center;font-size:16px;padding:10px">{{scope.row.ORG_ALL_NAME}}</div>
-                            <div class="common-table">
+                            <div class="common-table" style="height:242px">
                               <el-table
                                 :data="reveive_data"
                                 border
@@ -329,15 +329,17 @@
                               <el-pagination
                               @size-change="handleSizeChange_unreceive"
                               @current-change="handleCurrentChange_unreceive"
-                              :current-page.sync="pageNo_unreceive"
+                              :current-page="pageNo_unreceive"
                               :page-sizes="[5]"
                               :page-size="pageSize_unreceive"
-                              layout="total,  prev, pager, next, jumper"
+                              layout="total,  prev, pager, next"
                               background
                               :total="total_unreceive">
                               </el-pagination>
                             </div>
-                            <div slot="reference"><little-button name='接收人信息'></little-button></div>
+                            <div  slot="reference">
+                            <little-button name='接收人信息'></little-button>
+                            </div>
                           </el-popover>
                       </template>
                     </el-table-column>
@@ -451,7 +453,9 @@ export default {
       tableData: [],
       register_tableData: [],
       file_list: [],
-      data: {},
+      data: {
+        noticeProfile: ""
+      },
       tbNoticeReceive: {},
       file_length: 0,
       status: "",
@@ -546,18 +550,24 @@ export default {
         });
     },
     handleSizeChange_unreceive(e) {
-      this.pageNo = 1;
+      this.pageNo_unreceive = 1;
+      this.pageSize_unreceive = e;
       this.init_reve(e, 1);
     },
     handleCurrentChange_unreceive(e) {
-      this.pageNo = e;
+      this.pageNo_unreceive = e;
       this.init_reve(this.pageSize, e);
     },
     find_data(item) {
-      this.reveive_data = [];
-      this.reve_data = item;
-      this.pageNo = 1;
-      this.init_reve(this.pageSize, 1);
+      if (item.DATA_TYPE === "org") {
+        this.reve_data = item;
+        this.pageNo_unreceive = 1;
+        this.init_reve(this.pageSize, 1);
+      } else {
+        item.REAL_NAME = item.RECEIVE_NAME;
+        this.total_unreceive = 1;
+        this.reveive_data = [item];
+      }
     },
     init(pageSize, currentPage) {
       var url = "";
@@ -601,7 +611,8 @@ export default {
             this.tableData = res.data.tbNoticeItemPageBean.datas;
             this.total = res.data.tbNoticeItemPageBean.totalCount - 0;
             if (this.dataType === 4) {
-              this.tabCounts.unSignUsers = res.data.tbNoticeItemPageBean.totalCount;
+              this.tabCounts.unSignUsers =
+                res.data.tbNoticeItemPageBean.totalCount;
             }
           }
         })
@@ -631,7 +642,7 @@ export default {
             return;
           }
           this.$message({
-            message: "",
+            message: "短信再次提醒成功！",
             type: "success"
           });
           this.init(this.pageSize, this.pageNo);
@@ -684,7 +695,7 @@ export default {
             dataType: 4
           },
           {
-            name: "smsNoticeFailedUsers",
+            name: "smsNoticeFailedUsersForPC",
             value: "短信通知失败",
             dataType: 5
           }
@@ -707,7 +718,7 @@ export default {
             dataType: 4
           },
           {
-            name: "smsNoticeFailedUsers",
+            name: "smsNoticeFailedUsersForPC",
             value: "短信通知失败",
             dataType: 5
           }
@@ -735,7 +746,7 @@ export default {
             dataType: 4
           },
           {
-            name: "smsNoticeFailedUsers",
+            name: "smsNoticeFailedUsersForPC",
             value: "短信通知失败",
             dataType: 5
           }
@@ -987,11 +998,13 @@ export default {
         }
       }
     }
-    .active-content {
+    .active-content2 {
       font-size: 15px;
       line-height: 28px;
-      margin: 12px 0;
-      text-indent: 2em;
+      margin: 0px 0;
+      overflow: hidden;
+      white-space: pre-wrap;
+      padding: 10px 20px;
     }
     .file-info {
       span {

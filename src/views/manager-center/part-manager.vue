@@ -10,7 +10,9 @@
           </div>
         </div>
         <div class="part-content common-temp scrollbar" style="overflow: auto" v-loading='tree_loading'>
-            <el-tree :data="tree_data" :props="defaultProps"
+            <el-tree 
+            :expand-on-click-node='false'
+            :data="tree_data" :props="defaultProps"
             node-key="id"
             :filter-node-method="filterNode"
             :default-expanded-keys="expand_arr"            
@@ -53,7 +55,7 @@
                   <el-table-column
                   prop="orgAllName"
                   align="center"
-                  label="部门全程">
+                  label="部门全称">
                   </el-table-column>
                   <el-table-column
                   prop="orgAddr"
@@ -100,9 +102,9 @@
 :title="part_type ==='add' ?'新增部门':'编辑部门'" v-drag
 :visible.sync="edit_visible">
 <el-form ref="form" :model="form" label-width="80px" :rules="rules"  v-loading='form_loading'>
-<el-form-item label="所属区域" prop='city' v-if='temp_data.nodeType === "REGION"'>
+<el-form-item label="所属区域" prop='city' v-show='temp_data.nodeType === "REGION"'>
     <div class="flex">
-      <el-select v-model="option_value1" placeholder="" size="small" style="width:100%;margin-right:20px" @change="change_option1">
+      <el-select v-model="form.city" placeholder="" size="small" style="width:100%;margin-right:20px" @change="change_option1">
         <el-option v-for="(item,index) in option1" :key="index" :label="item.itemName" :value="item.dicId"></el-option>
       </el-select>
       <el-select v-model="option_value2" placeholder="" size="small" style="width:100%"  @change="change_option2">
@@ -113,11 +115,11 @@
       </el-select>
     </div>
 </el-form-item>
-<el-form-item label="上级部门" v-if='temp_data.nodeType === "ORG"'>
+<el-form-item label="上级部门" v-show='temp_data.nodeType === "ORG"'>
     <el-input v-model="temp_data.name" size="small" readonly></el-input>
 </el-form-item>
 <el-form-item label="部门名称" prop='orgName'>
-    <el-input v-model="form.orgName" size="small" maxlength="10" @blur="add_part_all_name"></el-input>
+    <el-input v-model="form.orgName" size="small" maxlength="20" @blur="add_part_all_name"></el-input>
 </el-form-item>
 <el-form-item label="部门全称" prop="orgAllName">
     <el-input v-model="form.orgAllName" size="small"></el-input>
@@ -155,11 +157,10 @@ export default {
     return {
       tree_loading: false,
       form: {
-        orgName: "",
-        orgAllName: "",
         orgAddr: "",
-        orgDesc: "",
         deptType: "",
+        orgAllName: "",
+        orgName: "",
         city: ""
       },
       filterText: "",
@@ -180,7 +181,9 @@ export default {
         deptType: [
           { required: true, message: "请选择部门类型", trigger: "change" }
         ],
-        city: [{ required: true, message: "请至少选一个地区", trigger: "blur" }]
+        city: [
+          { required: true, message: "请至少选一个地区", trigger: "change" }
+        ]
       },
       table_loading: false,
       tableData: [],
@@ -197,14 +200,13 @@ export default {
       option1: [],
       option2: [],
       option3: [],
-      option_value1: "",
       option_value2: "",
       option_value3: "",
       expand_arr: []
     };
   },
   computed: {
-    ...mapGetters(["is_admin", "group_list", "user_info"])
+    ...mapGetters(["is_admin", "group_list", "user_info", "org_role_list"])
   },
   watch: {
     filterText(val) {
@@ -214,7 +216,6 @@ export default {
   beforeDestroy(e) {
     sessionStorage.removeItem("user-manager/part/pageNo");
     sessionStorage.removeItem("user-manager/part/total");
-    sessionStorage.removeItem("user-manager/part/data");
   },
   created() {
     var expand_arr = sessionStorage.getItem("user-manager/part/data");
@@ -244,11 +245,13 @@ export default {
     },
     filterNode(value, data) {
       if (!value) return true;
-      if (data.name) return true;
-      return data.name.indexOf(value) !== -1;
+      if (data.allName) {
+        return data.allName.indexOf(value) !== -1;
+      } else {
+        return data.name.indexOf(value) !== -1;
+      }
     },
     change_option1(e) {
-      this.form.city = "e";
       this.option_value2 = "";
       this.option_value3 = "";
       this.$post(
@@ -327,11 +330,10 @@ export default {
       var areaId = this.temp_data.areaId;
       var orgParentId = this.temp_data.id;
       if (this.temp_data.nodeType === "ORG") {
-        orgParentId = orgParentId.replace(/\D/g, "");
-        areaId = areaId.replace(/\D/g, "");
+        orgParentId = orgParentId && orgParentId.replace(/\D/g, "");
+        areaId = "";
       } else {
         orgParentId = "";
-        areaId = "";
       }
       this.$post(
         `gwt/system/sysOrg/list?${qs.stringify({
@@ -396,9 +398,7 @@ export default {
             this.temp_data.id = this.temp_data.orgId;
             this.temp_data.name = this.temp_data.orgAllName;
             this.temp_data.nodeType = "ORG";
-            console.log(this.temp_data);
             this.search_child_part(this.pageSize, this.pageNo);
-            // this.handleNodeClick(this.temp_data);
           }
         })
         .catch(res => {
@@ -409,9 +409,10 @@ export default {
     add_part() {
       this.edit_visible = true;
       this.part_type = "add";
+      this.form.city = "";
       this.$nextTick(res => {
         this.$refs.form.resetFields();
-        this.option_value1 = "";
+        this.form.city = "";
         this.option_value2 = "";
         this.option_value3 = "";
         this.form.orgDesc = "";
@@ -419,14 +420,10 @@ export default {
         this.form.orgAddr = "";
         this.form.deptType = "";
         this.form.orgAllName = "";
-        this.form.city = "";
       });
     },
     handleNodeClick(data) {
-      if (
-        !this.is_admin &&
-        !this.group_list.map(res => res.orgId).includes(data.id)
-      ) {
+      if (!this.is_admin && !this.org_role_list.includes(data.id)) {
         this.$message({
           message: "您没有操作权限！",
           type: "warning",
@@ -465,7 +462,7 @@ export default {
         ).then(res => {
           var region = res.data.region;
           if (region[0]) {
-            this.option_value1 = region[0].dicId + "";
+            this.form.city = region[0].dicId + "";
             this.change_option1(region[0].dicId + "");
           }
           if (region[1]) {
@@ -480,7 +477,7 @@ export default {
     },
     handle_delete(orgId) {
       this.$swal({
-        title: "您确定要删除的信息吗？",
+        title: "您确定要删除信息吗？",
         text: "删除后将无法恢复，请谨慎操作！",
         type: "warning",
         showCancelButton: true,
@@ -516,6 +513,7 @@ export default {
               type: "success"
             });
             this.search_child_part(this.pageSize, this.pageNo);
+            this.get_user_tree();
           })
           .catch(res => {
             console.log(res);
@@ -534,11 +532,14 @@ export default {
       this.search_child_part(this.pageSize, e);
     },
     onSubmit() {
-      var account = "";
-      if (this.option_value1 !== -1) {
-        account = this.option_value1;
+      if (this.temp_data.nodeType === "ORG") {
+        this.form.city = "true";
       }
-      account = this.option_value1;
+      var account = "";
+      if (this.form.city !== -1) {
+        account = this.form.city;
+      }
+      account = this.form.city;
       if (this.option_value2 !== "-1" && this.option_value2) {
         account = this.option_value2;
       }
@@ -594,6 +595,7 @@ export default {
             });
             this.get_user_tree();
             this.search_child_part(this.pageSize, this.pageNo);
+            this.$store.dispatch("get_org_role_list");
             this.edit_visible = false;
           })
           .catch(res => {

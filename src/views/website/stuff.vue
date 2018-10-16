@@ -16,7 +16,7 @@
                     </el-form-item>
                     <el-form-item label="接收部门">
                         <div class="flex">
-                            <el-input v-model="form.name" size="small" placeholder="请选择接受部门"></el-input>
+                            <el-input v-model="form.name" size="small" placeholder="请选择接收部门"></el-input>
                             <add-user-button @click="yield_dialog= true">选择部门</add-user-button>
                         </div>
                     </el-form-item>

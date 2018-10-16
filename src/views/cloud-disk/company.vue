@@ -12,6 +12,7 @@
   <div slot="right">
       <div class="common field">
           <t-title title="部门云盘"></t-title>
+          <div v-loading='uploading'>
           <div class="common-action">
               <div class="disk-cloud">
                   <upload-button icon="el-icon-upload2"
@@ -70,6 +71,8 @@
               :total="totalCount">
               </el-pagination>
           </div>
+          </div>
+
           <!-- 举报弹框 -->
           <el-dialog
             title="举报信息"
@@ -112,12 +115,14 @@ import { fileType } from "@/utils";
 import { Base64 } from "js-base64";
 import md5 from "js-md5";
 import { delete_item, action_fail } from "@/utils/user";
+import { mapGetters } from "vuex";
 export default {
   components: {
     uploadButton
   },
   data() {
     return {
+      uploading: false,
       loading: false,
       checkList: [],
       reportform: {
@@ -183,6 +188,7 @@ export default {
     };
   },
   computed: {
+    ...mapGetters(["user_info"]),
     file_name() {
       if (this.select_list.length) {
         return `已选中${this.select_list.length}个文件/文件夹`;
@@ -221,7 +227,6 @@ export default {
           this.left_nav_data = res.data.sysOrgs;
           if (!this.left_nav_data.length) return;
           this.temp_data = this.left_nav_data[0];
-          console.log(this.temp_data);
           this.get_deptCloudisk(this.pageSize, this.pageNo);
         })
         .catch(res => {});
@@ -260,6 +265,7 @@ export default {
     //上传
     upload_img(e) {
       // console.log(e);
+      this.uploading = true;
       var formData = new FormData();
       formData.append("ownerSystem", "gwt-platform");
       formData.append("ownerModule", "cloudisk");
@@ -273,6 +279,7 @@ export default {
       console.log(this.temp_data.orgId);
       this.$post("gwt/uploadFile/uploadCloudisk", formData, "form")
         .then(res => {
+          this.uploading = false;
           this.attaPath = res.data.attachmentList[0].attaPath;
           // console.log(res.data.attachmentList[0].attaPath)
           if (res.result === "0000") {
@@ -284,7 +291,9 @@ export default {
             });
           }
         })
-        .catch(res => {});
+        .catch(res => {
+          this.uploading = false;
+        });
     },
     //新建文件夹
     add_older(formName) {
@@ -375,22 +384,20 @@ export default {
     },
     //删除
     delete_btn() {
-      // console.log(this.createId.includes(parseInt(this.current_user.id)))
-      // return;
-      // if (
-      //   parseInt(this.current_user.id) !== this.createId &&
-      //   !this.createId.includes(parseInt(this.current_user.id))
-      // ) {
-      //   this.$swal({
-      //     title: "提示信息！",
-      //     text: "您没有权限删除此文件",
-      //     type: "warning",
-      //     confirmButtonColor: "#DD6B55",
-      //     confirmButtonText: "确定",
-      //     showConfirmButton: true
-      //   });
-      //   return;
-      // }
+      var list = this.select_list.filter(res => {
+        return res.createUser == this.user_info.sysOrgUserX.id;
+      });
+      if (list.length !== this.select_list.length) {
+        this.$swal({
+          title: "操作失败！",
+          text: "非本人文件不能删除",
+          type: "warning",
+          confirmButtonColor: "#DD6B55",
+          confirmButtonText: "确定",
+          showConfirmButton: true
+        });
+        return;
+      }
       if (this.fileIds.length == 0 && this.dirIds.length == 0) {
         this.$swal({
           title: "提示信息！",
@@ -425,13 +432,8 @@ export default {
           "json"
         )
           .then(res => {
-            if (res.result === "0000") {
-              this.get_deptCloudisk(this.pageSize, this.pageNo);
-              this.$message({
-                type: "success",
-                message: "删除成功"
-              });
-            }
+            if (action_fail(res, "删除成功")) return;
+            this.get_deptCloudisk(this.pageSize, this.pageNo);
           })
           .catch(res => {
             console.log(res);
@@ -455,6 +457,14 @@ export default {
     },
     //举报信息提交
     submit_report(formName) {
+      var file_list = this.select_list
+        .filter(res => res.type === "file")
+        .map(res => res.fileId)
+        .join(",");
+      var folder_list = this.select_list
+        .filter(res => res.type === "folder")
+        .map(res => res.dirId)
+        .join(",");
       this.$refs[formName].validate(valid => {
         if (valid) {
           this.$post(
@@ -463,9 +473,7 @@ export default {
               appId: "1",
               arrayContentType: this.reportform.type.join(","),
               cause: this.reportform.desc,
-              contentId: this.select_list
-                .map(res => res.dirId || res.fileId)
-                .join(","),
+              contentId: file_list + "_" + folder_list,
               reportored: this.select_list.map(res => res.createUser).join(","),
               reportoredOrg: this.temp_data.orgId,
               title: ` 标题为“${this.select_list

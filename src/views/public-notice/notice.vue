@@ -14,12 +14,15 @@ export default {
   components: {
     CreateNotice
   },
+  created() {
+    sessionStorage.setItem("send_status", 2);
+  },
   data() {
     return {
       rules: {
         noticeTitle: [
           { required: true, message: "请输入会议标题", trigger: "blur" }
-        ],
+        ]
       },
       form_array: [
         {

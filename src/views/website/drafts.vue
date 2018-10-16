@@ -175,7 +175,7 @@ export default {
     },
     handleDelete(noticeId) {
       this.$swal({
-        title: "您确定要删除的信息吗？",
+        title: "您确定要删除信息吗？",
         text: "删除后将无法恢复，请谨慎操作！",
         type: "warning",
         showCancelButton: true,

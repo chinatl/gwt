@@ -14,9 +14,7 @@
                 <p v-if="data.startTime">开始时间：<span>{{data.startTime}}</span></p>
                 <p v-if="data.noticeAdress">会议地点：<span>{{data.noticeAdress}}</span></p>
             </div>
-            <div class="active-content">
-                {{data.noticeProfile}}
-            </div>
+            <div class="active-content2" v-text="data.noticeProfile"></div>
             <div class="file-info">
                 附件： <span>{{file_length}} 个附件，共{{file_list | folderSize}}</span>
             </div>
@@ -51,7 +49,7 @@ export default {
   data() {
     return {
       file_list: [],
-      data: {},
+      data: {noticeProfile:''},
       file_length: 0,
       file_size: 0,
       form: {
@@ -240,10 +238,13 @@ export default {
         }
       }
     }
-    .active-content {
+    .active-content2 {
       font-size: 15px;
       line-height: 28px;
-      margin: 12px 0;
+      margin: 0px 0;
+      overflow: hidden;
+      white-space: pre-wrap;
+      padding: 10px 20px;
     }
     .file-info {
       span {

@@ -31,8 +31,9 @@
               @click="go_desc(item)"
               @delete='del_one_list(item.RECV_ID)'
               ></message-item>
+              <no-data v-if="!tableData.length"></no-data>
         </div>
-        <div class="common-page">
+        <div class="common-page" v-if="tableData.length">
             <el-pagination
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
@@ -44,6 +45,38 @@
             :total="total">
             </el-pagination>
         </div>
+       <el-dialog 
+        :close-on-click-modal='false'
+        title="用户接收"
+        class="common-dialog"
+        v-drag
+        :visible.sync="transfer_dialog">
+      <div v-loading='transfer_dialog_loading'>
+        <div class="user_info_dialog">
+            <div class="user_photo">
+              <img :src="require('@/assets/imgs/a9.jpg')" alt="">
+            </div>
+            <div class="user_info">
+              <div class="outName">{{temp_user_data.realName}}</div>
+              <div class="outPhone">{{temp_user_data.mobilePhone}}</div>
+              <p>部门: <span>{{temp_user_data.sysOrgUserX.orgAllName || '--'}}</span></p>
+              <p>职务: <span>{{temp_user_data.sysOrgUserX.duty || '--'}}</span></p>
+              <p>级别: <span>{{temp_user_data.sysOrgUserX.userLevelName || '--'}}</span></p>
+              <p>角色: <span>{{temp_user_data.sysUserRoleOrgList.map(res=>res.sysRole.roleName).join('、') || '--'}}</span></p>
+              <p>固话: <span>{{temp_user_data.sysOrgUserX.phone || '--'}}</span></p>
+            </div>
+        </div>
+        <div style="padding:0 20px" class="button-message">
+          <p>调离类型：<span>{{ remove_type == 0 ? '内部':'外部'}}</span></p>
+          <p>接收部门：<span>{{reomve_org}}</span></p>
+          <el-form>
+          <form-button  
+          submit_name='同意' cancel_name='拒绝'
+          @submit=" save_message_transfer " @cancel='cancel_transfer' ></form-button>
+        </el-form>
+        </div>
+      </div>  
+    </el-dialog>
     </div>
 </template>
 <script>
@@ -52,12 +85,21 @@ import MessageItem from "@/components/MessageItem";
 import qs from "qs";
 import { delete_item } from "@/utils/user";
 import { parseTime } from "@/utils";
+import formButton from "@/components/Button/formButton";
+
 export default {
   components: {
-    MessageItem
+    MessageItem,
+    formButton
   },
   data() {
     return {
+      transfer_dialog: false,
+      transfer_dialog_loading: false,
+      temp_user_data: {
+        sysOrgUserX: {},
+        sysUserRoleOrgList: []
+      },
       pageNo: 1,
       loading: false,
       pageSize: 10,
@@ -66,7 +108,10 @@ export default {
       meeting_type_list: [],
       title: "",
       startTime: "",
-      msgType: ""
+      msgType: "",
+      remove_type: "",
+      reomve_org: "",
+      remove_data: {}
     };
   },
   created() {
@@ -77,9 +122,82 @@ export default {
     var pageSize = localStorage.getItem("message/index/pageSize");
     this.pageSize = pageSize ? pageSize - 0 : 10;
     this.init(this.pageSize, this.pageNo);
+    this.$store.dispatch("get_org_role_list");
     //初始化查询
   },
   methods: {
+    save_message_transfer() {
+      this.transfer_dialog_loading = true;
+      this.$post(
+        "gwt/system/sysUser/agreeUser",
+        {
+          userId: this.remove_data.userId,
+          orgId: this.remove_data.rollOutOrgId,
+          inOrgId: this.remove_data.rollInOrgId,
+          positionId: this.remove_data.id
+        },
+        "json"
+      )
+        .then(res => {
+          this.transfer_dialog_loading = false;
+          if (res.result !== "0000") {
+            this.$swal({
+              title: "操作失败！",
+              text: res.msg,
+              type: "error",
+              confirmButtonColor: "#DD6B55",
+              confirmButtonText: "确定",
+              showConfirmButton: true
+            });
+            return;
+          }
+          this.transfer_dialog = false;
+          this.$message({
+            message: "用户转入成功！",
+            type: "success"
+          });
+          this.init(this.pageSize, this.pageNo);
+        })
+        .catch(res => {
+          this.transfer_dialog_loading = false;
+          console.log(res);
+        });
+    },
+    cancel_transfer() {
+      this.transfer_dialog_loading = true;
+      this.$post(
+        "gwt/system/sysUser/refuseUser",
+        {
+          userId: this.remove_data.userId,
+          orgId: this.remove_data.rollOutOrgId,
+          positionId: this.remove_data.id
+        },
+        "json"
+      )
+        .then(res => {
+          this.transfer_dialog_loading = false;
+          if (res.result !== "0000") {
+            this.$swal({
+              title: "操作失败！",
+              text: res.msg,
+              type: "error",
+              confirmButtonColor: "#DD6B55",
+              confirmButtonText: "确定",
+              showConfirmButton: true
+            });
+            return;
+          }
+          this.transfer_dialog = false;
+          this.$message({
+            message: "用户转入被拒绝！",
+            type: "success"
+          });
+          this.init(this.pageSize, this.pageNo);
+        })
+        .catch(res => {
+          this.transfer_dialog_loading = false;
+        });
+    },
     //条件查询
     condition() {
       sessionStorage.setItem("message/index/pageNo", 1);
@@ -97,15 +215,17 @@ export default {
       this.pageNo = e;
       this.init(this.pageSize, e);
     },
-    init(pageSize, pageNo) {
-      this.loading = true;
+    init(pageSize, pageNo, temp) {
+      if (!temp) {
+        this.loading = true;
+      }
       this.$post(
         `gwt/business/msgRecvUser/list?${qs.stringify({
           currentPage: pageNo,
           pageSize: pageSize
         })}`,
         {
-          title: this.title,
+          title: this.$filterText(this.title),
           startTime: this.startTime && parseTime(this.startTime, "{y}-{m}-{d}"),
           msgType: this.msgType,
           endTime: ""
@@ -153,6 +273,83 @@ export default {
         });
     },
     go_desc(item) {
+      if (item.TYPE_DESC === "调岗") {
+        this.$post(
+          "gwt/business/msgRecvUser/update",
+          {
+            id: item.RECV_ID,
+            state: "1"
+          },
+          "json"
+        )
+          .then(res => {
+            this.init(this.pageSize, this.pageNo, true);
+          })
+          .catch(res => {
+            console.log(res);
+          });
+        this.$post(
+          "gwt/system/sysUser/getPositionStatus",
+          {
+            messageId: item.MSG_ID
+          },
+          "json"
+        )
+          .then(res => {
+            if (res.result !== "0000") {
+              return;
+            }
+            if (res.data.sysPositionMessageRelation.status != 0) {
+              this.$message({
+                message: "该消息已处理",
+                type: "success"
+              });
+              return;
+            }
+            this.transfer_dialog = true;
+            this.remove_data = res.data.sysPositionMessageRelation;
+            this.remove_type =
+              res.data.sysPositionMessageRelation.opreationType;
+            this.$post(
+              "gwt/system/sysOrg/get",
+              {
+                orgId: res.data.sysPositionMessageRelation.rollInOrgId
+              },
+              "json"
+            )
+              .then(res => {
+                if (res.result !== "0000") {
+                  return;
+                }
+                this.reomve_org = res.data.loadOrg.orgAllName;
+              })
+              .catch(res => {
+                console.log(res);
+              });
+            this.$post(
+              "gwt/system/sysUser/editUser",
+              {
+                orgId: res.data.sysPositionMessageRelation.rollOutOrgId,
+                userId: res.data.sysPositionMessageRelation.userId
+              },
+              "json"
+            )
+              .then(res => {
+                if (res.result !== "0000") {
+                  return;
+                }
+                if (!res.data.sysUser.sysUserRoleOrgList) {
+                  return;
+                }
+                this.temp_user_data = res.data.sysUser;
+              })
+              .catch(res => {
+                console.log(res);
+              });
+            console.log(res);
+          })
+          .catch(res => {});
+      }
       if (item.TYPE_DESC === "举报") {
         this.$post(
           "gwt/business/msgRecvUser/update",
@@ -169,9 +366,10 @@ export default {
             console.log(res);
           });
         if (item.TITLE.includes("被管理员删除，请知悉")) {
+          this.init(this.pageSize, this.pageNo, true);
           this.$message({
-            message: "已处理",
-            type: "info"
+            message: "该消息已处理",
+            type: "success"
           });
           return;
         }
@@ -190,23 +388,12 @@ export default {
           {
             messageId: item.MSG_ID,
             recvId: item.RECV_ID,
-            receOrgId: "",
+            receOrgId: item.ORG_ID,
             ORG_ID: item.ORG_ID
           },
           "json"
         ).then(res => {
           if (res.result !== "0000") {
-            return;
-          }
-          if (res.data.tbNotice.noticeStatus === "1002") {
-            this.$swal({
-              title: "操作失败！",
-              text: "该文件因为“" + res.data.tbNotice.deleteReason + "”被删除",
-              type: "error",
-              confirmButtonColor: "#DD6B55",
-              confirmButtonText: "确定",
-              showConfirmButton: true
-            });
             return;
           }
           this.$post(
@@ -224,6 +411,23 @@ export default {
             .catch(res => {
               console.log(res);
             });
+          if (res.data.tbNotice.noticeStatus === "1002") {
+            this.init(this.pageSize, this.pageNo, true);
+            this.$swal({
+              title: "删除原因！",
+              text:
+                "由于“" +
+                res.data.tbNotice.deleteReason +
+                "”，通知已被“" +
+                res.data.tbNotice.updateUserName +
+                "”被删除",
+              type: "warning",
+              confirmButtonColor: "#DD6B55",
+              confirmButtonText: "确定",
+              showConfirmButton: true
+            });
+            return;
+          }
           item.RECEIVE_ID = res.data.tbNoticeReceive.id;
           this.$store.commit(SET_MESSAGE_DATA, item);
           if (item.TYPE_DESC === "通知") {
@@ -262,3 +466,46 @@ export default {
   }
 };
 </script>
+<style rel="stylesheet/scss" lang="scss">
+.button-message {
+  p {
+    margin-top: 12px;
+    font-weight: 600;
+    span {
+      font-weight: normal;
+      margin-left: 12px;
+    }
+  }
+}
+.user_info_dialog {
+  padding: 10px 40px;
+  overflow: hidden;
+  display: flex;
+  .user_photo {
+    padding: 0 30px;
+  }
+  .user_info {
+    padding: 0 30px;
+    .outName {
+      color: rgb(59, 164, 245);
+      font-size: 24px;
+      font-weight: 500;
+    }
+    .outPhone {
+      margin-top: 10px;
+      color: rgb(59, 164, 245);
+      font-size: 16px;
+      font-weight: 500;
+    }
+    p {
+      color: rgb(103, 106, 108);
+      font-size: 13px;
+      font-weight: 700;
+      margin-top: 10px;
+      span {
+        font-weight: normal;
+      }
+    }
+  }
+}
+</style>

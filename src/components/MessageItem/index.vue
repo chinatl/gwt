@@ -11,10 +11,14 @@
                  {{data.TITLE}}
                 <span class="status">
                     {{data.REC_STATUS === 1000 ? "未签收": null}}
-                    {{data.REC_STATUS === 1001 ? "已签收": null}}
+                    {{data.REC_STATUS === 1001 ?( data.TYPE_DESC === "会议通知" ? "未报名": "已签收") :null }}
                     {{data.REC_STATUS === 1002 ? "已拒签": null}}
                     {{data.REC_STATUS === 1003 ? "未报名": null}}
                     {{data.REC_STATUS === 1004 ? "已报名": null}} 
+                    {{(data.TYPE_DESC === '调岗' && data.REC_STATUS == 0) ? '未处理' : null}}
+                    {{(data.TYPE_DESC === '调岗' && data.REC_STATUS == 1) ? '已转入' : null}}
+                    {{(data.TYPE_DESC === '调岗' && data.REC_STATUS == 2) ? '已拒绝' : null}}
+                    {{(data.TYPE_DESC === '调岗' && data.REC_STATUS == 3) ? '已撤回' : null}}
                 </span>
             </div>
             <div class="user-message-info">

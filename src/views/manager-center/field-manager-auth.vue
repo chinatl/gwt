@@ -70,12 +70,13 @@ export default {
   created() {
     this.$store.dispatch("readSession", SET_FIELD_MANAGER_DATA);
     this.$store.dispatch("readSession", SET_FIELD_APP_LIST);
-    this.tableData = JSON.parse(JSON.stringify(this.field_app_list)).map(
-      res => {
-        res.checked = res.isShow === "1";
-        return res;
-      }
-    );
+    this.tableData = this.field_app_list.map(res => {
+      res.checked = res.isShow === "1";
+      return res;
+    });
+  },
+  beforeDestroy() {
+    this.$store.commit("DEL_VIEW_BY_NAME", "授权管理");
   },
   computed: {
     ...mapGetters(["field_app_list", "field_manager_data"])
@@ -175,26 +176,9 @@ export default {
           }
         })
         .catch(res => {
-          Console.log(res);
+          console.log(res);
         });
     }
-    // handleSizeChange(e) {
-    //   localStorage.setItem("user-manager/field/pageSize", e);
-    //   this.pageNo = 1;
-    //   this.pageSize = e;
-    //   this.init(e, 1);
-    // },
-    // handleCurrentChange(e) {
-    //   sessionStorage.setItem("user-manager/field/pageNo", e);
-    //   this.pageNo = e;
-    //   this.init(this.pageSize, e);
-    // },
-    // handleEdit(index, item) {
-    //   this.$store.commit("SET_FIELD_MANAGER_DATA", item);
-    //   this.$router.push({
-    //     path: "/user-manager/field-desc"
-    //   });
-    // },
   }
 };
 </script>

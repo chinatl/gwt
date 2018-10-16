@@ -40,7 +40,6 @@ export default {
   },
   created() {
     this.$store.dispatch("readSession", SET_REPORT_DATA);
-    console.log(this.report_data);
   },
   beforeDestroy() {
     this.$store.commit("DEL_VIEW_BY_NAME", "举报详情");

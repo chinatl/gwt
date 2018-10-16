@@ -1,7 +1,7 @@
 <template>
 <el-dialog :visible.sync="dialog" title='选择接收部门' class="select-user-dialog" v-drag :close-on-click-modal='false'>
     <div class="select-user-container">
-        <div class="select-left">
+        <div class="yield-select-left"  ref="yield_left">
             <div class="select-part-top">
                 <el-input v-model="filterText" size="small" placeholder="请选择部门名称">
                     <i slot="suffix" class="el-input__icon el-icon-search"></i>
@@ -15,8 +15,9 @@
                         :class="current === index ? 'avtive' : ''">{{item.name}}</li>
                     </ul>
                 </div>
-                <div class="common-temp scrollbar" style="height:240px;overflow:auto">
+                <div class="common-temp scrollbar" style="height:320px;overflow:auto" v-loading='loading'>
                   <el-tree 
+                  :expand-on-click-node='false'
                   ref="tree"
                   :data="data" :props="defaultProps"
                   :default-expanded-keys="expanded_keys"
@@ -27,17 +28,20 @@
                 </div>
             </div>
         </div>
-        <div class="select-right">
+        <div class="yield-select-right">
             <div class="has-selected">
                 <span>已选({{has_select_arr.length}})</span>
                 <el-button size="mini" @click="clear_all_list"><span class="span">清空</span></el-button>
             </div>
-            <div class="has-yield-list">
+            <div class="has-yield-list1 scrollbar"  ref="yield_right">
                 <ul>
                     <li v-for="(item,index) in has_select_arr" :key="index">
                         <div>
                             <svg-icon icon-class='tree'></svg-icon>
-                            <span class="user-name">{{item.name}}</span>
+                            <el-tooltip class="item" effect="dark" :content="item.name" placement="top-start" v-if='item.name.length >10'>
+                              <span class="user-name">{{item.name}}</span>
+                            </el-tooltip>
+                            <span class="user-name" v-else>{{item.name}}</span>
                         </div>
                         <div @click="del_item(item,index)">
                             <i class="el-icon-close"></i>
@@ -58,6 +62,7 @@ import { generate_tree } from "@/utils";
 export default {
   data() {
     return {
+      loading: false,
       part: "1",
       checked: false,
       input: "",
@@ -71,7 +76,9 @@ export default {
       },
       expanded_keys: [],
       has_select_arr: [],
-      filterText: ""
+      filterText: "",
+      all_tree_data: [],
+      checked_keys: []
     };
   },
   props: {
@@ -85,48 +92,54 @@ export default {
       required: false
     }
   },
-
   watch: {
     show(res) {
-      this.has_select_arr = this.userList;
+      if (res) {
+        this.has_select_arr = [...this.userList];
+        var arr = [];
+        for (var i = 0; i < this.has_select_arr.length; i++) {
+          var tempList = this.all_tree_data
+            .filter(res => res.originId === this.has_select_arr[i].originId)
+            .map(res => res.id);
+          arr.push(...tempList);
+        }
+        this.checked_keys = arr;
+        this.$nextTick(res => {
+          this.$refs.tree.setCheckedKeys(this.checked_keys);
+          this.$refs.yield_right.style.height =
+            (this.$refs.yield_left.clientHeight - 40 )+ "px";
+        });
+      }
     },
     filterText(val) {
       this.$refs.tree.filter(val);
     }
   },
   computed: {
-    checked_keys() {
-      if (this.field_list.length) {
-        return this.field_list[this.current].checkedKeys;
-      } else {
-        return [];
-      }
-    },
     dialog: {
       get() {
         return this.show;
       },
       set(res) {
-        this.$emit("close");
+        this.$emit("close", this.userList);
       }
-    }
+    },
   },
   created() {
     this.$post("gwt/system/sysAddressBookGroup/getGroupTree", {}, "json").then(
       res => {
-        console.log(res.data.nodes);
         if (res.result !== "0000") {
           return;
         }
+        this.all_tree_data = res.data.nodes.map(res => {
+          res.disabled = !res.originId;
+          return res;
+        });
         this.field_list = generate_tree(res.data.nodes);
         for (var i = 0; i < this.field_list.length; i++) {
           if (this.field_list[i].name === "常用联系人") {
             this.field_list.splice(i, 1);
           }
-        }
-        for (var i = 0; i < this.field_list.length; i++) {
-          this.field_list[i].checkedNodes = [];
-          this.field_list[i].checkedKeys = [];
         }
         if (this.field_list.length) {
           this.data = this.field_list[0].childrens;
@@ -140,33 +153,32 @@ export default {
   methods: {
     filterNode(value, data) {
       if (!value) return true;
-      return data.name.indexOf(value) !== -1;
+      if (data.allName) {
+        return data.allName.indexOf(value) !== -1;
+      } else {
+        return data.name.indexOf(value) !== -1;
+      }
     },
     //删除一个
     del_item(item, index) {
       this.has_select_arr.splice(index, 1);
-      for (
-        var i = 0;
-        i < this.field_list[this.current].checkedKeys.length;
-        i++
-      ) {
-        if (this.field_list[this.current].checkedKeys[i] === item.id) {
-          this.$refs.tree.setChecked(item.id, false);
-          this.field_list[this.current].checkedNodes.splice(i, 1);
-          this.field_list[this.current].checkedKeys.splice(i, 1);
+      var has_select_arr = this.all_tree_data
+        .filter(res => item.originId === res.originId)
+        .map(res => res.id);
+      for (var i = 0; i < has_select_arr.length; i++) {
+        for (var j = 0; j < this.checked_keys.length; j++) {
+          if (this.checked_keys[j] === has_select_arr[i]) {
+            this.checked_keys.splice(j, 1);
+          }
         }
       }
+      this.$refs.tree.setCheckedKeys(this.checked_keys);
     },
     clear_all_list() {
       this.has_select_arr = [];
-      for (var i = 0; i < this.field_list.length; i++) {
-        this.field_list[i].checkedNodes = [];
-        this.field_list[i].checkedKeys = [];
-      }
       this.$refs.tree.setCheckedKeys([]);
     },
     check_field_part(index) {
-      this.filterText = "";
       this.current = index;
       this.data = this.field_list[index].childrens;
       if (this.data.length) {
@@ -174,27 +186,34 @@ export default {
       }
     },
     handleNodeClick(node, { checkedNodes, checkedKeys }) {
+      if (node.originId === "") {
+        this.$refs.tree.setChecked(node.id, false);
+        return;
+      }
+      if (node.nodeType === "ORG_GROUP_CHILD") {
+        return;
+      }
       if (node.nodeType === "DOMAIN_GROUP") {
         return;
       }
-      var index = 1;
-      if ("/create-meeting/index" === this.$route.path) {
-        index = 1;
-      } else if ("/create-notice/index" === this.$route.path) {
-        index = 2;
+      var is_add = true;
+      if (this.checked_keys.includes(node.id)) {
+        is_add = false;
       } else {
-        index = 3;
+        is_add = true;
       }
+      this.loading = true;
       this.$post(
         "gwt/notice/tbNoticeRecePermission/getAllReceByOrgId",
         {
           getAllFlag: "N",
-          receiveNoticeType: index,
+          receiveNoticeType: sessionStorage.getItem("send_status"),
           orgId: node.id.replace(/.*\D/, "")
         },
         "json"
       )
         .then(res => {
+          this.loading = false;
           if (res.data.sysUserPageBean.totalCount - 0 === 0) {
             this.$refs.tree.setChecked(node.id, false);
             this.$message({
@@ -203,15 +222,30 @@ export default {
             });
             return;
           }
-          this.field_list[this.current].checkedNodes = checkedNodes;
-          this.field_list[this.current].checkedKeys = checkedKeys;
-          var arr = [];
-          for (var i = 0; i < this.field_list.length; i++) {
-            [].push.apply(arr, this.field_list[i].checkedNodes);
+          var has_select_arr = this.all_tree_data
+            .filter(res => node.originId === res.originId)
+            .map(res => res.id);
+          if (is_add) {
+            [].push.apply(this.checked_keys, has_select_arr);
+            this.has_select_arr.push(node);
+          } else {
+            for (var i = 0; i < has_select_arr.length; i++) {
+              for (var j = 0; j < this.checked_keys.length; j++) {
+                if (this.checked_keys[j] === has_select_arr[i]) {
+                  this.checked_keys.splice(j, 1);
+                }
+              }
+            }
+            for (var i = 0; i < this.has_select_arr.length; i++) {
+              if (node.originId === this.has_select_arr[i].originId) {
+                this.has_select_arr.splice(i, 1);
+              }
+            }
           }
-          this.has_select_arr = arr;
+          this.$refs.tree.setCheckedKeys(this.checked_keys);
         })
         .catch(res => {
+          this.loading = false;
           console.log(res);
         });
     },
@@ -219,7 +253,7 @@ export default {
       this.$emit("submit", this.has_select_arr);
     },
     cancel() {
-      this.$emit("close");
+      this.$emit("close", this.userList);
     }
   }
 };
@@ -243,8 +277,9 @@ export default {
     padding-bottom: 16px;
     .select-user-container {
       overflow: hidden;
-      .select-left {
-        height: 437px;
+      display: flex;
+      justify-content: space-between;
+      .yield-select-left {
         width: 400px;
         float: left;
         border-radius: 6px;
@@ -310,11 +345,10 @@ export default {
           }
         }
       }
-      .select-right {
+      .yield-select-right {
         width: 260px;
         float: right;
         border-radius: 6px;
-        overflow: hidden;
         border: 1px solid #e7e7e7;
         .has-selected {
           height: 40px;
@@ -334,8 +368,7 @@ export default {
             font-size: 14px;
           }
         }
-        .has-yield-list {
-          height: 395px;
+        .has-yield-list1 {
           background-color: #f8f9fb;
           overflow-y: auto;
           ul {
@@ -343,10 +376,11 @@ export default {
             li {
               display: flex;
               justify-content: space-between;
-              line-height: 28px;
+              line-height: 24px;
               .svg-icon {
                 font-size: 16px;
-                vertical-align: sub;
+                display: inline-block;
+                vertical-align: super;
               }
               .user-name {
                 letter-spacing: 1px;
@@ -354,16 +388,12 @@ export default {
                 white-space: nowrap;
                 text-overflow: ellipsis;
                 overflow: hidden;
-                max-width: 180px;
-              }
-              .part-name {
-                width: 110px;
-                white-space: nowrap;
-                text-overflow: ellipsis;
-                overflow: hidden;
+                max-width: 160px;
                 display: inline-block;
                 padding-right: 4px;
+                padding-left: 4px;
               }
+
               .el-icon-close {
                 cursor: pointer;
                 color: #2e88e7;

@@ -16,7 +16,7 @@
                     </el-form-item>
                     <el-form-item label="接收部门">
                         <div class="flex">
-                            <el-input v-model="form.part" size="small" readonly placeholder="请选择接受部门"></el-input>
+                            <el-input v-model="form.part" size="small" readonly placeholder="请选择接收部门"></el-input>
                             <add-user-button @click="yield_dialog= true">选择部门</add-user-button>
                         </div>
                     </el-form-item>
@@ -146,7 +146,7 @@ export default {
           changeType: "",
           changeNoticeId: "",
           domainArray: "",
-          orgArray: this.has_select_part.map(res => res.id.replace(/\D*/g,'')).join(",")
+          orgArray: this.has_select_part.map(res => res.id.replace(/.*\D/g,'')).join(",")
         },
         "json"
       )

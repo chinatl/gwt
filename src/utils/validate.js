@@ -45,7 +45,6 @@ export function validateTime(rule, value, callback) {
   }
 }
 export function validateEndTime(rule, value, callback) {
-  console.log(+value, rule)
   if (!value) {
     callback(new Error('请输入开始时间'));
   } else {
@@ -59,7 +58,7 @@ export function validateEndTime(rule, value, callback) {
 }
 
 export function validatePhone(rule, value, callback) {
-  const reg = /^((13[0-9])|(14[5,7])|(15[0-3,5-9])|(17[0,3,5-8])|(18[0-9])|166|198|199|(147))\d{8}$/;
+  const reg = /^((13[0-9])|(14[5,7])|(15[0-3,5-9])|(17[0,1,3,5-8])|(18[0-9])|166|198|196|199|(147))\d{8}$/;
   const reg1 = /^\d{3,4}-\d{7,8}$/;
   if (!value) {
     callback(new Error('请输入手机号'));

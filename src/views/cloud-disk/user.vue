@@ -1,6 +1,8 @@
 <template>
     <div class="field">
         <t-title title="个人云盘"></t-title>
+        <div v-loading='uploading'>
+
         <div class="common-action">
             <div class="disk-cloud">
                 <upload-button icon="el-icon-upload2" @on-change="upload_img" size='medium' type="success" :pan='true' >上传</upload-button>
@@ -55,6 +57,7 @@
             :total="totalCount">
             </el-pagination>
         </div>
+        </div>
         <!-- 新建文件夹弹窗 -->
         <el-dialog title="请输入新建文件夹名称" :visible.sync="dialogFolderVisible" center class="folder" width="30%" @submit.native.prevent>
           <el-form :model="folderform" :rules="folderrules" ref="folderform">
@@ -83,6 +86,7 @@ export default {
   },
   data() {
     return {
+      uploading: false,
       pageNo: 1,
       pageSize: 10,
       totalCount: 0,
@@ -191,38 +195,42 @@ export default {
         inputValidator: value => {
           return !value && "文件夹名不能为空！";
         }
-      }).then(res => {
-        if (res.value) {
-          this.$post(
-            `gwt/cloudisk/cloudiskAttaDir/addFolder`,
-            {
-              type: "user",
-              orgId: this.folderform.orgId,
-              name: res.value,
-              parentId: this.parentId === "" ? "" : this.dirId
-            },
-            "json"
-          )
-            .then(res => {
-              // console.log(res)
-              if (res.result === "0000") {
-                this.dialogFolderVisible = false;
-                this.init_usercloudisk();
-                this.$message({
-                  type: "success",
-                  message: "新建成功"
-                });
-                this.folderform = {};
-              } else {
-                this.$message.error(res.msg);
-              }
-              // console.log(this.tableData.type)
-            })
-            .catch(res => {
-              console.log(res);
-            });
-        }
-      });
+      })
+        .then(res => {
+          if (res.value) {
+            this.$post(
+              `gwt/cloudisk/cloudiskAttaDir/addFolder`,
+              {
+                type: "user",
+                orgId: this.folderform.orgId,
+                name: res.value,
+                parentId: this.parentId === "" ? "" : this.dirId
+              },
+              "json"
+            )
+              .then(res => {
+                // console.log(res)
+                if (res.result === "0000") {
+                  this.dialogFolderVisible = false;
+                  this.init_usercloudisk();
+                  this.$message({
+                    type: "success",
+                    message: "新建成功"
+                  });
+                  // this.folderform = {};
+                } else {
+                  this.$message.error(res.msg);
+                }
+                // console.log(this.tableData.type)
+              })
+              .catch(res => {
+                console.log(res);
+              });
+          }
+        })
+        .catch(res => {
+          console.log(res);
+        });
     },
     //删除
     delete_btn() {
@@ -259,7 +267,6 @@ export default {
           "json"
         )
           .then(res => {
-            console.log(res);
             if (res.result === "0000") {
               this.init_usercloudisk();
               this.$message({
@@ -442,6 +449,7 @@ export default {
     },
     //上传
     upload_img(e) {
+      this.uploading = true;
       var formData = new FormData();
       formData.append("ownerSystem", "gwt-platform");
       formData.append("ownerModule", "cloudisk");
@@ -455,6 +463,7 @@ export default {
       console.log(this.dirId);
       this.$post("gwt/uploadFile/uploadCloudisk", formData, "form")
         .then(res => {
+          this.uploading = false;
           if (res.result === "0000") {
             this.init_usercloudisk();
             this.$message({
@@ -463,7 +472,9 @@ export default {
             });
           }
         })
-        .catch(res => {});
+        .catch(res => {
+          this.uploading = false;
+        });
     }
   }
 };

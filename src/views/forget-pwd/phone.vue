@@ -1,6 +1,6 @@
 <template>
   <div class="forget-sub" v-loading='loading'>
-    <el-form ref="form" :model="form" label-width="120px" :rules="rules" status-icon :validate-on-rule-change='false'>
+    <el-form ref="form" :model="form" label-width="120px" :rules="rules" status-icon :validate-on-rule-change='false' @submit.native.prevent>
         <el-form-item label="验证手机号:" prop="phone" required>
             <el-input v-model="form.phone" size='medium' placeholder="请输入手机号" maxlength="20"></el-input>
         </el-form-item>
@@ -19,6 +19,8 @@
 </template>
 <script>
 import { validatePhone } from "@/utils/validate";
+import { Base64 } from "js-base64";
+import md5 from "js-md5";
 export default {
   data() {
     return {
@@ -45,7 +47,6 @@ export default {
   created() {
     var phone = sessionStorage.getItem("forgetpwd/phone");
     this.form.phone = phone;
-
     var isSend = sessionStorage.getItem("forget-phone-isSend");
     this.isSend = isSend === "true" ? true : false;
     var send_message = sessionStorage.getItem("forget-phone-message");
@@ -83,53 +84,89 @@ export default {
       }
       this.loading = true;
       this.$post(
-        "gwt/getPhoneValidateCode",
+        "gwt/getEquipRandom",
         {
+          id: md5(
+            Base64.encode(
+              this.form.phone
+                .slice(-6)
+                .split("")
+                .reverse()
+                .join("") -
+                0 +
+                123
+            )
+          ),
           phone: this.form.phone
         },
         "json"
       )
         .then(res => {
-          this.loading = false;
           if (res.result !== "0000") {
-            this.$swal({
-              title: "操作失败！",
-              text: res.msg,
-              type: "error",
-              showConfirmButton: true
-            });
             return;
           }
-          sessionStorage.setItem("forgetpwd/phone", this.form.phone);
-          clearInterval(this.timer);
-          this.loading = false;
-          this.isSendPhone = true;
-          this.$message({
-            message: "短信验证码已发送，请注意查收",
-            type: "success"
-          });
-          this.isSend = true;
-          var isSend = sessionStorage.setItem("forget-phone-isSend", "true");
-          var a = 0;
-          this.send_message = 60 - a + "秒";
-          this.timer = setInterval(res => {
-            a++;
-            this.send_message = 60 - a + "秒";
-            sessionStorage.setItem("forget-phone-message", this.send_message);
-            if (a == 60) {
-              this.send_message = "获取验证码";
-              this.isSend = false;
+          this.$post(
+            "gwt/getPhoneValidateCode",
+            {
+              phone: this.form.phone,
+              id: res.data.uuid
+            },
+            "json"
+          )
+            .then(res => {
+              this.loading = false;
+              if (res.result !== "0000") {
+                this.$swal({
+                  title: "操作失败！",
+                  text: res.msg,
+                  type: "error",
+                  showConfirmButton: true
+                });
+                return;
+              }
+              sessionStorage.setItem("forgetpwd/phone", this.form.phone);
               clearInterval(this.timer);
+              this.loading = false;
+              this.isSendPhone = true;
+              this.$message({
+                message: "短信验证码已发送，请注意查收",
+                type: "success"
+              });
+              this.isSend = true;
               var isSend = sessionStorage.setItem(
                 "forget-phone-isSend",
-                "false"
+                "true"
               );
-              sessionStorage.setItem("forget-phone-message", this.send_message);
-            }
-          }, 1000);
+              var a = 0;
+              this.send_message = 60 - a + "秒";
+              this.timer = setInterval(res => {
+                a++;
+                this.send_message = 60 - a + "秒";
+                sessionStorage.setItem(
+                  "forget-phone-message",
+                  this.send_message
+                );
+                if (a == 60) {
+                  this.send_message = "获取验证码";
+                  this.isSend = false;
+                  clearInterval(this.timer);
+                  var isSend = sessionStorage.setItem(
+                    "forget-phone-isSend",
+                    "false"
+                  );
+                  sessionStorage.setItem(
+                    "forget-phone-message",
+                    this.send_message
+                  );
+                }
+              }, 1000);
+            })
+            .catch(res => {
+              this.loading = false;
+            });
         })
         .catch(res => {
-          this.loading = false;
+          console.log(res);
         });
     },
     submit() {
@@ -162,6 +199,7 @@ export default {
             var isSend = sessionStorage.setItem("forget-phone-isSend", "false");
             sessionStorage.setItem("forget-phone-message", this.send_message);
             sessionStorage.setItem("login-user-phone", this.form.phone);
+            sessionStorage.setItem("login-user-code", this.form.userCode);
           })
           .catch(res => {
             this.loading = false;

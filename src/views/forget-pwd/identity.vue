@@ -1,6 +1,6 @@
 <template>
 <div class="forget-sub" v-loading='loading'>
-    <el-form ref="form" :model="form" label-width="120px" :rules="rules" status-icon :validate-on-rule-change='false'>
+    <el-form ref="form" :model="form" label-width="120px" :rules="rules" status-icon :validate-on-rule-change='false' @submit.native.prevent>
         <el-form-item label="验证姓名:" prop="realName">
             <el-input v-model="form.realName" size='medium' placeholder="请输入姓名" maxlength="20" @keyup.native.enter='submit'></el-input>
         </el-form-item>

@@ -29,7 +29,7 @@
               <el-button type="danger" size="small"  icon="el-icon-delete" v-wave>删除</el-button>
           </div>
           <div class="part-content common-temp" style="height:490px">
-              <el-tree :data="data" :props="defaultProps" @node-click="handleNodeClick"></el-tree>
+              <el-tree  :expand-on-click-node='false' :data="data" :props="defaultProps" @node-click="handleNodeClick"></el-tree>
           </div>
       </div>               
       <div class="data-right">

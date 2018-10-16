@@ -10,10 +10,10 @@
                         <span>{{userform.realName}}</span>
                     </el-form-item>
                     <el-form-item label="性 別：" class="page-form-item">
-                        <span v-if="isHide">{{userform.sex == "0" ? "男" : "女"}}</span>
+                        <span v-if="isHide">{{userform.sex == "1" ? "男" : "女"}}</span>
                         <template v-else prop="sex" >
-                          <el-radio v-model="userform.sex" label="0">男</el-radio>
-                          <el-radio v-model="userform.sex" label="1">女</el-radio>
+                          <el-radio v-model="userform.sex" label="1">男</el-radio>
+                          <el-radio v-model="userform.sex" label="0">女</el-radio>
                         </template>                      
                     </el-form-item>
                     <el-form-item label="部 门：" class="page-form-item">
@@ -205,6 +205,10 @@ import littleButton from "@/components/Button/littleButton";
 import { validatePhone, validatePassword } from "@/utils/validate";
 import { mapGetters } from "vuex";
 import { delete_item } from "@/utils/user";
+import { fileType } from "@/utils";
+import config from "@/config";
+import { Base64 } from "js-base64";
+import md5 from "js-md5";
 export default {
   components: {
     panThumb,
@@ -264,7 +268,6 @@ export default {
       role_visible: false,
       password_first_visible: false, //修改密码第一步
       password_second_visible: false, //修改密码第一步
-      user_img: "",
       //
       crap: false,
       previews: {},
@@ -349,22 +352,11 @@ export default {
   created() {
     this.getUserInfo();
     this.getloginTable();
-    // this.get_head();
-    this.get_user_img();
   },
   computed: {
-    ...mapGetters(["user_info"])
+    ...mapGetters(["user_info", "user_img"])
   },
   methods: {
-    get_user_img() {
-      this.$post("gwt/system/sysUserAttachRelation/getHead", {}, "json")
-        .then(res => {
-          console.log(res);
-        })
-        .catch(res => {
-          console.log(res);
-        });
-    },
     open_edit_pwd() {
       this.role_visible = true;
       this.$nextTick(res => {
@@ -377,18 +369,7 @@ export default {
         this.$refs.password_first_visible_form.resetFields();
       });
     },
-    //获取头像
-    get_head() {
-      this.$post(
-        `gwt/cloudisk/attachment/list`,
-        {
-          inIdAry: this.attachId
-        },
-        "json"
-      ).then(res => {
-        console.log(res);
-      });
-    },
+
     //获取用户基本信息
     getUserInfo() {
       this.$post(`gwt/system/sysUserZone/getUserInfo`).then(res => {
@@ -410,7 +391,6 @@ export default {
             res.data.user.sysOrgUserX.userLevelName;
           this.resetform.phone = res.data.user.sysOrgUserX.phone;
           this.resetform.remark = res.data.user.sysOrgUserX.remark;
-          this.user_img = res.data.AttrHeadId;
           this.isHide = true;
         }
       });
@@ -566,51 +546,81 @@ export default {
         if (!res) return;
         this.loading = true;
         this.$post(
-          "gwt/getPhoneValidateCode",
+          "gwt/getEquipRandom",
           {
-            phone: this.userform.mobilePhone,
-            newPhoneNum: this.phone_first_visible_form.phone,
-            fromSource: "updatePhone"
+            id: md5(
+              Base64.encode(
+                this.userform.mobilePhone
+                  .slice(-6)
+                  .split("")
+                  .reverse()
+                  .join("") -
+                  0 +
+                  123
+              )
+            ),
+            phone: this.userform.mobilePhone
           },
           "json"
         )
           .then(res => {
-            this.loading = false;
             if (res.result !== "0000") {
-              this.$swal({
-                title: "操作失败！",
-                text: res.msg,
-                type: "error",
-                confirmButtonColor: "#DD6B55",
-                showConfirmButton: true
-              });
               return;
             }
-            clearInterval(this.timer);
-            this.isSendPhone = true;
-            this.$message({
-              message: "短信验证码已发送，请注意查收",
-              type: "success"
-            });
-            this.isSend = true;
-            var isSend = sessionStorage.setItem("login-isSend", "true");
-            var a = 0;
-            this.send_message = 60 - a + "秒";
-            this.timer = setInterval(res => {
-              a++;
-              this.send_message = 60 - a + "秒";
-              sessionStorage.setItem("login-message", this.send_message);
-              if (a == 60) {
-                this.send_message = "获取验证码";
-                this.isSend = false;
+            this.$post(
+              "gwt/getPhoneValidateCode",
+              {
+                id: res.data.uuid,
+                phone: this.userform.mobilePhone,
+                newPhoneNum: this.phone_first_visible_form.phone,
+                fromSource: "updatePhone"
+              },
+              "json"
+            )
+              .then(res => {
+                this.loading = false;
+                if (res.result !== "0000") {
+                  this.$swal({
+                    title: "操作失败！",
+                    text: res.msg,
+                    type: "error",
+                    confirmButtonColor: "#DD6B55",
+                    showConfirmButton: true
+                  });
+                  return;
+                }
                 clearInterval(this.timer);
-                var isSend = sessionStorage.setItem("login-isSend", "false");
-                sessionStorage.setItem("login-message", this.send_message);
-              }
-            }, 1000);
+                this.isSendPhone = true;
+                this.$message({
+                  message: "短信验证码已发送，请注意查收",
+                  type: "success"
+                });
+                this.isSend = true;
+                var isSend = sessionStorage.setItem("login-isSend", "true");
+                var a = 0;
+                this.send_message = 60 - a + "秒";
+                this.timer = setInterval(res => {
+                  a++;
+                  this.send_message = 60 - a + "秒";
+                  sessionStorage.setItem("login-message", this.send_message);
+                  if (a == 60) {
+                    this.send_message = "获取验证码";
+                    this.isSend = false;
+                    clearInterval(this.timer);
+                    var isSend = sessionStorage.setItem(
+                      "login-isSend",
+                      "false"
+                    );
+                    sessionStorage.setItem("login-message", this.send_message);
+                  }
+                }, 1000);
+              })
+              .catch(res => {
+                this.loading = false;
+              });
           })
           .catch(res => {
-            this.loading = false;
+            console.log(res);
           });
       });
     },
@@ -683,15 +693,19 @@ export default {
           "json"
         )
           .then(res => {
-            if (res.result === "0000") {
-              this.upload_img_dialog = false;
-              // this.init_usercloudisk();
-              this.$message({
-                type: "success",
-                message: "上传成功"
+            if (res.result !== "0000") {
+              this.$swal({
+                title: "操作失败！",
+                text: res.msg,
+                type: "error",
+                confirmButtonColor: "#DD6B55",
+                confirmButtonText: "确定",
+                showConfirmButton: true
               });
-              this.user_img = res.data.headInfo.fullAttaPath;
+              return;
             }
+            this.upload_img_dialog = false;
+            this.$store.dispatch("get_user_head");
           })
           .catch(res => {
             console.log(res);
@@ -717,7 +731,14 @@ export default {
       this.option.img = this.user_img;
     },
     select_img(e) {
-      this.option.img = e.url;
+      if (fileType(e.name) !== "photo") {
+        this.$message({
+          message: "请上传jpg,png,jpeg等图片格式文件",
+          type: "warning"
+        });
+        return;
+      }
+      if (e.name) this.option.img = e.url;
     },
     right_rotate() {
       this.$refs.cropper.rotateRight(); // 向右边旋转90度
