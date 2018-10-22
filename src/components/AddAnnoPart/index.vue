@@ -1,10 +1,10 @@
 <template>
 <el-dialog :visible.sync="dialog" title='选择接收部门' class="select-user-dialog" v-drag :close-on-click-modal='false'>
   <div  v-loading ='loading'>
-    <div class="select-user-container">
+    <div class="select-user-container33">
         <div class="select-left">
             <div class="select-part-top">
-                <el-select v-model="select_part" size="small" style="margin-right:6px;width:300px" @change="change_type_part">
+                <el-select v-model="select_part" size="small" style="margin-right:6px;width:300px" @change="change_type_part" v-if="is_admin">
                     <el-option :value="item.dicId" :label="item.itemName" v-for='(item,index) in all_options' :key="index"></el-option>
                 </el-select>
                 <el-input v-model="filterText" size="small" placeholder="请选择部门名称">
@@ -12,21 +12,24 @@
                 </el-input>
             </div>
             <div style="height:32px;line-height:32px;padding-left:35px;font-weight:900">
-              <el-checkbox v-model="all_checked" @change="all_select_change">全选</el-checkbox>
+              <el-checkbox v-model="all_checked" 
+              :indeterminate = 'indeterminate'
+              @change="all_select_change">全选</el-checkbox>
             </div>
             <div class="select-part-bottom2 common-temp scrollbar" v-loading='tree_loading'>
                 <el-tree
-                :expand-on-click-node='false'
-                :data="change_data"
-                show-checkbox
-                node-key="id"
-                @check="handleCheckChange"
-                :default-checked-keys='checked_keys'
-                :filter-node-method="filterNode"
-                ref="tree"
-                :highlight-current= 'true'
-                :default-expand-all='default_expand'
-                :props="defaultProps">
+                  :expand-on-click-node='false'
+                  :data="change_data"
+                  show-checkbox
+                  node-key="id"
+                  @check="handleCheckChange"
+                  :default-checked-keys='checked_keys'
+                  :filter-node-method="filterNode"
+                  ref="tree"
+                  :check-strictly='true'
+                  :highlight-current= 'true'
+                  :default-expand-all='default_expand'
+                  :props="defaultProps">
                 </el-tree>
             </div>
         </div>
@@ -40,7 +43,7 @@
                     <li v-for='(item,index) in has_select_arr' :key="index">
                         <div>
                             <svg-icon icon-class='tree'></svg-icon>
-                            <span class="user-name">{{item.name}}</span>
+                            <span class="user-name">{{item.allName}}</span>
                         </div>
                         <div @click="del_tree_node(item.id,index)">
                             <i class="el-icon-close"></i>
@@ -59,6 +62,7 @@
 </template>
 <script>
 import { resolve_tree, generate_tree } from "@/utils";
+import { mapGetters } from "vuex";
 export default {
   data() {
     return {
@@ -76,7 +80,8 @@ export default {
       all_options: [],
       default_expand: false,
       tree_loading: false,
-      all_checked: false
+      all_checked: false,
+      indeterminate: false
     };
   },
   props: {
@@ -116,6 +121,7 @@ export default {
     }
   },
   computed: {
+    ...mapGetters(["is_admin"]),
     change_data() {
       if (this.select_part) {
         return generate_tree(
@@ -145,10 +151,44 @@ export default {
     this.get_all_dept();
   },
   methods: {
+    get_tree_children_id(item) {
+      var checkedKeys = [];
+      var checkedNodes = [];
+      if (!item.childrens || !item.childrens.length) {
+        return {
+          checkedKeys: [item.id],
+          checkedNodes: [item]
+        };
+      } else {
+        get_id([item]);
+        return {
+          checkedKeys,
+          checkedNodes: checkedNodes.filter(res => res.nodeType === "ORG")
+        };
+      }
+      function get_id(arr) {
+        console.log(arr);
+        if (!arr) {
+          return;
+        }
+        for (var i = 0; i < arr.length; i++) {
+          checkedKeys.push(arr[i].id);
+          checkedNodes.push(arr[i]);
+          get_id(arr[i].childrens);
+        }
+      }
+    },
     all_select_change(e) {
+      this.indeterminate = false;
       if (e) {
+        this.has_select_arr = this.all_tree_data.filter(
+          res => res.nodeType === "ORG"
+        );
+        this.checked_keys = this.all_tree_data.filter(res => res.id);
         this.$refs.tree.setCheckedKeys(this.all_tree_data.map(res => res.id));
       } else {
+        this.checked_keys = [];
+        this.has_select_arr = [];
         this.$refs.tree.setCheckedKeys([]);
       }
     },
@@ -196,9 +236,6 @@ export default {
           }
           this.all_tree_data = res.data.nodes;
           var arr = res.data.nodes.map(res => {
-            // if (res.nodeType === "DOMAIN" || res.nodeType === "DOMAIN_GROUP") {
-            //   res.disabled = true;
-            // }
             return res;
           });
           this.tree_data = generate_tree(arr);
@@ -214,26 +251,75 @@ export default {
     // 清空
     remove_all() {
       this.has_select_arr = [];
+      this.checkedKeys = [];
       this.$refs.tree.setCheckedKeys([]);
+      this.is_all_checked();
     },
     del_tree_node(id, index) {
-      this.$refs.tree.setChecked(id, false);
       this.has_select_arr.splice(index, 1);
+      for (var j = 0; j < this.checked_keys.length; j++) {
+        if (this.checked_keys[j] === id) {
+          this.checked_keys.splice(j, 1);
+        }
+      }
+      this.$refs.tree.setCheckedKeys(this.checked_keys);
+      this.is_all_checked();
     },
-    handleCheckChange(e, { checkedKeys, checkedNodes }) {
-      console.log(e)
-      this.checkedKeys = checkedKeys;
-      this.has_select_arr = checkedNodes.filter(res=>res.nodeType === 'ORG');
+    handleCheckChange(node) {
+      var is_add = true;
+      if (this.checked_keys.includes(node.id)) {
+        is_add = false;
+      } else {
+        is_add = true;
+      }
+      var { checkedKeys, checkedNodes } = this.get_tree_children_id(node);
+      if (is_add) {
+        this.has_select_arr.push(...checkedNodes);
+        this.checked_keys.push(...checkedKeys);
+      } else {
+        for (var i = 0; i < checkedKeys.length; i++) {
+          for (var j = 0; j < this.checked_keys.length; j++) {
+            if (this.checked_keys[j] === checkedKeys[i]) {
+              this.checked_keys.splice(j, 1);
+              continue;
+            }
+          }
+        }
+        for (var j = 0; j < checkedNodes.length; j++) {
+          for (var i = 0; i < this.has_select_arr.length; i++) {
+            if (checkedNodes[j].id === this.has_select_arr[i].id) {
+              this.has_select_arr.splice(i, 1);
+              continue;
+            }
+          }
+        }
+      }
+      this.$refs.tree.setCheckedKeys(this.checked_keys);
+      this.is_all_checked();
     },
-    handleNodeClick() {},
+    is_all_checked() {
+      if (this.has_select_arr.length === 0) {
+        this.all_checked = false;
+        this.indeterminate = false;
+      } else {
+        if (
+          this.has_select_arr.length ===
+          this.all_tree_data.filter(res => res.nodeType === "ORG").length
+        ) {
+          this.all_checked = true;
+          this.indeterminate = false;
+        } else {
+          this.indeterminate = true;
+          this.all_checked = false;
+        }
+      }
+    },
     onSubmit() {
       this.$emit("submit", this.has_select_arr);
     },
     cancel() {
       this.$emit("close");
-    },
-    save_message() {},
-    handleChange() {}
+    }
   }
 };
 </script>
@@ -254,7 +340,7 @@ export default {
   .el-dialog__body {
     padding: 20px 20px;
     padding-bottom: 16px;
-    .select-user-container {
+    .select-user-container33 {
       overflow: hidden;
       .select-left {
         height: 457px;

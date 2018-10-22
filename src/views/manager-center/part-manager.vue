@@ -16,14 +16,15 @@
             node-key="id"
             :filter-node-method="filterNode"
             :default-expanded-keys="expand_arr"            
-             @node-click="handleNodeClick" :highlight-current= 'true' ref="tree"></el-tree>
+            @node-click="handleNodeClick" 
+            :highlight-current= 'true' ref="tree"></el-tree>
         </div>
     </div>
     <div slot="right">
         <t-title>部门管理</t-title>
             <div class="part-action between">
                 <div class="part-action-left">
-                    当前位置：{{temp_data.name}}
+                    当前位置：{{temp_data.allName}}
                 </div>
                 <arrow-button 
                   @setTop='setTop'
@@ -116,13 +117,13 @@
     </div>
 </el-form-item>
 <el-form-item label="上级部门" v-show='temp_data.nodeType === "ORG"'>
-    <el-input v-model="temp_data.name" size="small" readonly></el-input>
+    <el-input v-model="temp_data.allName" size="small" readonly></el-input>
 </el-form-item>
 <el-form-item label="部门名称" prop='orgName'>
     <el-input v-model="form.orgName" size="small" maxlength="20" @blur="add_part_all_name"></el-input>
 </el-form-item>
 <el-form-item label="部门全称" prop="orgAllName">
-    <el-input v-model="form.orgAllName" size="small"></el-input>
+    <el-input v-model="form.orgAllName" size="small" readonly></el-input>
 </el-form-item>
 <el-form-item label="部门类型" prop="deptType" v-if='temp_data.nodeType === "REGION"'>
     <el-select v-model="form.deptType" placeholder="" size="small" style="width:100%;">
@@ -238,7 +239,7 @@ export default {
   methods: {
     add_part_all_name() {
       if (this.temp_data.nodeType === "ORG") {
-        this.form.orgAllName = this.temp_data.name + this.form.orgName;
+        this.form.orgAllName = this.temp_data.allName + this.form.orgName;
       } else {
         this.form.orgAllName = this.form.orgName;
       }
@@ -396,7 +397,7 @@ export default {
               JSON.stringify(this.user_info.sysOrgUserX)
             );
             this.temp_data.id = this.temp_data.orgId;
-            this.temp_data.name = this.temp_data.orgAllName;
+            this.temp_data.allName = this.temp_data.orgAllName;
             this.temp_data.nodeType = "ORG";
             this.search_child_part(this.pageSize, this.pageNo);
           }
@@ -423,15 +424,13 @@ export default {
       });
     },
     handleNodeClick(data) {
+      console.log(this.org_role_list)
       if (!this.is_admin && !this.org_role_list.includes(data.id)) {
         this.$message({
           message: "您没有操作权限！",
           type: "warning",
           showClose: true
         });
-        return;
-      }
-      if (data.id === this.temp_data.id) {
         return;
       }
       this.temp_data = data;

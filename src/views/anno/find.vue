@@ -91,6 +91,53 @@ export default {
 
   methods: {
     get_active_desc(item) {
+      if (item.readStats === "0") {
+        this.$post(
+          "gwt/business/tbAnnoReceiveUser/updateStatus",
+          {
+            recvId: item.RECV_ID,
+            annoId: item.NOTICE_ID
+          },
+          "json"
+        )
+          .then(res => {})
+          .catch(res => {
+            console.log(res);
+          });
+      }
+      if (item.isDelete === "1") {
+        this.$post(
+          "gwt/business/tbAnnoDeleteReason/getByAnnoId",
+          {
+            annoId: item.id
+          },
+          "json"
+        )
+          .then(res => {
+            if (res.result !== "0000") {
+              return;
+            }
+            this.init(this.pageSize, this.pageNo);
+            this.$swal({
+              title: "删除原因！",
+              text:
+                "由于“" +
+                res.data.tbAnnoDeleteReason.deleteReason +
+                "”，通知已被“" +
+                res.data.tbAnnoDeleteReason.deleteUserName +
+                "”被删除",
+              type: "warning",
+              confirmButtonColor: "#DD6B55",
+              confirmButtonText: "确定",
+              showConfirmButton: true
+            });
+            console.log(res);
+          })
+          .catch(res => {
+            console.log(res);
+          });
+        return;
+      }
       this.$store.commit(SET_MESSAGE_DATA, item);
       this.$router.push({
         path: "/anno-desc/index"

@@ -8,7 +8,7 @@
                     <i slot="suffix" class="el-input__icon el-icon-search"></i>
                 </el-input>
             </div>
-            <div class="select-part-bottom common-temp scrollbar" style="overflow:auto">
+            <div class="select-part-bottom22 common-temp scrollbar" style="overflow:auto">
                 <el-tree
                 :expand-on-click-node='false'
                 :data="allData"
@@ -23,8 +23,6 @@
                 </el-tree>
             </div>
         </div>
-         <!-- :default-expanded-keys="[2, 3]"
-                :default-checked-keys="[5]" -->
         <div class="select-right">
             <div class="has-selected">
                 <span>已选({{has_checked_item.length}})</span>
@@ -135,7 +133,6 @@ export default {
         return res.nodeType === "ORG";
       });
     },
-    handleNodeClick() {},
     onSubmit() {
       this.$emit("submit", this.has_checked_item);
     },
@@ -181,12 +178,12 @@ export default {
           background-color: #e7e7e7;
           align-items: center;
         }
-        .select-part-bottom {
+        .select-part-bottom22 {
           padding: 10px 8px 20px 8px;
           background-color: #fff;
           overflow: auto;
           width: 100%;
-          height: 100%;
+          height: 410px;
           .el-icon-star-off {
             color: #ffa227;
             font-size: 18px;

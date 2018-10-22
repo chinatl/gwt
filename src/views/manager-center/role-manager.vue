@@ -258,6 +258,7 @@ export default {
     // this.total = total ? total - 0 : 0;
     // var pageNo = sessionStorage.getItem("user-manager/role/pageNo");
     // this.pageNo = pageNo ? pageNo - 0 : 1;
+    this.$store.dispatch("get_org_role_list");
     var pageSize = localStorage.getItem("user-manager/role/pageSize");
     this.pageSize = pageSize ? pageSize - 0 : 5;
 

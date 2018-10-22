@@ -199,6 +199,18 @@ export const constantRouterMap = [
     ]
   },
   {
+    path: '/forward-website',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        name: '转发通知',
+        component: () => import('@/views/desc/forward-website'),
+        meta: { title: '转发通知', requiresAuth: true, up: true },
+      }
+    ]
+  },
+  {
     path: '/file-desc',
     component: Layout,
     children: [
@@ -207,6 +219,18 @@ export const constantRouterMap = [
         name: '文件举报详情',
         component: () => import('@/views/desc/file'),
         meta: { title: '文件举报详情', requiresAuth: true, up: true },
+      }
+    ]
+  },
+  {
+    path: '/website-desc',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        name: '网站信息-通知详情',
+        component: () => import('@/views/desc/website'),
+        meta: { title: '通知详情', requiresAuth: true, up: true }
       }
     ]
   },
@@ -496,6 +520,56 @@ export const constantRouterMap = [
     ]
   },
   {
+    path: '/circulate-drafts',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        name: '公告-草稿箱',
+        component: () => import('@/views/circulate/drafts'),
+        meta: { title: '草稿箱', name: '草稿箱', role: true }
+      }
+    ]
+  },
+  {
+    path: '/circulate-tidings',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        name: '来文传阅',
+        component: () => import('@/views/circulate/tidings'),
+        meta: { title: '来文传阅', name: '来文传阅', role: true }
+      }
+    ]
+  },
+  {
+    path: '/circulate-send-manager',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        name: '发文管理',
+        component: () => import('@/views/circulate/send'),
+        meta: { title: '发文管理', name: '发文管理', role: true }
+      }
+    ]
+  },
+  {
+    path: '/circulate-reveive-manager',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        name: '来文管理',
+        component: () => import('@/views/circulate/reveive'),
+        meta: { title: '来文管理', name: '来文管理', role: true }
+      }
+    ]
+  },
+
+
+  {
     path: '/website-create-notice',
     component: Layout,
     children: [
@@ -526,8 +600,20 @@ export const constantRouterMap = [
       {
         path: 'index',
         name: '网站信息-草稿箱',
-        component: () => import('@/views/public-notice/drafts'),
+        component: () => import('@/views/website/drafts'),
         meta: { title: '草稿箱', requiresAuth: true }
+      }
+    ]
+  },
+  {
+    path: '/website-re-drafts',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        name: '通知编辑',
+        component: () => import('@/views/website/re-drafts'),
+        meta: { title: '通知编辑', requiresAuth: true, name: '草稿箱', role: true, up: true }
       }
     ]
   },
@@ -538,7 +624,7 @@ export const constantRouterMap = [
       {
         path: 'index',
         name: '网站信息-通知签收',
-        component: () => import('@/views/public-notice/signin'),
+        component: () => import('@/views/website/signin'),
         meta: { title: '通知签收', requiresAuth: true }
       }
     ]
@@ -556,17 +642,42 @@ export const constantRouterMap = [
     ]
   },
   {
+    path: '/website-active-desc',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        name: '网站信息-已发通知详情',
+        component: () => import('@/views/desc/website-active'),
+        meta: { title: '通知详情', requiresAuth: true, up: true },
+      }
+    ]
+  },
+  {
+    path: '/website-change',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        name: '网站信息-通知变更',
+        component: () => import('@/views/website/change'),
+        meta: { title: '通知变更', requiresAuth: true, up: true, name: '已发通知' }
+      }
+    ]
+  },
+  {
     path: '/website-forwarded',
     component: Layout,
     children: [
       {
         path: 'index',
         name: '网站信息-已转发通知',
-        component: () => import('@/views/public-notice/forwarded'),
+        component: () => import('@/views/website/forwarded'),
         meta: { title: '已转发通知', requiresAuth: true }
       }
     ]
   },
+
   {
     path: '/website-role',
     component: Layout,
@@ -574,7 +685,7 @@ export const constantRouterMap = [
       {
         path: 'index',
         name: '网站信息-权限维护',
-        component: () => import('@/views/public-notice/role'),
+        component: () => import('@/views/website/role'),
         meta: { title: '权限维护', requiresAuth: true }
       }
     ]
@@ -586,11 +697,12 @@ export const constantRouterMap = [
       {
         path: 'index',
         name: '网站信息-通知维护',
-        component: () => import('@/views/public-notice/maintain'),
+        component: () => import('@/views/website/maintain'),
         meta: { title: '通知维护', requiresAuth: true }
       }
     ]
   },
+  // 教育培训
   {
     path: '/subject-list',
     component: Layout,
@@ -603,6 +715,72 @@ export const constantRouterMap = [
       }
     ]
   },
+  {
+    path: '/edu-train',
+    component: Layout,
+    children: [
+      {
+        path: 'chapter',
+        name: '课程章节',
+        component: () => import('@/views/edu-train/chapter'),
+        meta: { title: '课程章节', up: true },
+        hidden: true
+      },
+    ]
+  },
+  {
+    path: '/edu-train',
+    component: Layout,
+    children: [
+      {
+        path: 'progress',
+        name: '学习进度',
+        component: () => import('@/views/edu-train/progress'),
+        meta: { title: '学习进度', up: true },
+        hidden: true
+      },
+    ]
+  },
+  {
+    path: '/edu-train',
+    component: Layout,
+    children: [
+      {
+        path: 'exercise',
+        name: '课程练习题',
+        component: () => import('@/views/edu-train/exercise'),
+        meta: { title: '课程练习题', up: true },
+        hidden: true
+      },
+    ]
+  },
+  {
+    path: '/edu-train',
+    component: Layout,
+    children: [
+      {
+        path: 'create',
+        name: '创建课程',
+        component: () => import('@/views/edu-train/createSubject'),
+        meta: { title: '创建课程', up: true },
+        hidden: true
+      },
+    ]
+  },
+  {
+    path: '/edu-train',
+    component: Layout,
+    children: [
+      {
+        path: 'chapter',
+        name: '课程章节',
+        component: () => import('@/views/edu-train/chapter'),
+        meta: { title: '课程章节', up: true },
+        hidden: true
+      },
+    ]
+  },
+  // ---------
   {
     path: '/user-subject',
     component: Layout,
@@ -624,18 +802,6 @@ export const constantRouterMap = [
         name: '课程类别',
         component: () => import('@/views/edu-train/category'),
         meta: { title: '课程类别', requiresAuth: true }
-      }
-    ]
-  },
-  {
-    path: '/question-list',
-    component: Layout,
-    children: [
-      {
-        path: 'index',
-        name: '题库列表',
-        component: () => import('@/views/online-test/questionlist'),
-        meta: { title: '题库列表', requiresAuth: true }
       }
     ]
   },
@@ -717,7 +883,7 @@ export const constantRouterMap = [
     children: [
       {
         path: 'index',
-        name: '公告',
+        name: '创建公告',
         component: () => import('@/views/anno/add'),
         meta: { title: '创建公告', requiresAuth: true, name: '公告维护', up: true }
       }
@@ -783,210 +949,11 @@ export const constantRouterMap = [
       },
     ]
   },
-  // {
-  //   path: '/message',
-  //   component: Layout,
-  //   meta: { title: '我的消息', icon: '消息' },
-  //   children: [
-  //     {
-  //       path: 'index',
-  //       name: '我的消息',
-  //       component: () => import('@/views/my-message'),
-  //       meta: { title: '我的消息', icon: '消息' },
-  //     },
-  //     {
-  //       path: 'desc',
-  //       name: '举报详情',
-  //       component: () => import('@/views/my-message/desc'),
-  //       meta: { title: '举报详情', icon: '消息', up: true },
-  //       hidden: true
-  //     },
-  //     {
-  //       path: 'report-desc',
-  //       name: '举报详情描述',
-  //       component: () => import('@/views/my-message/report-desc'),
-  //       meta: { title: '详情列表', icon: '消息', up: true },
-  //       hidden: true
-  //     },
-  //     {
-  //       path: 'notice-desc',
-  //       name: '通知详情',
-  //       component: () => import('@/views/my-message/notice-desc'),
-  //       meta: { title: '通知详情', icon: '消息', up: true },
-  //       hidden: true
-  //     },
+  
 
-  //   ]
-  // },
-  // {
-  //   path: '/public-notice',
-  //   component: Layout,
-  //   redirect: '/public-notice/meeting',
-  //   name: '公务通知',
-  //   meta: { title: '公务通知', icon: 'example' },
-  //   children: [
-  //     {
-  //       path: 'meeting',
-  //       name: '创建会议',
-  //       component: () => import('@/views/public-notice/meeting'),
-  //       meta: { title: '创建会议' }
-  //     },
-  //     {
-  //       path: 'notice',
-  //       name: '创建通知1',
-  //       component: () => import('@/views/public-notice/notice'),
-  //       meta: { title: '创建通知' }
-  //     },
-  //     {
-  //       path: 'stuff',
-  //       name: '材料征集1',
-  //       component: () => import('@/views/public-notice/stuff'),
-  //       meta: { title: '材料征集' }
-  //     },
-  //     {
-  //       path: 'drafts',
-  //       name: '草稿箱1',
-  //       component: () => import('@/views/public-notice/drafts'),
-  //       meta: { title: '草稿箱' }
-  //     },
-  //     {
-  //       path: 'signin',
-  //       name: '通知签收1',
-  //       component: () => import('@/views/public-notice/signin'),
-  //       meta: { title: '通知签收' }
-  //     },
-  //     {
-  //       path: 'active',
-  //       name: '已发通知1',
-  //       component: () => import('@/views/public-notice/active'),
-  //       meta: { title: '已发通知' }
-  //     },
-  //     {
-  //       path: 'forwarded',
-  //       name: '已转发通知1',
-  //       component: () => import('@/views/public-notice/forwarded'),
-  //       meta: { title: '已转发通知' }
-  //     },
-  //     {
-  //       path: 'role',
-  //       name: '权限维护1',
-  //       component: () => import('@/views/public-notice/role'),
-  //       meta: { title: '权限维护' }
-  //     },
-  //     {
-  //       path: 'maintain',
-  //       name: '通知维护1',
-  //       component: () => import('@/views/public-notice/maintain'),
-  //       meta: { title: '通知维护' }
-  //     },
-  //   ]
-  // },
-  // {
-  //   path: '/website',
-  //   component: Layout,
-  //   redirect: '/website/notice',
-  //   name: '网站信息',
-  //   meta: { title: '网站信息', icon: '电脑' },
-  //   children: [
-  //     {
-  //       path: 'notice',
-  //       name: '创建通知',
-  //       component: () => import('@/views/web-info/notice'),
-  //       meta: { title: '创建通知' }
-  //     },
-  //     {
-  //       path: 'drafts',
-  //       name: '草稿箱',
-  //       component: () => import('@/views/web-info/drafts'),
-  //       meta: { title: '草稿箱' }
-  //     },
-  //     {
-  //       path: 'signin',
-  //       name: '通知签收',
-  //       component: () => import('@/views/web-info/signin'),
-  //       meta: { title: '通知签收' }
-  //     },
-  //     {
-  //       path: 'active',
-  //       name: '已发通知',
-  //       component: () => import('@/views/web-info/active'),
-  //       meta: { title: '已发通知' }
-  //     },
-  //     {
-  //       path: 'forwarded',
-  //       name: '已转发通知',
-  //       component: () => import('@/views/web-info/forwarded'),
-  //       meta: { title: '已转发通知' }
-  //     },
-  //     {
-  //       path: 'role',
-  //       name: '权限维护',
-  //       component: () => import('@/views/web-info/role'),
-  //       meta: { title: '权限维护' }
-  //     },
-  //     {
-  //       path: 'maintain',
-  //       name: '通知维护',
-  //       component: () => import('@/views/web-info/maintain'),
-  //       meta: { title: '通知维护' }
-  //     },
-  //   ]
-  // },
-  // {
-  //   path: '/edu-train',
-  //   component: Layout,
-  //   redirect: '/edu-train/user',
-  //   name: '教育培训',
-  //   meta: { title: '教育培训', icon: '云盘' },
-  //   children: [
-  //     {
-  //       path: 'list',
-  //       name: '课程列表',
-  //       component: () => import('@/views/edu-train/list'),
-  //       meta: { title: '课程列表' }
-  //     },
-  //     {
-  //       path: 'user',
-  //       name: '我的课程',
-  //       component: () => import('@/views/edu-train/user'),
-  //       meta: { title: '我的课程' }
-  //     },
-  //     {
-  //       path: 'category',
-  //       name: '课程类别',
-  //       component: () => import('@/views/edu-train/category'),
-  //       meta: { title: '课程类别' }
-  //     },
-  //     {
-  //       path: 'chapter',
-  //       name: '课程章节',
-  //       component: () => import('@/views/edu-train/chapter'),
-  //       meta: { title: '课程章节', up: true },
-  //       hidden: true
-  //     },
-  //     {
-  //       path: 'progress',
-  //       name: '学习进度',
-  //       component: () => import('@/views/edu-train/progress'),
-  //       meta: { title: '学习进度', up: true },
-  //       hidden: true
-  //     },
-  //     {
-  //       path: 'exercise',
-  //       name: '课程练习题',
-  //       component: () => import('@/views/edu-train/exercise'),
-  //       meta: { title: '课程练习题', up: true },
-  //       hidden: true
-  //     },
-  //     {
-  //       path: 'create',
-  //       name: '创建课程',
-  //       component: () => import('@/views/edu-train/createSubject.vue'),
-  //       meta: { title: '创建课程', up: true },
-  //       hidden: true
-  //     },
-  //   ]
-  // },
+ 
+
+ 
   // {
   //   path: '/online-test',
   //   component: Layout,

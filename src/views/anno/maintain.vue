@@ -36,7 +36,7 @@
                   size="medium"
                   placeholder="结束日期">
                 </el-date-picker>
-                <el-input v-model="Q_noticeTitle_SL" placeholder="请输入标题" style="width:200px" size='medium'></el-input>
+                <el-input v-model="Q_noticeTitle_SL" placeholder="请输入标题" style="width:200px" size='medium' @keyup.native.enter='condition'></el-input>
                 <el-button type="primary" icon="el-icon-search" size='medium' v-wave @click="condition">搜索</el-button>
             </div>
             <div>
@@ -121,27 +121,24 @@ export default {
     var pageSize = localStorage.getItem("anno-maintain/maintain/pageSize");
     this.pageSize = pageSize ? pageSize - 0 : 10;
     this.init(this.pageSize, this.pageNo);
-    this.$message({
-      message: "hello world",
-      type: "success"
-    });
   },
   computed: {
     ...mapGetters(["meeting_type_list"])
   },
   beforeDestroy() {
-    sessionStorage.removeItem("anno-maintain/maintain/pageNo");
-    sessionStorage.removeItem("anno-maintain/maintain/total");
+    // sessionStorage.removeItem("anno-maintain/maintain/pageNo");
+    // sessionStorage.removeItem("anno-maintain/maintain/total");
   },
   methods: {
     build_anno() {
       this.$router.push("/anno-build/index");
     },
     get_active_desc(item) {
+      item.isShow = true;
       this.$store.commit(SET_MESSAGE_DATA, item);
       this.$router.push("/anno-desc/index");
     },
-    condition(e) {
+    condition(index) {
       if (this.beginendTime && this.endendTime) {
         if (+this.beginendTime > +this.endendTime) {
           this.$message({
@@ -174,10 +171,10 @@ export default {
       this.$post(
         `gwt/business/tbAnnouncement/getAnnoMaintainList?${qs.stringify({
           currentPage: pageNo,
-          pageSize: pageSize
+          endTime: pageSize
         })}`,
         {
-          beginendTime: beginendTime,
+          startTime: beginendTime,
           endendTime: endendTime,
           title: this.$filterText(this.Q_noticeTitle_SL)
         },

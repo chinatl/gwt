@@ -42,7 +42,7 @@ import {
     Row,
     Col,
     Tooltip,
-    RadioGroup, MessageBox
+    RadioGroup, MessageBox,Notification
 } from 'element-ui';
 Vue.use(Tooltip);
 Vue.use(RadioGroup);
@@ -83,6 +83,7 @@ Vue.use(Row);
 Vue.use(Col);
 Vue.prototype.$message = Message;
 Vue.prototype.$confirm = MessageBox.confirm;
+Vue.prototype.$notify = Notification;
 //---------------------
 import '@/styles/index.scss' // global css
 import App from './App'

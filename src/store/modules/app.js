@@ -184,10 +184,13 @@ const app = {
               ]
             }
           ];
-          slider_list[current].isShow = true;
+          if (slider_list[current]) {
+            slider_list[current].isShow = true;
+          }
           commit('SET_SLIDER_LIST', slider_list)
         })
         .catch(res => {
+          console.log(res)
           state.slider_loading = false;
         });
     },

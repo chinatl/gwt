@@ -29,7 +29,7 @@
     </div>
 </template>
 <script>
-import { SET_REPORT_DATA } from "@/store/mutations";
+import { SET_REPORT_DATA, SET_MESSAGE_DATA } from "@/store/mutations";
 import { mapGetters } from "vuex";
 export default {
   data() {
@@ -61,6 +61,13 @@ export default {
       if (this.report_data.appId === "1") {
         this.$router.push({
           path: "/file-desc/index"
+        });
+      } else if (this.report_data.appId === "37") {
+        var data = JSON.parse(JSON.stringify(this.report_data));
+        data.id = data.contentId;
+        this.$store.commit(SET_MESSAGE_DATA, data);
+        this.$router.push({
+          path: "/anno-desc/index"
         });
       } else {
         this.$router.push({

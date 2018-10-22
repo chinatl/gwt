@@ -2,32 +2,33 @@
     <t-layout>
         <div slot="left">
             <div class="user-role">
-                <el-button icon="el-icon-news" size="small" :type="current === 1 ? 'primary':'info'" @click="check_role(1)" v-wave>发布权限</el-button>
                 <el-button icon="el-icon-message" size="small" :type="current === 2 ? 'primary':'info'" @click="check_role(2)" v-wave>接收权限</el-button>
                 <el-button icon="el-icon-document" size="small" :type="current === 3 ? 'primary':'info'" @click="check_role(3)" v-wave>阅读权限</el-button>
             </div>
             <div class="role-page-content common-temp">
                 <div class="main-input">
-                    <el-input size="small" v-model="keyword" placeholder="搜索部门名称"></el-input>
+                    <el-input size="small" v-model="filterText" placeholder="搜索部门名称"></el-input>
                 </div>
-                <el-tree :data="data" :props="defaultProps" @node-click="handleNodeClick"></el-tree>
+                <div class="scrollbar ROLE-TABLE" style="height:490px">
+                  <el-tree
+                  :expand-on-click-node='false'
+                  :data="tree_data" :props="defaultProps"
+                  :highlight-current = 'true'
+                  :filter-node-method="filterNode"
+                  ref="tree"
+                  @node-click="handleNodeClick"></el-tree>
+                </div>
             </div>
         </div>
         <div slot="right">
             <t-title>{{ current === 1 ? '跨部门通知权限' : current === 2 ? ' 通知接收权限' : '跨部门阅读权限'}}</t-title>
             <div class="common-action">
                 <div>
-                    <el-input size="medium" placeholder="请输入姓名/手机号"  v-model="select.keyword"  style="width:200px"></el-input>
-                    <el-button type="primary" icon="el-icon-search" size="medium"  style="margin-right:8px" v-wave>搜索</el-button>
-                    <el-select size="medium" v-show="current === 2" v-model="select.type" style="width:120px">
-                        <el-option label="全部" value="0"></el-option>
-                        <el-option label="会议通知" value="1"></el-option>
-                        <el-option label="通知" value="2"></el-option>
-                        <el-option label="材料征集" value="3"></el-option>
-                    </el-select>
+                    <el-input size="medium" placeholder="请输入姓名/手机号"  v-model="searchParam"  style="width:200px" @keyup.native.enter="condition"></el-input>
+                    <el-button type="primary" icon="el-icon-search" size="medium"  style="margin-right:8px" v-wave @click="condition">搜索</el-button>
                 </div>
-                <div v-if='current === 2'>
-                    <el-button type="success" icon="el-icon-plus" size="medium"  style="margin-right:8px" @click="dialog = true" v-wave>新增接收人</el-button>
+                <div v-if='current === 2 && has_role'>
+                    <el-button type="success" icon="el-icon-plus" size="medium"  style="margin-right:8px" @click="add_user_dialog" v-wave>新增接收人</el-button>
                 </div>
             </div>
             <div class="common-table">
@@ -35,11 +36,27 @@
                     :data="tableData"
                     border
                     style="width: 100%">
-                    <el-table-column prop="name" align="center" label="姓名"></el-table-column>
-                    <el-table-column prop="name" align="center" label="性别"></el-table-column>
-                    <el-table-column prop="name" align="center" label="人员级别"></el-table-column>
-                    <el-table-column prop="name" align="center" label="手机号码"></el-table-column>
-                    <el-table-column prop="name" align="center" label="固定电话"></el-table-column>
+                    <el-table-column prop="realName" align="center" label="姓名"></el-table-column>
+                    <el-table-column  align="center" label="性别">
+                    <template slot-scope="scope">
+                      {{scope.row.sex === '0' ? '女':'男'}}
+                    </template>
+                    </el-table-column>
+                    <el-table-column prop="name" align="center" label="人员级别">
+                      <template slot-scope="scope">
+                      {{scope.row.sysOrgUserX.userLevelName}}
+                    </template>
+                    </el-table-column>
+                    <el-table-column prop="name" align="center" label="手机号码">
+                       <template slot-scope="scope">
+                      {{scope.row.mobilePhone}}
+                    </template>
+                    </el-table-column>
+                    <el-table-column prop="phone" align="center" label="固定电话">
+                       <template slot-scope="scope">
+                      {{scope.row.sysOrgUserX.phone}}
+                    </template>
+                    </el-table-column>
                     <el-table-column
                     prop="name"
                     label="操作"
@@ -47,123 +64,316 @@
                     width="120"
                     >
                     <template slot-scope="scope">
-                        <el-button
-                        size="mini"
-                        type="danger"
-                        icon="el-icon-minus"
-                        @click="handleDelete(scope.$index, scope.row)" v-if='Math.random() < .5' v-wave>删除</el-button>
-                        <el-button
-                        size="mini"
-                        type="success"
-                        icon="el-icon-delete"
-                        @click="handleDelete(scope.$index, scope.row)" v-else v-wave>添加</el-button>
+                        <little-button name='删除'  v-if='scope.row.sendFlag && current !== 2'  @click.native="del_send_sys(scope.row.sysOrgUserX.id)"></little-button>
+                        <little-button name='添加' v-if='!scope.row.sendFlag && current !== 2' @click.native="add_send_sys(scope.row.sysOrgUserX.id)"></little-button>
+                        <little-button name='删除' v-if="current === 2" @click.native="del_reve_sys(scope.row.sysOrgUserX.id)"></little-button>
                     </template>
                     </el-table-column>
                 </el-table>
             </div>
+            <div class="common-page">
+            <el-pagination
+              @size-change="handleSizeChange"
+              @current-change="handleCurrentChange"
+              :current-page.sync="pageNo"
+              :page-sizes="$store.getters.page_list"
+              :page-size="pageSize"
+              layout="total, sizes, prev, pager, next, jumper"
+              background
+              :total="total">
+              </el-pagination>
+            </div>
         </div> 
-        <template slot="else">
-            <add-user :show='dialog' @close='dialog = false'></add-user>
-        </template>
+        <div slot="else">
+          <add-user 
+          :role="true"
+          :address='true'
+          :show='dialog' @close='cancel_user_dialog' 
+          :user-list='has_select_user_list'
+          @cancel='cancel_user_dialog'
+          :has-role-user='add_children_data'
+          @submit="submit_user_dialog"></add-user>
+        </div>
     </t-layout>
 </template>
 <script>
-import arrowButton from "@/components/Button/arrowButton";
 import addUserButton from "@/components/Button/addUserButton";
-import addUser from "@/components/AddUser";
+import addUser from "@/components/AddRoleUser";
+import { generate_tree } from "@/utils";
+import littleButton from "@/components/Button/littleButton";
+import { action_fail, delete_item } from "@/utils/user";
+import qs from "qs";
+import { mapGetters } from "vuex";
 export default {
   components: {
-    arrowButton,
     addUserButton,
+    littleButton,
     addUser
   },
   data() {
     return {
+      filterText: "",
       dialog: false,
-      current: 1, // 1.发布权限 2.接收权限 3.阅读权限
+      has_select_user_list: [],
+      pageSize: 5,
+      pageNo: 1,
+      total: 0,
+      searchParam: "", //条件搜索参数
+      dialog: false,
+      current: 2, // 1.发布权限 2.接收权限 3.阅读权限
       keyword: "",
       defaultProps: {
-        children: "children",
-        label: "label"
+        children: "childrens",
+        label: "name"
       },
-      data: [
-        {
-          label: "运城市",
-          children: [
-            {
-              label: "二级 1-1",
-              children: [
-                {
-                  label: "三级 1-1-1"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          label: "一级 2",
-          children: [
-            {
-              label: "二级 2-1",
-              children: [
-                {
-                  label: "三级 2-1-1"
-                }
-              ]
-            },
-            {
-              label: "二级 2-2",
-              children: [
-                {
-                  label: "三级 2-2-1"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          label: "一级 3",
-          children: [
-            {
-              label: "二级 3-1",
-              children: [
-                {
-                  label: "三级 3-1-1"
-                }
-              ]
-            },
-            {
-              label: "二级 3-2",
-              children: [
-                {
-                  label: "三级 3-2-1"
-                }
-              ]
-            }
-          ]
-        }
-      ],
-      tableData: [
-        {
-          name: "陕西测试部门1",
-          type: "地市政府"
-        },
-        {
-          name: "NB电子竞技俱乐部",
-          type: "地市政府"
-        }
-      ],
+      tree_data: [],
+      tableData: [],
       select: {
         type: "0"
-      }
+      },
+      temp_data: {},
+      has_role: false,
+      add_children_data: []
     };
   },
+  watch: {
+    filterText(val) {
+      this.$refs.tree.filter(val);
+    }
+  },
+  computed: {
+    ...mapGetters(["org_role_list", "user_info", "is_admin"])
+  },
+  created() {
+    this.get_tree_data();
+    this.get_all_child_part();
+  },
   methods: {
+      cancel_user_dialog(list) {
+      this.dialog = false;
+      this.has_select_user_list = list;
+    },
+    get_all_child_part() {
+      this.$post(
+        "gwt/system/sysOrg/getSysOrgsBypId",
+        {
+          orgId: this.user_info.sysOrgUserX.orgId
+        },
+        "json"
+      )
+        .then(res => {
+          if (res.result !== "0000") {
+            return;
+          }
+          this.add_children_data = res.data.sysOrgs.map(res => res.orgId);
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
+    filterNode(value, data) {
+      if (!value) return true;
+      return data.allName.indexOf(value) !== -1;
+    },
+    //增加用户弹窗
+    add_user_dialog() {
+      this.dialog = true;
+    },
+    //确定选择用户
+    submit_user_dialog(list) {
+      this.$post(
+        "gwt/website/tbWebsiteRecePermission/saveReceByOrgId",
+        {
+          userIds: list.map(res => res.ID).join(","),
+          orgId: this.temp_data.id,
+          receiveNoticeType: ''
+        },
+        "json"
+      )
+        .then(res => {
+          if (action_fail(res)) return;
+          this.dialog = false;
+          this.init(this.pageSize, this.pageNo);
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
+    search_all_sys() {
+      this.$post(
+        "gwt/website/tbWebsiteRecePermission/getAllreceiceUsers",
+        {
+          orgId: this.temp_data.id,
+        },
+        "json"
+      )
+        .then(res => {
+          if (res.result !== "0000") {
+            return;
+          }
+          this.has_select_user_list = res.data.sysUserList.map(res => {
+            res.REAL_NAME = res.realName;
+            res.ORG_ID = res.sysOrgUserX.orgId;
+            res.ID = res.sysOrgUserX.id - 0;
+            res.USER_ID = res.sysOrgUserX.userId - 0;
+            res.ORG_NAME = res.sysOrgUserX.orgName;
+            return res;
+          });
+        })
+        .catch(res => {});
+    },
+    //删除接收权限的人
+    del_reve_sys(userId) {
+      this.$post(
+        "gwt/website/tbWebsiteRecePermission/del",
+        {
+          userId,
+          receiveOrg: this.temp_data.id,
+          receiveNoticeType: ''
+        },
+        "json"
+      )
+        .then(res => {
+          if (action_fail(res)) return;
+          this.init(this.pageSize, this.pageNo);
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
+    //删除发布权限
+    del_send_sys(userId) {
+      var url = "gwt/website/tbWebsiteQueryPermission/del";
+      this.$post(
+        url,
+        {
+          userId
+        },
+        "json"
+      )
+        .then(res => {
+          if (action_fail(res)) return;
+          this.init(this.pageSize, this.pageNo);
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
+    //增加发布权限
+    add_send_sys(userId) {
+      var url = "gwt/website/tbWebsiteQueryPermission/save";
+      this.$post(
+        url,
+        {
+          userId
+        },
+        "json"
+      )
+        .then(res => {
+          if (action_fail(res)) return;
+          this.init(this.pageSize, this.pageNo);
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
+    condition() {
+      this.pageNo = 1;
+      this.init(this.pageSize, 1);
+    },
+    handleSizeChange(e) {
+      localStorage.setItem("user-manager/field/pageSize", e);
+      this.pageNo = 1;
+      this.pageSize = e;
+      this.init(e, 1);
+    },
+    handleCurrentChange(e) {
+      sessionStorage.setItem("user-manager/field/pageNo", e);
+      this.pageNo = e;
+      this.init(this.pageSize, e);
+    },
+    init(pageSize, currentPage) {
+      var orgId = this.temp_data.id;
+      if (this.current === 2) {
+        this.$post(
+          `gwt/website/tbWebsiteRecePermission/getAllReceByOrgId?${qs.stringify({
+            pageSize,
+            currentPage
+          })}`,
+          {
+            selectedUsers: "+",
+            searchParam: this.$filterText(this.searchParam),
+            orgId: orgId,
+            receiveNoticeType: ''
+          },
+          "json"
+        )
+          .then(res => {
+            if (res.result !== "0000") {
+              return;
+            }
+            this.tableData = res.data.sysUserPageBean.datas;
+            this.total = res.data.sysUserPageBean.totalCount - 0;
+            this.search_all_sys();
+          })
+          .catch(res => {
+            console.log(res);
+          });
+      } else {
+        this.$post(
+          `gwt/website/tbWebsiteQueryPermission/getUserReadByOrgId?${qs.stringify(
+            {
+              pageSize,
+              currentPage
+            }
+          )}`,
+          {
+            orgId,
+            searchParam: this.$filterText(this.searchParam),
+            selectedUsers: "",
+            receiveNoticeType: ''
+          },
+          "json"
+        )
+          .then(res => {
+            if (res.result !== "0000") {
+              return;
+            }
+            this.tableData = res.data.sysUserPageBean.datas;
+            this.total = res.data.sysUserPageBean.totalCount - 0;
+          })
+          .catch(res => {
+            console.log(res);
+          });
+      }
+    },
+    get_tree_data() {
+      this.$post("gwt/system/sysOrg/getOrgTreeData", {}, "json")
+        .then(res => {
+          this.tree_data = generate_tree(res.data.nodes);
+          console.log(res);
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
     check_role(index) {
       this.current = index;
+      this.pageNo = 1;
+      this.init(this.pageSize, 1);
     },
     handleNodeClick(data) {
-      console.log(data);
+      if (!this.is_admin && !this.org_role_list.includes(data.id)) {
+        this.$message({
+          message: "您没有操作权限！",
+          type: "warning",
+          showClose: true
+        });
+        return;
+      }
+      this.has_role = true;
+      this.temp_data = data;
+      this.init(this.pageSize, this.pageNo);
     },
     add_user() {
       this.$swal({
@@ -237,6 +447,10 @@ export default {
 };
 </script>
 <style rel="stylesheet/scss" lang="scss">
+.ROLE-TABLE {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
 .user-role {
   margin: 12px 20px;
   display: flex;

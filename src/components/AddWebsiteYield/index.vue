@@ -96,7 +96,6 @@ export default {
     show(res) {
       if (res) {
         this.has_select_arr = [...this.userList];
-        console.log(this.userList)
         var arr = [];
         for (var i = 0; i < this.has_select_arr.length; i++) {
           var tempList = this.all_tree_data
@@ -104,12 +103,11 @@ export default {
             .map(res => res.id);
           arr.push(...tempList);
         }
-        console.log(arr)
         this.checked_keys = arr;
         this.$nextTick(res => {
           this.$refs.tree.setCheckedKeys(this.checked_keys);
           this.$refs.yield_right.style.height =
-            (this.$refs.yield_left.clientHeight - 40 )+ "px";
+            this.$refs.yield_left.clientHeight - 40 + "px";
         });
       }
     },
@@ -125,7 +123,7 @@ export default {
       set(res) {
         this.$emit("close", this.userList);
       }
-    },
+    }
   },
   created() {
     this.$post("gwt/system/sysAddressBookGroup/getGroupTree", {}, "json").then(
@@ -206,11 +204,12 @@ export default {
       }
       this.loading = true;
       this.$post(
-        "gwt/notice/tbNoticeRecePermission/getAllReceByOrgId",
+        "gwt/website/tbWebsiteRecePermission/getAllReceByOrgId",
         {
-          getAllFlag: "N",
-          receiveNoticeType: sessionStorage.getItem("send_status"),
-          orgId: node.id.replace(/.*\D/, "")
+          selectedUsers: "+",
+          receiveNoticeType: "",
+          orgId: node.id.replace(/.*\D/, ""),
+          searchParam:''
         },
         "json"
       )
@@ -252,7 +251,6 @@ export default {
         });
     },
     onSubmit() {
-      console.log(this.has_select_arr);
       this.$emit("submit", this.has_select_arr);
     },
     cancel() {

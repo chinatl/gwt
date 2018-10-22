@@ -11,6 +11,7 @@
                     <el-option label="材料征集" value="4"></el-option>
                     <el-option label="举报" value="5"></el-option>
                     <el-option label="调岗" value="6"></el-option>
+                    <el-option label="网站信息" value="7"></el-option>
                 </el-select>
                 <el-date-picker
                 v-model="startTime"
@@ -261,6 +262,7 @@ export default {
                 tableData[i].FROM_NOTICE_ID =
                   res.data.stateList[i].FROM_NOTICE_ID;
                 tableData[i].FORWARD_ID = res.data.stateList[i].FORWARD_ID;
+                tableData[i].TB_RECV_ID = res.data.stateList[i].TB_RECV_ID;
               }
               this.tableData = tableData;
             })
@@ -377,6 +379,79 @@ export default {
         this.$router.push({
           path: "/report/index"
         });
+      }
+      if (item.TYPE_DESC === "网站信息") {
+        this.$post(
+          "gwt/website/tbWebsite/changStatus",
+          {
+            receId: item.TB_RECV_ID
+          },
+          "json"
+        )
+          .then(res => {})
+          .catch(res => {
+            console.log(res);
+          });
+        item.RECEIVE_ID = item.TB_RECV_ID;
+        this.$store.commit(SET_MESSAGE_DATA, item);
+        this.$router.push("/website-desc/index");
+      }
+      if (item.TYPE_DESC === "公告") {
+        this.$post(
+          "gwt/business/tbAnnoReceiveUser/updateStatus",
+          {
+            recvId: item.RECV_ID,
+            annoId: item.NOTICE_ID
+          },
+          "json"
+        )
+          .then(res => {
+            this.init(this.pageSize, this.pageNo, true);
+          })
+          .catch(res => {
+            console.log(res);
+          });
+        if (item.FROM_NOTICE_ID === 1) {
+          this.$post(
+            "gwt/business/tbAnnoDeleteReason/getByAnnoId",
+            {
+              annoId: item.NOTICE_ID
+            },
+            "json"
+          )
+            .then(res => {
+              if (res.result !== "0000") {
+                return;
+              }
+              this.init(this.pageSize, this.pageNo, true);
+              this.$swal({
+                title: "删除原因！",
+                text:
+                  "由于“" +
+                  res.data.tbAnnoDeleteReason.deleteReason +
+                  "”，通知已被“" +
+                  res.data.tbAnnoDeleteReason.deleteUserName +
+                  "”删除",
+                type: "warning",
+                confirmButtonColor: "#DD6B55",
+                confirmButtonText: "确定",
+                showConfirmButton: true
+              });
+            })
+            .catch(res => {
+              console.log(res);
+            });
+        } else {
+          item.id = item.NOTICE_ID;
+          item.title = item.TITLE;
+          item.createUserName = item.CREATE_USER_NAME;
+          item.createOrgName = item.DEPT;
+          item.createTime = item.CREATE_TIME;
+          this.$store.commit(SET_MESSAGE_DATA, item);
+          this.$router.push({
+            path: "/anno-desc/index"
+          });
+        }
       }
       if (
         item.TYPE_DESC === "材料征集" ||

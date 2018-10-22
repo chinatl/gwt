@@ -9,7 +9,7 @@
             </div>
             <div>
                 <el-input v-model="Q_appName_SL" placeholder="请输入应用名称" style="width:200px" size='medium'></el-input>
-                <el-button type="primary" icon="el-icon-search" size='medium' v-wave>搜索</el-button>
+                <el-button type="primary" icon="el-icon-search" size='medium' v-wave @click="condition">搜索</el-button>
                 <el-button type="success" icon="el-icon-plus" size='medium' @click="add_role">新增应用</el-button>
             </div>
         </div>
@@ -22,7 +22,14 @@
                 <el-table-column
                 prop="title"
                 align="center"
+                width="160"
                 label="应用logo">
+                  <template slot-scope="scope">
+                    <div style="text-align:center">
+                      <img :src="require('@/assets/imgs/yingyong.png')" alt="" v-if="!scope.row.logo" class="radius" style="width:40px;height:40px;display:block;margin:0 auto">
+                      <img :src="scope.row.logo" alt="" v-else style="width:40px;height:40px;display:block;margin:0 auto" class="radius">
+                    </div>
+                  </template>
                 </el-table-column>
                 <el-table-column
                 prop="appName"
@@ -34,7 +41,7 @@
                 width="140"
                 label="应用状态">
                     <template slot-scope="scope">
-                        <little-button :name='scope.row.isActive === 2 ? "已下架" : "已上架"'></little-button>
+                        <little-button :name='scope.row.isActive === "2" ? "已下架" : "已上架"'></little-button>
                     </template>
                 </el-table-column>
                 <el-table-column
@@ -43,7 +50,7 @@
                 width="140"
                 label="资源管理">
                     <template slot-scope="scope">
-                        <little-button name='资源管理' @click.native='resource_manager'></little-button>
+                        <little-button name='资源管理' @click.native='resource_manager(scope.row)'></little-button>
                     </template>
                 </el-table-column>
                 <el-table-column
@@ -54,8 +61,8 @@
                 >
                  <template slot-scope="scope">
                     <little-button :name='scope.row.status ? "下架" : "上架"' @click.native="swal_app(scope.row.status)"></little-button>
-                    <little-button name='编辑' @click.native="edit_role(scope.$index, scope.row)"></little-button>
-                    <little-button name='删除' @click.native="handleDelete(scope.$index, scope.row)"></little-button>
+                    <little-button name='编辑' @click.native="edit_role(scope.row)"></little-button>
+                    <little-button name='删除' @click.native="handleDelete(scope.row.appId)"></little-button>
                 </template>
                 </el-table-column>
             </el-table>
@@ -65,11 +72,11 @@
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
             :current-page="pageNo"
-            :page-sizes="[10, 20, 30, 40]"
+            :page-sizes="$store.getters.page_list"
             :page-size="pageSize"
             layout="total, sizes, prev, pager, next, jumper"
             background
-            :total="40">
+            :total="total">
             </el-pagination>
         </div>
         <!-- 角色新增弹出框 -->
@@ -87,14 +94,14 @@
                         :file-list="fileList"
                         :show-file-list="false"
                         :auto-upload="false"
-                        v-if="!img_data.url"
+                        v-if="!img_data_url"
                         >
                         <el-button size='small' type="primary" icon="el-icon-edit-outline">
                             上传图片
                         </el-button>
                     </el-upload>
                     <div v-else class="dialog-img-container">
-                        <img :src="img_data.url">
+                        <img :src="img_data_url">
                         <i class="el-icon-close" @click="del_upload_img"></i>
                     </div>
                     <p class="form-tips"><i class="el-icon-warning"></i> 注：上传尺寸为40px * 40px、格式PNG、JPG、GIF均可。</p>
@@ -102,19 +109,8 @@
                 <el-form-item label="名称" prop='appName'>
                     <el-input v-model="form.appName" size="small" placeholder="应用中文名称,系统中唯一"></el-input>
                 </el-form-item>
-                <el-form-item label="首页地址" prop='homePage'>
+                <el-form-item label="首页地址">
                     <el-input v-model="form.homePage" size="small" placeholder=" 应用首页地址"></el-input>
-                </el-form-item>
-                <el-form-item label="是否第三方应用">
-                      <el-radio v-model="form.isLocal" :label="1">本地</el-radio>
-                      <el-radio v-model="form.isLocal" :label="0">非本地</el-radio>
-                    <!-- <el-checkbox-group v-model="form.isLocal"> -->
-                        <!-- <el-checkbox label="本地" name="isLocal" @></el-checkbox> -->
-                        <!-- <el-checkbox label="非本地" name="isLocal"></el-checkbox> -->
-                    <!-- </el-checkbox-group> -->
-                </el-form-item>
-                <el-form-item label="功能获取地址" prop='defaultUrl'>
-                    <el-input v-model="form.defaultUrl" size="small" placeholder="必填资源管理需要应用"></el-input>
                 </el-form-item>
                 <el-form-item label="功能简介">
                         <el-input type="textarea" v-model="form.remark" :autosize="{ minRows: 4, maxRows: 6}"></el-input>
@@ -127,6 +123,8 @@
 <script>
 import littleButton from "@/components/Button/littleButton";
 import formButton from "@/components/Button/formButton";
+import { action_fail, delete_item } from "@/utils/user";
+import qs from "qs";
 export default {
   components: {
     littleButton,
@@ -149,14 +147,7 @@ export default {
         appId: ""
       },
       form_loading: false,
-      tableData: [
-        {
-          title: "测试角色11111",
-          name: "公务通",
-          key: "c2a112a4-8a70-4ff2-acc0-3d7c07082076",
-          status: false
-        }
-      ],
+      tableData: [],
       rules: {
         logo: [
           { required: true, message: "请选择应用图标", trigger: "change" }
@@ -193,7 +184,9 @@ export default {
       fileList: [],
       img_data: {},
       Q_appName_SL: "",
-      loading: false
+      loading: false,
+      img_data_url: "",
+      img_info: {}
     };
   },
   created() {
@@ -221,6 +214,10 @@ export default {
       this.pageSize = e;
       this.init(e, 1);
     },
+    condition() {
+      this.pageNo = 1;
+      this.init(this.pageSize, 1);
+    },
     handleCurrentChange(e) {
       sessionStorage.setItem("system-set/app/pageNo", e);
       this.pageNo = e;
@@ -228,12 +225,14 @@ export default {
     },
     init(pageSize, pageNo) {
       this.$post(
-        "gwt/system/sysApp/list",
+        `gwt/system/sysApp/list?${qs.stringify({
+          currentPage: pageNo,
+          pageSize: pageSize
+        })}`,
         {
           Q_appName_SL: this.Q_appName_SL,
           Q_isActive_L: "all",
-          currentPage: pageNo,
-          pageSize: pageSize
+          sourece: "yygl"
         },
         "json"
       )
@@ -315,25 +314,41 @@ export default {
           });
       }
     },
-    resource_manager() {
+    resource_manager(item) {
+      sessionStorage.setItem("appId", JSON.stringify(item));
       this.$router.push({
         path: "/resoure-manager/index"
       });
     },
-    handleDelete() {},
+    handleDelete(appId) {
+      delete_item({
+        url: "gwt/system/sysApp/del",
+        data: {
+          appId
+        },
+        success: res => {
+          if (action_fail(res)) return;
+          this.init(this.pageSize, this.pageNo);
+        }
+      });
+    },
     onSubmit() {
+      var appId;
+      if (this.role_type === "add") {
+        appId = "";
+      } else {
+        appId = this.form.appId;
+      }
       this.$refs.form.validate(res => {
         if (!res) return;
         this.form_loading = true;
         this.$post(
           "gwt/system/sysApp/save",
           {
-            appId: "",
-            logo: this.form.logo,
+            appId,
+            logo: this.img_data_url,
             appName: this.form.appName,
             homePage: this.form.homePage,
-            isLocal: this.form.isLocal,
-            defaultUrl: this.form.defaultUrl,
             remark: this.form.remark
           },
           "json"
@@ -360,7 +375,6 @@ export default {
           })
           .catch(res => {
             this.form_loading = false;
-            this.role_visible = false;
           });
       });
     },
@@ -370,10 +384,19 @@ export default {
     add_role() {
       this.role_type = "add";
       this.role_visible = true;
+      this.$nextTick(res => {
+        this.$refs.form.resetFields();
+        this.form.appName = "";
+        this.form.homePage = "";
+        this.form.remark = "";
+        this.img_data.url = "";
+      });
     },
-    edit_role() {
+    edit_role(item) {
+      this.form = JSON.parse(JSON.stringify(item));
       this.role_type = "update";
       this.role_visible = true;
+      this.img_data_url = item.logo;
     },
     upload_img(file) {
       if (
@@ -387,6 +410,7 @@ export default {
         });
         return;
       }
+      this.loading = true;
       var formData = new FormData();
       formData.append("ownerSystem", "gwt-platform");
       formData.append("ownerModule", "app");
@@ -395,19 +419,25 @@ export default {
       formData.append("uploadOpt", "add");
       formData.append("editFileId", "");
       formData.append("selectFile", file.raw);
-      this.$post("gwt-web-cloudisk/uploadFile/upload", formData, "form")
+      this.$post("gwt/uploadFile/upload", formData, "form")
         .then(res => {
-          // this.file_name_list.push(res.filePath);
+          this.loading = false;
+          if (action_fail(res, "上传成功！", "上传失败！")) return;
           this.$message({
             type: "success",
             message: "上传成功"
           });
+          this.img_data_url =
+            res.data.attachment.attaPath +
+            "/" +
+            res.data.attachment.smallImgName;
         })
-        .catch(res => {});
-      this.img_data = file;
+        .catch(res => {
+          this.loading = false;
+        });
     },
     del_upload_img() {
-      this.img_data.url = "";
+      this.img_data_url = "";
     }
   }
 };

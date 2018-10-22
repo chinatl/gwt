@@ -3,7 +3,7 @@
         <div class="common">
             <t-title title=" 本地资源"></t-title>
             <div class="padding20 resource-title">
-                应用名称：<span class="resource-name">公务通</span>
+                应用名称：<span class="resource-name">{{data.appName}}</span>
                 <span class="add-title" @click="add_resource"><el-button type="success" size='small' icon="el-icon-plus" v-wave>添加</el-button></span>
             </div>
             <div class="common-table">
@@ -12,13 +12,19 @@
                     border
                     style="width: 100%">
                     <el-table-column
-                    prop="title"
+                    prop="resName"
                     align="center"
                     label="功能名称">
                     </el-table-column>
                     <el-table-column
-                    prop="name"
+                    prop="remark"
                     label="功能描述"
+                    align="center"
+                    >
+                    </el-table-column>
+                    <el-table-column
+                    prop="resUrl"
+                    label="路由地址"
                     align="center"
                     >
                     </el-table-column>
@@ -35,30 +41,19 @@
                 </el-table>
             </div>
         </div>
-        <!-- <div class="common sourece-page">
-          <t-title title="功能获取"></t-title>
-            <div class="page-form">
-              <el-form label-width="120px" >
-                <el-form-item label="功能获取地址：" prop='name'>
-                    <div class="flex">
-                        <el-input v-model="url" size="small" readonly></el-input>
-                        <el-button size="small" icon="el-icon-edit-outline" type="primary" @click="get_function" v-wave>获取功能</el-button>
-                    </div>
-                </el-form-item>
-                <form-button @cancel='onCancel' @submit="onSubmit"></form-button>
-            </el-form>
-          </div>
-        </div> -->
         <el-dialog :close-on-click-modal='false'
             :title="group_type === 'add' ? '新增资源' :'编辑资源'"
             class="common-dialog"
             :visible.sync="group_visible">
             <el-form ref="form" :model="form" label-width="80px" :rules="rules"  class="demo-ruleForm">
                 <el-form-item label="功能名称" prop='title'>
-                    <el-input v-model="form.title" size="small" placeholder="请输入功能名称"></el-input>
+                    <el-input v-model="form.resName" size="small" placeholder="请输入功能名称"></el-input>
                 </el-form-item>
                 <el-form-item label="功能描述">
-                    <el-input v-model="form.title" size="small" placeholder="请输入功能描述"></el-input>
+                    <el-input v-model="form.remark" size="small" placeholder="请输入功能描述"></el-input>
+                </el-form-item>
+                <el-form-item label="功能地址">
+                    <el-input v-model="form.resUrl" size="small" placeholder="请输入功能路径"></el-input>
                 </el-form-item>
                 <form-button @cancel='onCancel_resource' @submit="onSubmit_resource"></form-button>
             </el-form>
@@ -75,38 +70,43 @@ export default {
     return {
       group_type: "",
       group_visible: false,
-      url: "http://192.168.31.47:8888/sysres",
-      tableData: [
-        {
-          title: "公务通资源名称5",
-          name: "公务通资源备注5"
-        },
-        {
-          title: "公务通资源名称4",
-          name: "公务通资源备注4"
-        },
-        {
-          title: "公务通资源名称3",
-          name: "公务通资源备注3"
-        },
-        {
-          title: "公务通资源名称2",
-          name: "公务通资源备注2"
-        },
-        {
-          title: "公务通资源名称1",
-          name: "公务通资源备注1"
-        }
-      ],
+      tableData: [],
       form: {
         name: ""
       },
       rules: {
         title: [{ required: true, message: "请输入域名城", trigger: "blur" }]
-      }
+      },
+      data: {}
     };
   },
+  beforeDestroy() {
+    this.$store.commit("DEL_VIEW_BY_NAME", "资源管理");
+  },
+  created() {
+    this.data = JSON.parse(sessionStorage.getItem("appId"));
+    this.init();
+  },
   methods: {
+    init() {
+      this.$post(
+        "gwt/system/sysResource/getByAppId",
+        {
+          appId: this.data.appId
+        },
+        "json"
+      )
+        .then(res => {
+          if (res.result !== "0000") {
+            return;
+          }
+          this.tableData = res.data.hashMap;
+          console.log(res);
+        })
+        .catch(res => {
+          console.log(res);
+        });
+    },
     add_resource() {
       this.group_visible = true;
       this.group_type = "add";

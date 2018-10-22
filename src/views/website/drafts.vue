@@ -3,22 +3,23 @@
         <t-title title="草稿箱"></t-title>
         <div class="common-action">
             <div>
-                <el-select v-model="type" size="medium" style="margin-right:8px;" @change="condition_search">
-                    <el-option v-for="(item,index) in meeting_type_list" :key='index' :label="item.itemName" :value="index"></el-option>
-                </el-select>
                 <el-date-picker
-                    v-model="date"
-                    type="daterange"
+                    v-model="beginendTime"
+                    type="date"
                     align="right"
                     size="medium"
-                    unlink-panels
-                     style="margin-right:8px;"
-                    range-separator="至"
-                    start-placeholder="开始日期"
-                    end-placeholder="结束日期"
-                    @change="condition_search">
+                    placeholder="开始日期"
+                    @change="condition_search(0)">
                 </el-date-picker>
-                <el-input v-model="noticeTitle" placeholder="请输入域名称" style="width:200px" size='medium' @keyup.native.enter='condition_search'></el-input>
+                <el-date-picker
+                  v-model="endendTime"
+                  @change="condition_search(1)"
+                  style="margin-right:8px;"
+                  type="date"
+                  size="medium"
+                  placeholder="结束日期">
+                </el-date-picker>
+                <el-input v-model="noticeTitle" placeholder="请输入标题" style="width:200px" size='medium' @keyup.native.enter='condition_search'></el-input>
                 <el-button type="primary" icon="el-icon-search" size='medium' v-wave @click="condition_search">搜索</el-button>
             </div>
         </div>
@@ -33,21 +34,23 @@
                 width="200"
                 label="通知类型">
                     <template slot-scope="scope">
-                        <span class="href">{{scope.row.noticeTypeName}}</span>
+                        <span class="href" @click="go_drafts(scope.row)">{{scope.row.noticeTypeName}}</span>
                     </template>
                 </el-table-column>
                 <el-table-column
-                prop="noticeTitle"
                 align="center"
                 show-overflow-tooltip
                 label="通知标题">
+                  <template slot-scope='scope'>
+                    <span  class="href"  @click="go_drafts(scope.row)">{{scope.row.noticeTitle || '无标题通知'}}</span>
+                  </template>
                 </el-table-column>
                 <el-table-column
                 align="center"
                 width="240"
                 label="保存时间">
                      <template slot-scope="scope">
-                        <span class="href">{{scope.row.createTime}}</span>
+                        <span class="href">{{scope.row.updateTime}}</span>
                     </template>
                 </el-table-column>
                 <el-table-column
@@ -82,7 +85,7 @@
     </div>
 </template>
 <script>
-import { SET_MEETING_TYPE_LIST } from "@/store/mutations";
+import { SET_NOTICE_DATA } from "@/store/mutations";
 import { mapGetters } from "vuex";
 import { parseTime } from "@/utils";
 import qs from "qs";
@@ -96,53 +99,75 @@ export default {
       date: null,
       loading: false,
       tableData: [],
-      noticeTitle: ""
+      noticeTitle: "",
+      beginendTime: "",
+      endendTime: ""
     };
   },
   created() {
-    this.$store.dispatch("readSession", SET_MEETING_TYPE_LIST);
-
-    var total = sessionStorage.getItem("public-notice/drafts/total");
+    var total = sessionStorage.getItem("website-notice/drafts/total");
     this.total = total ? total - 0 : 0;
-    var pageNo = sessionStorage.getItem("public-notice/drafts/pageNo");
+    var pageNo = sessionStorage.getItem("website-notice/drafts/pageNo");
     this.pageNo = pageNo ? pageNo - 0 : 1;
     //页数存到localstorage里面
-    var pageSize = localStorage.getItem("public-notice/drafts/pageSize");
+    var pageSize = localStorage.getItem("website-notice/drafts/pageSize");
     this.pageSize = pageSize ? pageSize - 0 : 5;
 
     this.init(this.pageSize, this.pageNo);
   },
   computed: {
-    ...mapGetters(["meeting_type_list"])
+  
+  },
+  beforeDestroy() {
+    // this.$store.commit("DEL_VIEW_BY_NAME", "草稿箱");
   },
   methods: {
-    condition_search() {
-      sessionStorage.setItem("public-notice/drafts/pageNo", 1);
+    go_drafts(item) {
+      this.$store.commit(SET_NOTICE_DATA, item);
+      this.$router.push({
+        path: "/website-re-drafts/index"
+      });
+    },
+    condition_search(index) {
+      if (this.beginendTime && this.endendTime) {
+        if (+this.beginendTime > +this.endendTime) {
+          this.$message({
+            message: "开始时间应小于结束时间",
+            type: "warning"
+          });
+          if (index) {
+            this.endendTime = "";
+          } else {
+            this.beginendTime = "";
+          }
+          return;
+        }
+      }
+      sessionStorage.setItem("website-notice/drafts/pageNo", 1);
       this.pageNo = 1;
       this.init(this.pageSize, 1);
     },
     init(pageSize, pageNo) {
       var endendTime = "";
       var beginendTime = "";
-      if (this.date) {
-        endendTime = parseTime(this.date[0], "{y}-{m}-{d}");
-        beginendTime = parseTime(this.date[1], "{y}-{m}-{d}");
+      if (this.endendTime) {
+        endendTime = parseTime(this.endendTime, "{y}-{m}-{d}");
+      }
+      if (this.beginendTime) {
+        beginendTime = parseTime(this.beginendTime, "{y}-{m}-{d}");
       }
       this.loading = true;
       this.$post(
-        `gwt/notice/tbNotice/list?${qs.stringify({
+        `gwt/website/tbWebsite/list?${qs.stringify({
           currentPage: pageNo,
           pageSize: pageSize
         })}`,
         {
-          noticeStatus: 1001,
-          createUser: 1,
-          account: this.type,
-          noticeTitle: this.noticeTitle,
-          receiveNoticeType: "",
-          noticeStatus: 1001,
-          endendTime,
-          beginendTime
+          noticeStatus: "1001",
+          receiveNoticeType: "0",
+          noticeTitle: this.$filterText(this.noticeTitle),
+          beginupdateTime: beginendTime,
+          endupdateTime: endendTime
         },
         "json"
       )
@@ -154,7 +179,7 @@ export default {
           this.tableData = res.data.tbNoticePageBean.datas;
           this.total = res.data.tbNoticePageBean.totalCount - 0;
           sessionStorage.setItem(
-            "public-notice/drafts/total",
+            "website-notice/drafts/total",
             res.data.tbNoticePageBean.totalCount
           );
         })
@@ -163,13 +188,13 @@ export default {
         });
     },
     handleSizeChange(e) {
-      localStorage.setItem("public-notice/drafts/pageSize", e);
+      localStorage.setItem("website-notice/drafts/pageSize", e);
       this.pageNo = 1;
       this.pageSize = e;
       this.init(e, 1);
     },
     handleCurrentChange(e) {
-      sessionStorage.setItem("public-notice/drafts/pageNo", e);
+      sessionStorage.setItem("website-notice/drafts/pageNo", e);
       this.pageNo = e;
       this.init(this.pageSize, e);
     },
@@ -188,7 +213,7 @@ export default {
           return;
         }
         this.$post(
-          "gwt/notice/tbNoticeDraft/del",
+          "gwt/website/tbWebsiteDraft/del",
           {
             noticeId
           },

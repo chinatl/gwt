@@ -1,6 +1,7 @@
 <template>
     <div class="user-message" @click="item_click">
         <div class="user-message-left">
+            <span class="new-message" v-if="data.readStats === '0' || data.REC_STATUS === 1000"></span>
             <img :src="require('@/assets/imgs/message.png')">
         </div>
         <div class="user-message-right">
@@ -12,6 +13,8 @@
                     {{data.REC_STATUS === 1002 ? "已拒签": null}}
                     {{data.REC_STATUS === 1003 ? "未报名": null}}
                     {{data.REC_STATUS === 1004 ? "已报名": null}} 
+
+                    {{ data.isDelete === '1' ? '已删除' : null}}
                 </span>
             </div>
             <div class="user-message-info">

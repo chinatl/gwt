@@ -15,7 +15,7 @@ export function get(url, data) {
 	})
 };
 export function post(url, data, type) {
-	console.log(JSON.stringify(data, {}, 4))
+	 console.log(JSON.stringify(data, {}, 4))
 	var content_type;
 	if (type === 'json') {
 		content_type = 'application/json';

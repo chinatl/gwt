@@ -160,6 +160,7 @@ export default {
   created() {
     this.get_tree_data();
     this.get_all_child_part();
+    this.$store.dispatch("get_org_role_list");
   },
   methods: {
       cancel_user_dialog(list) {
@@ -398,7 +399,6 @@ export default {
       this.$post("gwt/system/sysOrg/getOrgTreeData", {}, "json")
         .then(res => {
           this.tree_data = generate_tree(res.data.nodes);
-          console.log(res);
         })
         .catch(res => {
           console.log(res);
@@ -410,15 +410,13 @@ export default {
       this.init(this.pageSize, 1);
     },
     handleNodeClick(data) {
-      if (!this.is_admin) {
-        if (!this.add_children_data.includes(data.id)) {
-          this.$message({
-            message: "您没有操作权限！",
-            type: "warning",
-            showClose: true
-          });
-          return;
-        }
+      if (!this.is_admin && !this.org_role_list.includes(data.id)) {
+        this.$message({
+          message: "您没有操作权限！",
+          type: "warning",
+          showClose: true
+        });
+        return;
       }
       this.has_role = true;
       this.temp_data = data;

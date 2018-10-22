@@ -19,10 +19,11 @@
                     {{(data.TYPE_DESC === '调岗' && data.REC_STATUS == 1) ? '已转入' : null}}
                     {{(data.TYPE_DESC === '调岗' && data.REC_STATUS == 2) ? '已拒绝' : null}}
                     {{(data.TYPE_DESC === '调岗' && data.REC_STATUS == 3) ? '已撤回' : null}}
+                    {{(data.TYPE_DESC === '公告' && data.FROM_NOTICE_ID) ? '已删除' : null}}
                 </span>
             </div>
             <div class="user-message-info">
-                <little-button name=' 变更 ' v-if="data.FROM_NOTICE_ID"></little-button>
+                <little-button name=' 变更 ' v-if="data.FROM_NOTICE_ID && data.TYPE_DESC !== '公告'"></little-button>
                 <little-button name='转发' v-if="data.FORWARD_ID "></little-button>
                 <little-button :name='data.TYPE_DESC'></little-button>
                 <span class="current">{{data.CREATE_USER_NAME}}</span>

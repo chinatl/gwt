@@ -252,7 +252,24 @@ export default {
                   "json"
                 )
                   .then(res => {
-                    if (action_fail(res, "会议创建成功！")) return;
+                    if (res.result !== "0000") {
+                      this.$swal({
+                        title: "操作失败！",
+                        text: res.msg,
+                        type: "error",
+                        confirmButtonColor: "#DD6B55",
+                        confirmButtonText: "确定",
+                        showConfirmButton: true
+                      });
+                      return;
+                    }
+                    this.$notify({
+                      title: "成功",
+                      message: "两分钟之内可以进行撤回操作，两分钟后会议将正式发送。正式发送后会议只能进行变更。",
+                      type: "success",
+                      offset: 150
+                    });
+                    // if (action_fail(res, "会议创建成功！")) return;
                     this.$router.push({
                       path: "/active/index"
                     });

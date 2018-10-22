@@ -109,7 +109,11 @@ const store = new Vuex.Store({
         if (res.result !== '0000') {
           return
         }
-        commit(SET_ORG_ROLE_LIST, res.data.adminOrgs.map(res => res.orgId))
+        var arr = [];
+        for (var i = 0; i < res.data.backOrgsList.length; i++) {
+          arr.push(...res.data.backOrgsList[i])
+        }
+        commit(SET_ORG_ROLE_LIST, arr.map(res => res.orgId))
       }).catch(res => {
         console.log(res)
       })

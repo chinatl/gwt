@@ -15,6 +15,7 @@
         </div>
       </el-form-item>
       <!-- <input type="password" style="position:absolute;z-index:100;opacity:0;width:0;height:0"> -->
+
       <el-form-item prop="password">
         <div class="input-img">
           <el-input v-model.trim="loginForm.password" placeholder="请输入密码" 
@@ -57,6 +58,10 @@
           <span>IOS 下载</span>
         </div>
       </div>
+    </div>
+    <div class="qq_qq">
+      <div class="qrcode-block">QQ群（ <span>166179255</span>  ）</div>
+      <div class="qrcode-block">客服（ <span><a href="tencent://message/?uin=656074767&Site=http://vps.shuidazhe.com&Menu=yes">656074767</a></span> ）</div>
     </div>
   </div>
     </div>
@@ -139,16 +144,12 @@ export default {
         width: 80, // 设置宽度
         height: 80 // 设置高度
       });
-      var iosUrl = localStorage.getItem("iosUrl");
-      if (iosUrl) {
-        this.app_qrcode(iosUrl);
-      }
-      var androidUrl = localStorage.getItem("androidUrl");
-      if (androidUrl) {
-        this.and_qrcode(androidUrl);
-      }
+      this.app_qrcode(
+        "https://itunes.apple.com/us/app/gwt/id1255423292?l=zh&ls=1&mt=8"
+      );
+      this.and_qrcode("https://meet1.inetgov.com/apk/gwt_android.apk");
     });
-    this.getQRURL();
+    // this.getQRURL();
     sessionStorage.removeItem("login-info");
     sessionStorage.removeItem("login-user-phone");
     sessionStorage.setItem("gwt-current-silder", "0");
@@ -314,6 +315,17 @@ export default {
 </script>
 
 <style rel="stylesheet/scss" lang="scss">
+.qq_qq {
+  margin-top: 12px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  span {
+    color: #3ba4f5;
+  }
+}
 .login-container {
   box-sizing: border-box;
   position: absolute;

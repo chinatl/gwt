@@ -480,6 +480,7 @@ export default {
     this.get_tree_data();
     var pageSize = localStorage.getItem("user-manager/user/pageSize");
     this.pageSize = pageSize ? pageSize - 0 : 5;
+    this.$store.dispatch("get_org_role_list");
   },
   computed: {
     ...mapGetters(["is_admin", "group_list", "user_info", "org_role_list"])
